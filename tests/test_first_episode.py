@@ -2,7 +2,7 @@ import pytest
 from pydantic import ValidationError
 
 from harnessing_honesty.episode import run_episode
-from harnessing_honesty.fake import ScriptedModelClient
+from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models import ModelResponse, Scenario
 
 

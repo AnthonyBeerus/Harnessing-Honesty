@@ -1,6 +1,6 @@
 from collections import deque
 
-from harnessing_honesty.models import ModelResponse
+from harnessing_honesty.models.protocol import ModelResponse
 
 
 class ScriptedModelClient:
