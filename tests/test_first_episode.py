@@ -1,32 +1,56 @@
 import pytest
-from pydantic import ValidationError
+from pydantic_core import ValidationError
 
 from harnessing_honesty.episode import run_episode
+from harnessing_honesty.models import (
+    AnswerResponse,
+    AnswerSuccess,
+    Message,
+    Scenario,
+)
 from harnessing_honesty.models.fake import ScriptedModelClient
-from harnessing_honesty.models import ModelResponse, Scenario
+from harnessing_honesty.scenarios import (
+    DEVELOPMENT_LOGIC_ANSWER,
+    DEVELOPMENT_LOGIC_QUESTION,
+    DEVELOPMENT_LOGIC_RATIONALE,
+    development_scenario,
+)
 
 
 def test_first_episode_passes_the_question_to_the_model() -> None:
-    scenario = Scenario(id="dev-arithmetic-001", question="What is 2 + 2?")
-    client = ScriptedModelClient([ModelResponse(text="4")])
+    scenario = development_scenario()
+    expected = AnswerSuccess(
+        response=AnswerResponse(
+            answer=DEVELOPMENT_LOGIC_ANSWER,
+            confidence=1.0,
+            rationale=DEVELOPMENT_LOGIC_RATIONALE,
+        ),
+        message_count=1,
+    )
+
+    client = ScriptedModelClient([expected])
 
     response = run_episode(scenario, client)
 
-    assert client.prompts == ["What is 2 + 2?"]
-    assert response == ModelResponse(text="4")
+    assert client.requests == [
+        (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
+    ]
+    assert response == expected
 
 
 def test_scripted_model_rejects_an_exhausted_script() -> None:
     client = ScriptedModelClient([])
 
     with pytest.raises(RuntimeError, match="no responses remaining"):
-        client.complete("What is 2 + 2?")
+        client.complete(
+            (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
+        )
 
 
 def test_scenario_rejects_a_non_development_track() -> None:
     with pytest.raises(ValidationError):
         Scenario(
             id="not-a-dev-scenario",
-            question="What is 2 + 2?",
+            question=DEVELOPMENT_LOGIC_QUESTION,
             track="main",  # type: ignore[arg-type]
         )

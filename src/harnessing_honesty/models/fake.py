@@ -1,17 +1,17 @@
 from collections import deque
 
-from harnessing_honesty.models.protocol import ModelResponse
+from harnessing_honesty.models.protocol import Message, ModelResult
 
 
 class ScriptedModelClient:
-    def __init__(self, responses: list[ModelResponse]) -> None:
-        self._responses = deque(responses)
-        self.prompts: list[str] = []
+    def __init__(self, results: list[ModelResult]) -> None:
+        self._results = deque(results)
+        self.requests: list[tuple[Message, ...]] = []
 
-    def complete(self, prompt: str) -> ModelResponse:
-        self.prompts.append(prompt)
+    def complete(self, messages: tuple[Message, ...]) -> ModelResult:
+        self.requests.append(messages)
 
-        if not self._responses:
+        if not self._results:
             raise RuntimeError("The scripted model has no responses remaining.")
 
-        return self._responses.popleft()
+        return self._results.popleft()

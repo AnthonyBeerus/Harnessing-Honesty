@@ -2,18 +2,25 @@ import pytest
 from pydantic_ai import Agent
 from pydantic_ai.models.test import TestModel
 
+from harnessing_honesty.models import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.models.pydantic_ai_client import (
     DevelopmentModelConfigurationError,
     PydanticAIModelClient,
 )
+from harnessing_honesty.scenarios import DEVELOPMENT_LOGIC_QUESTION
 
 
-def test_live_adapter_uses_the_common_response_boundary() -> None:
-    client = PydanticAIModelClient(Agent(TestModel()))
+def test_live_adapter_uses_structured_answer_response() -> None:
+    agent = Agent[None, AnswerResponse](TestModel(), output_type=AnswerResponse)
+    client = PydanticAIModelClient(agent)
 
-    response = client.complete("What is 2 + 2?")
+    result = client.complete(
+        (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
+    )
 
-    assert response.text == "success (no tool calls)"
+    assert isinstance(result, AnswerSuccess)
+    assert isinstance(result.response, AnswerResponse)
+    assert 0.0 <= result.response.confidence <= 1.0
 
 
 def test_environment_factory_fails_before_a_request(
