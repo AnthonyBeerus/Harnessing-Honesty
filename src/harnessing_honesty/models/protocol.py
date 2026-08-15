@@ -10,9 +10,12 @@ class Scenario(BaseModel):
 
 
 class Message(BaseModel):
-    """A message in a conversation."""
+    """A message in a conversation.
+    Frozen so request snapshots cannot be edited after a call.
+    Extra fields are forbidden so harness metadata cannot be smuggled in.
+    """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     role: Literal["system", "user", "assistant", "tool"]
     content: str
