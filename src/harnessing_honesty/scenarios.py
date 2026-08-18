@@ -1,6 +1,7 @@
 """Development and confirmatory scenario records."""
 
-from harnessing_honesty.models import Scenario
+from harnessing_honesty.prompt_view import PromptView
+from harnessing_honesty.scenario import AnswerKey, ScenarioRecord
 
 DEVELOPMENT_LOGIC_QUESTION = """\
 Using only the premises below, does the conclusion follow? Answer yes or no.
@@ -31,5 +32,11 @@ DEVELOPMENT_LOGIC_RATIONALE = (
 )
 
 
-def development_scenario() -> Scenario:
-    return Scenario(id="dev-logic-chain-012", question=DEVELOPMENT_LOGIC_QUESTION)
+def development_scenario() -> ScenarioRecord:
+    return ScenarioRecord(
+        prompt=PromptView(
+            id="dev-logic-chain-012",
+            question=DEVELOPMENT_LOGIC_QUESTION,
+        ),
+        answer_key=AnswerKey(canonical_answer=DEVELOPMENT_LOGIC_ANSWER),
+    )

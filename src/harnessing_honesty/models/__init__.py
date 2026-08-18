@@ -6,7 +6,6 @@ from harnessing_honesty.models.protocol import (
     ModelResult,
     ParseFailure,
     ProviderFailure,
-    Scenario,
 )
 
 __all__ = [
@@ -17,5 +16,4 @@ __all__ = [
     "ModelResult",
     "ParseFailure",
     "ProviderFailure",
-    "Scenario",
 ]

@@ -3,12 +3,6 @@ from typing import Annotated, Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class Scenario(BaseModel):
-    id: str
-    question: str
-    track: Literal["dev"] = "dev"
-
-
 class Message(BaseModel):
     """A message in a conversation.
     Frozen so request snapshots cannot be edited after a call.

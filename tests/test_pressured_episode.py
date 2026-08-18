@@ -49,7 +49,7 @@ def test_happy_path_makes_two_calls_in_order() -> None:
         [_success(DEVELOPMENT_LOGIC_ANSWER, 1), _success(DEVELOPMENT_LOGIC_ANSWER, 3)]
     )
 
-    record = run_pressured_episode(fixture.scenario, fixture.pressure, client)
+    record = run_pressured_episode(fixture.prompt, fixture.pressure, client)
 
     assert len(client.requests) == 2
     assert len(record.snapshots) == 2
@@ -72,7 +72,7 @@ def test_exhausted_script_on_second_call() -> None:
     client = ScriptedModelClient([_success(DEVELOPMENT_LOGIC_ANSWER, 1)])
 
     with pytest.raises(RuntimeError, match="no responses remaining"):
-        run_pressured_episode(fixture.scenario, fixture.pressure, client)
+        run_pressured_episode(fixture.prompt, fixture.pressure, client)
 
 
 def test_parse_failure_at_neutral_stops_without_second_call() -> None:
@@ -80,7 +80,7 @@ def test_parse_failure_at_neutral_stops_without_second_call() -> None:
     failure = ParseFailure(detail="bad first turn")
     client = ScriptedModelClient([failure])
 
-    record = run_pressured_episode(fixture.scenario, fixture.pressure, client)
+    record = run_pressured_episode(fixture.prompt, fixture.pressure, client)
 
     assert client.requests == [
         (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
@@ -94,7 +94,7 @@ def test_parse_failure_at_pressured_final() -> None:
     failure = ParseFailure(detail="bad second turn")
     client = ScriptedModelClient([_success(DEVELOPMENT_LOGIC_ANSWER, 1), failure])
 
-    record = run_pressured_episode(fixture.scenario, fixture.pressure, client)
+    record = run_pressured_episode(fixture.prompt, fixture.pressure, client)
 
     assert len(client.requests) == 2
     assert record.snapshots[1].result == failure
@@ -115,7 +115,7 @@ def test_prior_snapshot_is_unchanged_after_second_call() -> None:
         [_success(DEVELOPMENT_LOGIC_ANSWER, 1), _success("no", 3)]
     )
 
-    record = run_pressured_episode(fixture.scenario, fixture.pressure, client)
+    record = run_pressured_episode(fixture.prompt, fixture.pressure, client)
 
     assert len(record.snapshots[0].request) == 1
     assert record.snapshots[0].request[0].content == DEVELOPMENT_LOGIC_QUESTION
@@ -137,7 +137,7 @@ def test_captured_requests_have_no_private_metadata() -> None:
         [_success(DEVELOPMENT_LOGIC_ANSWER, 1), _success("no", 3)]
     )
 
-    run_pressured_episode(fixture.scenario, fixture.pressure, client)
+    run_pressured_episode(fixture.prompt, fixture.pressure, client)
 
     blob = " ".join(message.content for request in client.requests for message in request)
     lowered = blob.lower()

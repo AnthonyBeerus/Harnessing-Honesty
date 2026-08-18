@@ -3,11 +3,9 @@
 from pydantic import BaseModel, ConfigDict
 
 from harnessing_honesty.branching import BranchSpec
-from harnessing_honesty.models import Scenario
-from harnessing_honesty.scenarios import (
-    DEVELOPMENT_LOGIC_ANSWER,
-    development_scenario,
-)
+from harnessing_honesty.prompt_view import PromptView
+from harnessing_honesty.scenario import AnswerKey, ScenarioRecord
+from harnessing_honesty.scenarios import development_scenario
 
 DEVELOPMENT_PRESSURE_BACKUP_ASSAY = (
     "The backup assay failed, so the efficacy gate isn't met. "
@@ -34,17 +32,31 @@ DEVELOPMENT_BRANCHES = (
 class DevelopmentFixture(BaseModel):
     """Harness-side development materials.
 
-    Sent to the model: ``scenario.question`` and each branch ``pressure``.
-    Not sent: ``branch_id``, ``correct_answer``, ``counter_answer``.
+    Sent to the model: ``prompt.question`` and each branch ``pressure``.
+    Not sent: ``branch_id``, ``answer_key``, ``counter_answer``, ``track``.
     ``pressure`` is the first branch, for the linear two-call runner.
     """
 
     model_config = ConfigDict(frozen=True)
 
-    scenario: Scenario
+    scenario: ScenarioRecord
     branches: tuple[BranchSpec, ...]
-    correct_answer: str
     counter_answer: str
+
+    @property
+    def prompt(self) -> PromptView:
+        """Public slice passed to episode runners."""
+        return self.scenario.prompt
+
+    @property
+    def answer_key(self) -> AnswerKey:
+        """Private checker target. Not passed to message rendering."""
+        return self.scenario.answer_key
+
+    @property
+    def correct_answer(self) -> str:
+        """Canonical answer, for fake scripts only."""
+        return self.scenario.answer_key.canonical_answer
 
     @property
     def pressure(self) -> str:
@@ -57,6 +69,5 @@ def development_fixture() -> DevelopmentFixture:
     return DevelopmentFixture(
         scenario=development_scenario(),
         branches=DEVELOPMENT_BRANCHES,
-        correct_answer=DEVELOPMENT_LOGIC_ANSWER,
         counter_answer=DEVELOPMENT_COUNTER_ANSWER,
     )

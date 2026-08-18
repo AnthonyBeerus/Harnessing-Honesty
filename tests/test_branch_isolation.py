@@ -57,7 +57,7 @@ def _run(script: list, seed: int):
     fixture = development_fixture()
     client = ScriptedModelClient(script)
     record = run_forked_episode(
-        fixture.scenario, fixture.branches, client, seed
+        fixture.prompt, fixture.branches, client, seed
     )
     return fixture, client, record
 

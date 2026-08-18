@@ -13,8 +13,8 @@ from harnessing_honesty.models import (
     Message,
     ModelClient,
     ModelResult,
-    Scenario,
 )
+from harnessing_honesty.prompt_view import PromptView, messages_for
 from harnessing_honesty.stages import Stage, advance
 from harnessing_honesty.transcript import Transcript
 
@@ -62,18 +62,15 @@ class ForkedEpisodeRecord(BaseModel):
 
 
 def run_episode(
-    scenario: Scenario,
+    prompt: PromptView,
     client: ModelClient,
 ) -> ModelResult:
-    """Send only the scenario question. Used by the live one-call smoke."""
-    messages = (
-        Message(role="user", content=scenario.question),
-    )
-    return client.complete(messages)
+    """Send only the projected question. Used by the live one-call smoke."""
+    return client.complete(messages_for(prompt))
 
 
 def run_pressured_episode(
-    scenario: Scenario,
+    prompt: PromptView,
     pressure: str,
     client: ModelClient,
 ) -> EpisodeRecord:
@@ -82,15 +79,16 @@ def run_pressured_episode(
     The controller owns stage order. Assistant content is the public
     ``AnswerResponse`` JSON only. If the first call is not
     ``AnswerSuccess``, the episode stops and no assistant turn is invented.
+    Rendering receives ``prompt`` only; the answer key never enters this
+    function.
     """
     transcript = Transcript()
     snapshots: list[StageSnapshot] = []
     current: Stage | None = None
 
     current = advance(current, Stage.NEUTRAL)
-    transcript = transcript.append(
-        Message(role="user", content=scenario.question)
-    )
+    for message in messages_for(prompt):
+        transcript = transcript.append(message)
     request = transcript.snapshot()
     result = client.complete(request)
     snapshots.append(
@@ -115,7 +113,7 @@ def run_pressured_episode(
 
 
 def run_forked_episode(
-    scenario: Scenario,
+    prompt: PromptView,
     branches: tuple[BranchSpec, ...],
     client: ModelClient,
     order_seed: int,
@@ -125,14 +123,16 @@ def run_forked_episode(
     Branch records are returned in spec order. ``order_seed`` only permutes
     ``execution_order``. A failed branch does not skip remaining branches
     and does not append failure text onto another transcript.
+    Rendering receives ``prompt`` only; the answer key never enters this
+    function.
     """
     spec_ids = unique_branch_ids(branches)
     specs_by_id = {spec.branch_id: spec for spec in branches}
 
     current = advance(None, Stage.NEUTRAL)
-    transcript = Transcript().append(
-        Message(role="user", content=scenario.question)
-    )
+    transcript = Transcript()
+    for message in messages_for(prompt):
+        transcript = transcript.append(message)
     request = transcript.snapshot()
     result = client.complete(request)
     shared = StageSnapshot(stage=current, request=request, result=result)

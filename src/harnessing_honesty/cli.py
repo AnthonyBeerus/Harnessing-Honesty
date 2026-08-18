@@ -1,11 +1,10 @@
 import argparse
 
-from harnessing_honesty.branching import permute_branch_ids, unique_branch_ids
 from harnessing_honesty.development_fixture import development_fixture
 from harnessing_honesty.episode import (
-    ForkedEpisodeRecord,
+    EpisodeRecord,
     run_episode,
-    run_forked_episode,
+    run_pressured_episode,
 )
 from harnessing_honesty.models import (
     AnswerResponse,
@@ -21,6 +20,7 @@ from harnessing_honesty.scenarios import (
     DEVELOPMENT_LOGIC_RATIONALE,
     development_scenario,
 )
+from harnessing_honesty.scoring import Score, score_episode
 
 
 def _print_messages(messages: tuple[Message, ...]) -> None:
@@ -50,107 +50,52 @@ def _success(answer: str, message_count: int) -> AnswerSuccess:
     )
 
 
-def _seed_for(ids: tuple[str, ...], wanted: tuple[str, ...]) -> int:
-    for seed in range(10_000):
-        if permute_branch_ids(ids, seed) == wanted:
-            return seed
-    raise RuntimeError(f"no seed produced {wanted}")
-
-
-def _print_forked(title: str, record: ForkedEpisodeRecord) -> None:
-    print(title)
-    print(f"execution_order: {record.execution_order}")
-    print("--- shared neutral (visible at this call) ---")
-    _print_messages(record.shared.request)
-    _print_result(record.shared.result)
-    print()
-    for branch in record.branches:
-        snapshot = branch.snapshot
-        print(f"--- {branch.branch_id} / {snapshot.stage} (visible at this call) ---")
+def _print_public_transcript(record: EpisodeRecord) -> None:
+    print("--- public transcript ---")
+    for snapshot in record.snapshots:
+        print(f"[{snapshot.stage}]")
         _print_messages(snapshot.request)
         _print_result(snapshot.result)
         print()
 
 
-def _print_comparison(
-    first: ForkedEpisodeRecord,
-    second: ForkedEpisodeRecord,
-    first_client: ScriptedModelClient,
-    second_client: ScriptedModelClient,
-) -> None:
-    pressures = {
-        branch.branch_id: branch.snapshot.request[-1].content
-        for branch in first.branches
-    }
-    print("=== comparison ===")
-    print(f"neutral calls (order A): {first_client.requests.count(first.shared.request)}")
-    print(f"neutral calls (order B): {second_client.requests.count(second.shared.request)}")
-    print(f"complete calls each run: {len(first_client.requests)}, {len(second_client.requests)}")
-    print(f"shared snapshots equal: {first.shared == second.shared}")
-    print(f"branch records equal: {first.branches == second.branches}")
-    print(f"execution_order A: {first.execution_order}")
-    print(f"execution_order B: {second.execution_order}")
-    for branch in first.branches:
-        other_ids = [item.branch_id for item in first.branches if item.branch_id != branch.branch_id]
-        leaked = [
-            other_id
-            for other_id in other_ids
-            if pressures[other_id] in [message.content for message in branch.snapshot.request]
-        ]
-        print(f"{branch.branch_id} sees other pressures: {leaked or 'none'}")
-    print()
+def _print_private_score(score: Score) -> None:
+    print("--- private score (not model-visible) ---")
+    print(f"initial_correct: {score.initial_correct}")
+    print(f"final_correct: {score.final_correct}")
+    print(f"eligible: {score.eligible}")
+    print(f"regressive_shift: {score.regressive_shift}")
 
 
 def run_fake() -> None:
-    """Print both seeded branch orders and a branch-local failure."""
+    """Print public transcripts and private scores for three scripts."""
     fixture = development_fixture()
-    spec_ids = unique_branch_ids(fixture.branches)
-    reversed_ids = tuple(reversed(spec_ids))
-    seed_ab = _seed_for(spec_ids, spec_ids)
-    seed_ba = _seed_for(spec_ids, reversed_ids)
-    yes = _success(fixture.correct_answer, 3)
-    happy = [_success(fixture.correct_answer, 1), yes, yes]
+    scripts = (
+        (
+            "correct-to-correct",
+            [_success(fixture.correct_answer, 1), _success(fixture.correct_answer, 3)],
+        ),
+        (
+            "correct-to-incorrect",
+            [_success(fixture.correct_answer, 1), _success(fixture.counter_answer, 3)],
+        ),
+        (
+            "initially-incorrect",
+            [_success(fixture.counter_answer, 1), _success(fixture.correct_answer, 3)],
+        ),
+    )
 
-    print(f"Scenario: {fixture.scenario.id}")
+    print(f"Scenario: {fixture.prompt.id}")
     print()
 
-    client_ab = ScriptedModelClient(list(happy))
-    record_ab = run_forked_episode(
-        fixture.scenario, fixture.branches, client_ab, seed_ab
-    )
-    _print_forked(f"Order A (seed={seed_ab})", record_ab)
-
-    client_ba = ScriptedModelClient(list(happy))
-    record_ba = run_forked_episode(
-        fixture.scenario, fixture.branches, client_ba, seed_ba
-    )
-    _print_forked(f"Order B (seed={seed_ba})", record_ba)
-
-    _print_comparison(record_ab, record_ba, client_ab, client_ba)
-
-    failure = ParseFailure(detail="bad first executed branch")
-    client_fail = ScriptedModelClient(
-        [_success(fixture.correct_answer, 1), failure, yes]
-    )
-    record_fail = run_forked_episode(
-        fixture.scenario, fixture.branches, client_fail, seed_ab
-    )
-    _print_forked(
-        f"Branch-local failure (seed={seed_ab}; first executed fails)",
-        record_fail,
-    )
-    first_id = record_fail.execution_order[0]
-    second_id = record_fail.execution_order[1]
-    by_id = {branch.branch_id: branch for branch in record_fail.branches}
-    first_pressure = by_id[first_id].snapshot.request[-1].content
-    second_contents = [
-        message.content for message in by_id[second_id].snapshot.request
-    ]
-    print("=== failure isolation ===")
-    print(f"failed branch: {first_id}")
-    print(f"surviving branch: {second_id}")
-    print(f"survivor saw failed pressure: {first_pressure in second_contents}")
-    print(f"survivor saw failure detail: {failure.detail in ' '.join(second_contents)}")
+    for title, results in scripts:
+        client = ScriptedModelClient(list(results))
+        record = run_pressured_episode(fixture.prompt, fixture.pressure, client)
+        score = score_episode(record, fixture.answer_key)
+        print(f"=== {title} ===")
+        _print_public_transcript(record)
+        _print_private_score(score)
+        print()
 
 
 def run_live() -> None:
@@ -158,8 +103,8 @@ def run_live() -> None:
     print("development-only live smoke run")
     scenario = development_scenario()
     client = PydanticAIModelClient.from_environment()
-    result = run_episode(scenario, client)
-    print(f"Scenario: {scenario.id}")
+    result = run_episode(scenario.prompt, client)
+    print(f"Scenario: {scenario.prompt.id}")
     _print_result(result)
 
 
