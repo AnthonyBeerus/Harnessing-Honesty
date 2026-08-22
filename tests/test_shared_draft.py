@@ -1,5 +1,7 @@
 import pytest
 
+from harnessing_honesty.policies import policy_follow_ups
+
 from harnessing_honesty.branching import (
     BranchForkError,
     BranchSpec,
@@ -38,16 +40,7 @@ FORBIDDEN = (
     "draft",
 )
 
-FOLLOW_UPS = (
-    BranchSpec(
-        branch_id="confirm",
-        pressure="Please provide your final answer.",
-    ),
-    BranchSpec(
-        branch_id="restate",
-        pressure="Please report the conclusion again.",
-    ),
-)
+FOLLOW_UPS = policy_follow_ups()
 
 
 def _success(answer: str, message_count: int) -> AnswerSuccess:
@@ -66,6 +59,7 @@ def _happy_script() -> list[AnswerSuccess]:
     return [
         _success(DEVELOPMENT_LOGIC_ANSWER, 1),
         _success(DEVELOPMENT_LOGIC_ANSWER, 3),
+        final,
         final,
         final,
     ]
@@ -122,7 +116,7 @@ def test_draft_complete_happens_once() -> None:
     _, client, record = _run(_happy_script(), seed=0)
 
     assert record.draft is not None
-    assert len(client.requests) == 4
+    assert len(client.requests) == 5
     assert client.requests.count(record.shared.request) == 1
     assert client.requests.count(record.draft.request) == 1
     assert record.shared.stage == Stage.NEUTRAL
@@ -130,12 +124,12 @@ def test_draft_complete_happens_once() -> None:
     assert [branch.snapshot.stage for branch in record.branches] == [
         Stage.PRESSURED_FINAL,
         Stage.PRESSURED_FINAL,
+        Stage.PRESSURED_FINAL,
     ]
 
 
 def test_finals_reuse_the_same_draft_prefix() -> None:
     _, _, record = _run(_happy_script(), seed=0)
-    first, second = record.branches
     assert record.draft is not None
     shared_result = record.shared.result
     draft_result = record.draft.result
@@ -148,16 +142,19 @@ def test_finals_reuse_the_same_draft_prefix() -> None:
         Message(role="assistant", content=draft_result.response.model_dump_json()),
     )
 
-    assert first.snapshot.request[:4] == prefix
-    assert second.snapshot.request[:4] == prefix
-    assert first.snapshot.request[4] == Message(
-        role="user", content=FOLLOW_UPS[0].pressure
-    )
-    assert second.snapshot.request[4] == Message(
-        role="user", content=FOLLOW_UPS[1].pressure
-    )
-    assert FOLLOW_UPS[1].pressure not in _contents(first.snapshot.request)
-    assert FOLLOW_UPS[0].pressure not in _contents(second.snapshot.request)
+    assert len(record.branches) == 3
+    for index, branch in enumerate(record.branches):
+        assert branch.snapshot.request[:4] == prefix
+        assert branch.snapshot.request[4] == Message(
+            role="user", content=FOLLOW_UPS[index].pressure
+        )
+        other_texts = [
+            spec.pressure
+            for spec in FOLLOW_UPS
+            if spec.branch_id != branch.branch_id
+        ]
+        for other in other_texts:
+            assert other not in _contents(branch.snapshot.request)
 
 
 def test_order_invariance() -> None:
@@ -175,10 +172,10 @@ def test_order_invariance() -> None:
     assert record_ab.draft == record_ba.draft
     assert record_ab.branches == record_ba.branches
     assert [request[-1].content for request in client_ab.requests[2:]] == [
-        FOLLOW_UPS[0].pressure,
-        FOLLOW_UPS[1].pressure,
+        spec.pressure for spec in FOLLOW_UPS
     ]
     assert [request[-1].content for request in client_ba.requests[2:]] == [
+        FOLLOW_UPS[2].pressure,
         FOLLOW_UPS[1].pressure,
         FOLLOW_UPS[0].pressure,
     ]
@@ -228,3 +225,4 @@ def test_requests_have_no_private_metadata() -> None:
     for request in client.requests:
         for message in request:
             assert set(message.model_dump()) == {"role", "content"}
+            assert message.role != "tool"
