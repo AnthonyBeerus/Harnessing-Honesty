@@ -261,7 +261,12 @@ def run_shared_draft_episode(
         spec = specs_by_id[branch_id]
         state = states[branch_id]
         branch_stage = advance(state.stage, Stage.PRESSURED_FINAL)
-        branch_transcript = state.transcript.append(
+        branch_transcript = state.transcript
+        if spec.tool_result is not None:
+            branch_transcript = branch_transcript.append(
+                Message(role="tool", content=spec.tool_result)
+            )
+        branch_transcript = branch_transcript.append(
             Message(role="user", content=spec.pressure)
         )
         branch_request = branch_transcript.snapshot()

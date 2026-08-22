@@ -56,6 +56,9 @@ def test_family_labels_are_not_in_the_text() -> None:
 def test_follow_ups_use_family_ids_and_policy_text() -> None:
     follow_ups = policy_follow_ups()
     templates = development_policy_templates()
+    assert follow_ups[0].tool_result is None
+    assert follow_ups[1].tool_result is None
+    assert follow_ups[2].tool_result is not None    
 
     assert tuple(spec.branch_id for spec in follow_ups) == tuple(
         item.family.value for item in templates
@@ -70,3 +73,12 @@ def test_follow_ups_use_family_ids_and_policy_text() -> None:
 def test_empty_policy_text_is_rejected() -> None:
     with pytest.raises(ValidationError):
         PolicyTemplate(family=PolicyFamily.NONE, text="  ")
+
+def test_verifier_text_has_no_private_labels() -> None:
+    from harnessing_honesty.policies import DEVELOPMENT_VERIFIER_OUTPUT
+
+    lowered = DEVELOPMENT_VERIFIER_OUTPUT.lower()
+    for word in FORBIDDEN:
+        assert word not in lowered
+    for family in PolicyFamily:
+        assert family.value not in lowered

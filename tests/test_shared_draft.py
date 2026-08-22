@@ -1,10 +1,7 @@
 import pytest
 
-from harnessing_honesty.policies import policy_follow_ups
-
 from harnessing_honesty.branching import (
     BranchForkError,
-    BranchSpec,
     clone_branch,
     permute_branch_ids,
     unique_branch_ids,
@@ -18,6 +15,10 @@ from harnessing_honesty.models import (
     ParseFailure,
 )
 from harnessing_honesty.models.fake import ScriptedModelClient
+from harnessing_honesty.policies import (
+    DEVELOPMENT_VERIFIER_OUTPUT,
+    policy_follow_ups,
+)
 from harnessing_honesty.pressures import CONTRADICTION_TEXT
 from harnessing_honesty.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
@@ -128,6 +129,18 @@ def test_draft_complete_happens_once() -> None:
     ]
 
 
+def test_call_matching_keeps_one_final_complete_per_policy() -> None:
+    _, client, record = _run(_happy_script(), seed=0)
+
+    assert len(client.requests) == 5
+    assert len(record.branches) == 3
+    assert [branch.snapshot.stage for branch in record.branches] == [
+        Stage.PRESSURED_FINAL,
+        Stage.PRESSURED_FINAL,
+        Stage.PRESSURED_FINAL,
+    ]
+
+
 def test_finals_reuse_the_same_draft_prefix() -> None:
     _, _, record = _run(_happy_script(), seed=0)
     assert record.draft is not None
@@ -143,18 +156,28 @@ def test_finals_reuse_the_same_draft_prefix() -> None:
     )
 
     assert len(record.branches) == 3
-    for index, branch in enumerate(record.branches):
+    by_id = {branch.branch_id: branch for branch in record.branches}
+    none = by_id["none"]
+    intrinsic = by_id["intrinsic"]
+    tool = by_id["tool"]
+
+    for branch in record.branches:
         assert branch.snapshot.request[:4] == prefix
-        assert branch.snapshot.request[4] == Message(
-            role="user", content=FOLLOW_UPS[index].pressure
-        )
-        other_texts = [
-            spec.pressure
-            for spec in FOLLOW_UPS
-            if spec.branch_id != branch.branch_id
-        ]
-        for other in other_texts:
-            assert other not in _contents(branch.snapshot.request)
+
+    assert none.snapshot.request[4:] == (
+        Message(role="user", content=FOLLOW_UPS[0].pressure),
+    )
+    assert intrinsic.snapshot.request[4:] == (
+        Message(role="user", content=FOLLOW_UPS[1].pressure),
+    )
+    assert tool.snapshot.request[4:] == (
+        Message(role="tool", content=DEVELOPMENT_VERIFIER_OUTPUT),
+        Message(role="user", content=FOLLOW_UPS[2].pressure),
+    )
+    assert DEVELOPMENT_VERIFIER_OUTPUT not in _contents(none.snapshot.request)
+    assert DEVELOPMENT_VERIFIER_OUTPUT not in _contents(
+        intrinsic.snapshot.request
+    )
 
 
 def test_order_invariance() -> None:
@@ -212,7 +235,7 @@ def test_draft_parse_failure_does_not_fork() -> None:
 
 
 def test_requests_have_no_private_metadata() -> None:
-    _, client, _record = _run(_happy_script(), seed=0)
+    _, client, record = _run(_happy_script(), seed=0)
     blob = " ".join(
         message.content for request in client.requests for message in request
     )
@@ -225,4 +248,13 @@ def test_requests_have_no_private_metadata() -> None:
     for request in client.requests:
         for message in request:
             assert set(message.model_dump()) == {"role", "content"}
-            assert message.role != "tool"
+
+    by_id = {branch.branch_id: branch for branch in record.branches}
+    none_roles = [message.role for message in by_id["none"].snapshot.request]
+    intrinsic_roles = [
+        message.role for message in by_id["intrinsic"].snapshot.request
+    ]
+    tool_roles = [message.role for message in by_id["tool"].snapshot.request]
+    assert "tool" not in none_roles
+    assert "tool" not in intrinsic_roles
+    assert tool_roles.count("tool") == 1

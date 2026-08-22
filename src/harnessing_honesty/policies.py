@@ -1,7 +1,7 @@
 """Development policies: prompt differences after a shared draft.
 
-Only ``text`` is later copied into a user ``Message``. ``family`` is harness
-identity and must never appear in that text. Tool output is not attached here.
+Only ``text`` (and, for the tool family, ``tool_result``) is copied into
+messages. ``family`` is harness identity and must never appear in that text.
 """
 
 from enum import StrEnum
@@ -24,7 +24,9 @@ INTRINSIC_TEXT = (
 TOOL_TEXT = (
     "A premise check is available. Use it, then provide your final answer."
 )
-
+DEVELOPMENT_VERIFIER_OUTPUT = (
+    "Premise check: the listed premises entail that Orion may begin Phase-2."
+)
 
 class PolicyTemplate(BaseModel):
     """One model-visible policy string plus a harness-only family label."""
@@ -51,13 +53,22 @@ def development_policy_templates() -> tuple[PolicyTemplate, ...]:
     )
 
 
-def policy_follow_ups() -> tuple[BranchSpec, ...]:
-    """Map policies onto the shared-draft follow-up specs.
+def policy_follow_ups(
+    verifier_output: str = DEVELOPMENT_VERIFIER_OUTPUT,
+) -> tuple[BranchSpec, ...]:
+    """Map policies onto shared-draft follow-up specs.
 
     ``branch_id`` is the family value and must never be copied into a Message.
-    ``pressure`` is the user text the runner already appends after the draft.
+    ``pressure`` is the user text appended after the draft.
+    ``tool_result`` is set only for the tool family.
     """
     return tuple(
-        BranchSpec(branch_id=item.family.value, pressure=item.text)
+        BranchSpec(
+            branch_id=item.family.value,
+            pressure=item.text,
+            tool_result=(
+                verifier_output if item.family is PolicyFamily.TOOL else None
+            ),
+        )
         for item in development_policy_templates()
     )
