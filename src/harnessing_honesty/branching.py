@@ -1,6 +1,8 @@
-"""Immutable branch forks from a shared neutral prefix.
+"""Immutable branch forks from a shared prefix.
+
 Clone state structurally. Do not mutate a shared transcript and roll it back.
 Permutation reorders branch IDs only; it does not copy or rewrite messages.
+Legal fork stages are NEUTRAL and DRAFT, not PRESSURED_FINAL.
 """
 
 from random import Random
@@ -9,6 +11,9 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 from harnessing_honesty.stages import Stage
 from harnessing_honesty.transcript import Transcript
+
+_FORKABLE = frozenset({Stage.NEUTRAL, Stage.DRAFT})
+
 
 class BranchSpec(BaseModel):
     """Specification for a branch of a transcript."""
@@ -38,7 +43,7 @@ class DuplicateBranchIdError(ValueError):
 
 
 class BranchForkError(ValueError):
-    """Raised when a fork is requested from a non-neutral stage."""
+    """Raised when a fork is requested from a non-forkable stage."""
 
 def clone_branch(
     prefix: Transcript,
@@ -46,13 +51,14 @@ def clone_branch(
     branch_id: str,
 ) -> BranchState:
     """Return a new branch that starts from ``prefix`` without aliasing mutation.
-    ``prefix`` must be at ``Stage.NEUTRAL``. The new transcript is a new
-    object with the same message tuple. Later ``append`` on one branch
-    cannot change another.
+
+    ``prefix`` must be at ``Stage.NEUTRAL`` or ``Stage.DRAFT``. The new
+    transcript is a new object with the same message tuple. Later
+    ``append`` on one branch cannot change another.
     """
-    if stage is not Stage.NEUTRAL:
+    if stage not in _FORKABLE:
         raise BranchForkError(
-            f"can only fork from {Stage.NEUTRAL}, not {stage}"
+            f"can only fork from {Stage.NEUTRAL} or {Stage.DRAFT}, not {stage}"
         )
     return BranchState(
         branch_id=branch_id,

@@ -1,4 +1,4 @@
-"""Episode runners: one-call smoke, linear pressured, and forked branches."""
+"""Episode runners: one-call smoke, linear pressured, forked branches, shared draft."""
 
 from pydantic import BaseModel, ConfigDict
 
@@ -57,6 +57,20 @@ class ForkedEpisodeRecord(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     shared: StageSnapshot
+    branches: tuple[BranchRecord, ...]
+    execution_order: tuple[str, ...]
+
+class DraftForkedRecord(BaseModel):
+    """One shared neutral, one shared draft, then isolated finals.
+
+    ``branches`` is spec order, not execution order. ``draft`` is None
+    when the neutral call is not ``AnswerSuccess``.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    shared: StageSnapshot
+    draft: StageSnapshot | None
     branches: tuple[BranchRecord, ...]
     execution_order: tuple[str, ...]
 
@@ -174,6 +188,96 @@ def run_forked_episode(
 
     return ForkedEpisodeRecord(
         shared=shared,
+        branches=tuple(records[branch_id] for branch_id in spec_ids),
+        execution_order=execution_order,
+    )
+
+def run_shared_draft_episode(
+    prompt: PromptView,
+    pressure: str,
+    follow_ups: tuple[BranchSpec, ...],
+    client: ModelClient,
+    order_seed: int,
+) -> DraftForkedRecord:
+    """Run neutral, one post-pressure draft, then isolated finals.
+
+    The draft ``complete()`` happens once. Follow-up IDs are cloned from
+    that draft prefix. ``order_seed`` permutes execution order only.
+    Rendering receives ``prompt`` only; the answer key never enters this
+    function.
+    """
+    spec_ids = unique_branch_ids(follow_ups)
+    specs_by_id = {spec.branch_id: spec for spec in follow_ups}
+
+    current = advance(None, Stage.NEUTRAL)
+    transcript = Transcript()
+    for message in messages_for(prompt):
+        transcript = transcript.append(message)
+    request = transcript.snapshot()
+    result = client.complete(request)
+    shared = StageSnapshot(stage=current, request=request, result=result)
+
+    if not isinstance(result, AnswerSuccess):
+        return DraftForkedRecord(
+            shared=shared,
+            draft=None,
+            branches=(),
+            execution_order=(),
+        )
+
+    transcript = transcript.append(
+        Message(role="assistant", content=result.response.model_dump_json())
+    )
+    transcript = transcript.append(Message(role="user", content=pressure))
+    current = advance(current, Stage.DRAFT)
+    draft_request = transcript.snapshot()
+    draft_result = client.complete(draft_request)
+    draft = StageSnapshot(
+        stage=current, request=draft_request, result=draft_result
+    )
+
+    if not isinstance(draft_result, AnswerSuccess):
+        return DraftForkedRecord(
+            shared=shared,
+            draft=draft,
+            branches=(),
+            execution_order=(),
+        )
+
+    prefix = transcript.append(
+        Message(
+            role="assistant",
+            content=draft_result.response.model_dump_json(),
+        )
+    )
+    states = {
+        branch_id: clone_branch(prefix, current, branch_id)
+        for branch_id in spec_ids
+    }
+    execution_order = permute_branch_ids(spec_ids, order_seed)
+    records: dict[str, BranchRecord] = {}
+
+    for branch_id in execution_order:
+        spec = specs_by_id[branch_id]
+        state = states[branch_id]
+        branch_stage = advance(state.stage, Stage.PRESSURED_FINAL)
+        branch_transcript = state.transcript.append(
+            Message(role="user", content=spec.pressure)
+        )
+        branch_request = branch_transcript.snapshot()
+        branch_result = client.complete(branch_request)
+        records[branch_id] = BranchRecord(
+            branch_id=branch_id,
+            snapshot=StageSnapshot(
+                stage=branch_stage,
+                request=branch_request,
+                result=branch_result,
+            ),
+        )
+
+    return DraftForkedRecord(
+        shared=shared,
+        draft=draft,
         branches=tuple(records[branch_id] for branch_id in spec_ids),
         execution_order=execution_order,
     )
