@@ -1,4 +1,4 @@
-"""Episode runners: one-call smoke, linear pressured, forked branches, shared draft."""
+"""Episode runners: one-call smoke, linear pressured, forked branches, shared draft, 3x3 matrix."""
 
 from pydantic import BaseModel, ConfigDict
 
@@ -14,6 +14,9 @@ from harnessing_honesty.models import (
     ModelClient,
     ModelResult,
 )
+from harnessing_honesty.matrix import cell_id, development_matrix_cell_ids
+from harnessing_honesty.policies import policy_follow_ups
+from harnessing_honesty.pressures import development_pressure_templates
 from harnessing_honesty.prompt_view import PromptView, messages_for
 from harnessing_honesty.stages import Stage, advance
 from harnessing_honesty.transcript import Transcript
@@ -72,6 +75,31 @@ class DraftForkedRecord(BaseModel):
     shared: StageSnapshot
     draft: StageSnapshot | None
     branches: tuple[BranchRecord, ...]
+    execution_order: tuple[str, ...]
+
+
+class MatrixBranchRecord(BaseModel):
+    """One policy-by-pressure final, keyed by harness-only cell id."""
+
+    model_config = ConfigDict(frozen=True)
+
+    cell_id: str
+    pressure_family: str
+    policy_family: str
+    snapshot: StageSnapshot
+
+
+class MatrixEpisodeRecord(BaseModel):
+    """One shared neutral, one draft per pressure, nine isolated finals.
+
+    ``drafts`` and ``branches`` are spec order, not execution order.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    shared: StageSnapshot
+    drafts: tuple[StageSnapshot, ...]
+    branches: tuple[MatrixBranchRecord, ...]
     execution_order: tuple[str, ...]
 
 
@@ -285,4 +313,113 @@ def run_shared_draft_episode(
         draft=draft,
         branches=tuple(records[branch_id] for branch_id in spec_ids),
         execution_order=execution_order,
+    )
+
+
+def run_development_matrix(
+    prompt: PromptView,
+    client: ModelClient,
+    order_seed: int,
+) -> MatrixEpisodeRecord:
+    """Run the 3×3 matrix from one neutral response.
+
+    Each pressure family gets one draft. Each draft is cloned into three
+    policy finals. ``order_seed`` permutes pressure order and, with the
+    same seed, policy order inside each pressure.
+    """
+    pressures = development_pressure_templates()
+    policies = policy_follow_ups()
+    pressure_ids = tuple(item.family.value for item in pressures)
+    pressures_by_id = {item.family.value: item for item in pressures}
+    policy_ids = tuple(spec.branch_id for spec in policies)
+    policies_by_id = {spec.branch_id: spec for spec in policies}
+
+    current = advance(None, Stage.NEUTRAL)
+    transcript = Transcript()
+    for message in messages_for(prompt):
+        transcript = transcript.append(message)
+    request = transcript.snapshot()
+    result = client.complete(request)
+    shared = StageSnapshot(stage=current, request=request, result=result)
+
+    if not isinstance(result, AnswerSuccess):
+        return MatrixEpisodeRecord(
+            shared=shared,
+            drafts=(),
+            branches=(),
+            execution_order=(),
+        )
+
+    neutral_prefix = transcript.append(
+        Message(role="assistant", content=result.response.model_dump_json())
+    )
+    pressure_order = permute_branch_ids(pressure_ids, order_seed)
+    policy_order = permute_branch_ids(policy_ids, order_seed)
+
+    draft_by_pressure: dict[str, StageSnapshot] = {}
+    records: dict[str, MatrixBranchRecord] = {}
+    execution_order: list[str] = []
+
+    for pressure_id in pressure_order:
+        pressure = pressures_by_id[pressure_id]
+        pressure_state = clone_branch(neutral_prefix, Stage.NEUTRAL, pressure_id)
+        draft_transcript = pressure_state.transcript.append(
+            Message(role="user", content=pressure.text)
+        )
+        draft_stage = advance(pressure_state.stage, Stage.DRAFT)
+        draft_request = draft_transcript.snapshot()
+        draft_result = client.complete(draft_request)
+        draft = StageSnapshot(
+            stage=draft_stage, request=draft_request, result=draft_result
+        )
+        draft_by_pressure[pressure_id] = draft
+
+        if not isinstance(draft_result, AnswerSuccess):
+            continue
+
+        draft_prefix = draft_transcript.append(
+            Message(
+                role="assistant",
+                content=draft_result.response.model_dump_json(),
+            )
+        )
+        for policy_id in policy_order:
+            spec = policies_by_id[policy_id]
+            identity = cell_id(pressure_id, policy_id)
+            state = clone_branch(draft_prefix, draft_stage, identity)
+            branch_stage = advance(state.stage, Stage.PRESSURED_FINAL)
+            branch_transcript = state.transcript
+            if spec.tool_result is not None:
+                branch_transcript = branch_transcript.append(
+                    Message(role="tool", content=spec.tool_result)
+                )
+            branch_transcript = branch_transcript.append(
+                Message(role="user", content=spec.pressure)
+            )
+            branch_request = branch_transcript.snapshot()
+            branch_result = client.complete(branch_request)
+            records[identity] = MatrixBranchRecord(
+                cell_id=identity,
+                pressure_family=pressure_id,
+                policy_family=policy_id,
+                snapshot=StageSnapshot(
+                    stage=branch_stage,
+                    request=branch_request,
+                    result=branch_result,
+                ),
+            )
+            execution_order.append(identity)
+
+    spec_ids = development_matrix_cell_ids()
+    return MatrixEpisodeRecord(
+        shared=shared,
+        drafts=tuple(
+            draft_by_pressure[pressure_id]
+            for pressure_id in pressure_ids
+            if pressure_id in draft_by_pressure
+        ),
+        branches=tuple(
+            records[identity] for identity in spec_ids if identity in records
+        ),
+        execution_order=tuple(execution_order),
     )
