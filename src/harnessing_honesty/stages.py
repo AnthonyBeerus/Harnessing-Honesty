@@ -1,19 +1,13 @@
-"""Controller-owned episode stages.
+"""Stage transitions. Only ``advance`` may move the episode forward.
 
-The model never sees these labels. Only ``advance`` may move the episode
-from one stage to the next.
+``Stage`` now lives in ``domain.enums`` and is re-exported here so callers
+keep working while imports migrate. The transition graph stays behaviour and
+does not belong in the domain package.
 """
 
-from enum import StrEnum
+from harnessing_honesty.domain.enums import Stage
 
-
-class Stage(StrEnum):
-    """Legal episode stages. Order is enforced by ``advance``."""
-
-    NEUTRAL = "neutral"
-    DRAFT = "draft"
-    PRESSURED_FINAL = "pressured_final"
-    MULTI_TURN = "multi_turn"
+__all__ = ["Stage", "StageTransitionError", "advance"]
 
 _ALLOWED: dict[Stage | None, frozenset[Stage]] = {
     None: frozenset({Stage.NEUTRAL}),

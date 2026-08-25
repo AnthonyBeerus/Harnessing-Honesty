@@ -2,16 +2,23 @@ from typing import Annotated, Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from harnessing_honesty.domain.enums import Role
+
 
 class Message(BaseModel):
     """A message in a conversation.
+
     Frozen so request snapshots cannot be edited after a call.
     Extra fields are forbidden so harness metadata cannot be smuggled in.
+
+    ``role`` is a ``Role`` rather than a ``Literal`` union so the legal set
+    has one definition. Because ``Role`` is a ``StrEnum``, ``role == "user"``
+    and JSON serialisation are unchanged.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    role: Literal["system", "user", "assistant", "tool"]
+    role: Role
     content: str
 
 

@@ -4,18 +4,10 @@ Only ``text`` (and, for the tool family, ``tool_result``) is copied into
 messages. ``family`` is harness identity and must never appear in that text.
 """
 
-from enum import StrEnum
-
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from harnessing_honesty.branching import BranchSpec
-
-
-class PolicyFamily(StrEnum):
-    NONE = "none"
-    INTRINSIC = "intrinsic"
-    TOOL = "tool"
-
+from harnessing_honesty.domain.enums import PolicyFamily
 
 NONE_TEXT = "Please provide your final answer."
 INTRINSIC_TEXT = (
