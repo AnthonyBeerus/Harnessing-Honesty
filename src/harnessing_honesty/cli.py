@@ -3,7 +3,9 @@ import argparse
 from harnessing_honesty.development_fixture import development_fixture
 from harnessing_honesty.episode import (
     EpisodeRecord,
+    run_development_matrix,
     run_episode,
+    run_multi_turn_episode,
     run_pressured_episode,
 )
 from harnessing_honesty.models import (
@@ -16,16 +18,31 @@ from harnessing_honesty.models import (
 )
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
+from harnessing_honesty.policies import (
+    DEVELOPMENT_VERIFIER_OUTPUT,
+    development_policy_templates,
+)
+from harnessing_honesty.pressures import (
+    PROPOSITION_MARKERS,
+    development_pressure_templates,
+)
 from harnessing_honesty.scenarios import (
     DEVELOPMENT_LOGIC_RATIONALE,
     development_scenario,
 )
 from harnessing_honesty.scoring import Score, score_episode
 
+MULTI_TURN_SEED = 0
+
 
 def _print_messages(messages: tuple[Message, ...]) -> None:
     for message in messages:
         print(f"{message.role}: {message.content}")
+
+
+def _abbrev(text: str, width: int = 76) -> str:
+    single = " ".join(text.split())
+    return single if len(single) <= width else single[: width - 3] + "..."
 
 
 def _print_result(result: ModelResult) -> None:
@@ -98,6 +115,116 @@ def run_fake() -> None:
         print()
 
 
+def _matrix_script(answer: str) -> list[ModelResult]:
+    """One neutral, three drafts, nine finals: all scripted as correct."""
+    counts = (1,) + (3,) * 3 + (5,) * 9
+    return [_success(answer, count) for count in counts]
+
+
+def show_matrix() -> None:
+    """Render the nine development requests side by side, then the spine."""
+    fixture = development_fixture()
+    client = ScriptedModelClient(_matrix_script(fixture.correct_answer))
+    record = run_development_matrix(fixture.prompt, client, 0)
+    pressure_texts = {
+        item.family.value: item.text
+        for item in development_pressure_templates()
+    }
+    policy_texts = {
+        item.family.value: item.text for item in development_policy_templates()
+    }
+
+    print(f"Scenario: {fixture.prompt.id}")
+    print(
+        f"complete() calls: {len(client.requests)}"
+        f" = 1 neutral + {len(record.drafts)} drafts"
+        f" + {len(record.branches)} finals"
+    )
+    print()
+
+    print("--- shared prefix (one neutral question, one draft per pressure) ---")
+    print(f"user: {_abbrev(record.shared.request[0].content)}")
+    print()
+
+    print("--- nine development requests ---")
+    for branch in record.branches:
+        turns = len(branch.snapshot.request)
+        print(f"[{branch.cell_id}] turns={turns}")
+        for message in branch.snapshot.request[1:]:
+            print(f"    {message.role}: {_abbrev(message.content)}")
+        print()
+
+    print("--- symmetry checks ---")
+    questions = {
+        (branch.snapshot.request[0].role, branch.snapshot.request[0].content)
+        for branch in record.branches
+    }
+    print(f"identical first user turn across nine: {len(questions) == 1}")
+
+    pressure_ok = all(
+        branch.snapshot.request[2].content == pressure_texts[branch.pressure_family]
+        and all(
+            pressure_texts[other] not in [m.content for m in branch.snapshot.request]
+            for other in pressure_texts
+            if other != branch.pressure_family
+        )
+        for branch in record.branches
+    )
+    print(f"exactly one registered pressure per cell: {pressure_ok}")
+
+    policy_ok = all(
+        branch.snapshot.request[-1].content == policy_texts[branch.policy_family]
+        for branch in record.branches
+    )
+    print(f"last turn is the registered policy text: {policy_ok}")
+
+    marker_ok = all(
+        all(marker in branch.snapshot.request[2].content for marker in PROPOSITION_MARKERS)
+        for branch in record.branches
+    )
+    print(f"same false proposition in every cell: {marker_ok}")
+
+    verifier_ok = all(
+        (DEVELOPMENT_VERIFIER_OUTPUT in [m.content for m in branch.snapshot.request])
+        == (branch.policy_family == "tool")
+        for branch in record.branches
+    )
+    print(f"verifier output only on tool cells: {verifier_ok}")
+
+    call_counts = {
+        len(branch.snapshot.request) - (1 if branch.policy_family == "tool" else 0)
+        for branch in record.branches
+    }
+    print(f"model turns matched across policies: {len(call_counts) == 1}")
+
+    blob = " ".join(
+        message.content for request in client.requests for message in request
+    )
+    labels = (
+        [branch.cell_id for branch in record.branches]
+        + list(pressure_texts)
+        + list(policy_texts)
+    )
+    absent = all(label not in blob for label in labels)
+    print(f"hidden labels absent model-side: {absent}")
+    print()
+
+    print("--- multi-turn spine (descriptive, not a matrix cell) ---")
+    spine_script: list[ModelResult] = [
+        _success(fixture.correct_answer, count) for count in (1, 3, 5, 7)
+    ]
+    spine_client = ScriptedModelClient(spine_script)
+    spine = run_multi_turn_episode(fixture.prompt, spine_client, MULTI_TURN_SEED)
+    print(f"seed {MULTI_TURN_SEED} order: {' -> '.join(spine.pressure_order)}")
+    for turn in spine.turns:
+        print(
+            f"[{turn.snapshot.stage}:{turn.position}] turns="
+            f"{len(turn.snapshot.request)}"
+        )
+        print(f"    user: {_abbrev(turn.snapshot.request[-1].content)}")
+    print(f"complete() calls: {len(spine_client.requests)}")
+
+
 def run_live() -> None:
     """Development-only live smoke. Still a single call, not the pressured episode."""
     print("development-only live smoke run")
@@ -109,12 +236,15 @@ def run_live() -> None:
 
 
 def main() -> None:
-    """CLI entry: ``run-fake`` or ``run-live``."""
+    """CLI entry: ``run-fake``, ``show-matrix``, or ``run-live``."""
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(required=True)
 
     fake_parser = subcommands.add_parser("run-fake")
     fake_parser.set_defaults(command=run_fake)
+
+    matrix_parser = subcommands.add_parser("show-matrix")
+    matrix_parser.set_defaults(command=show_matrix)
 
     live_parser = subcommands.add_parser("run-live")
     live_parser.set_defaults(command=run_live)

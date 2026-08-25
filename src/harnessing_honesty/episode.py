@@ -1,4 +1,9 @@
-"""Episode runners: one-call smoke, linear pressured, forked branches, shared draft, 3x3 matrix."""
+"""Episode runners.
+
+One-call smoke, linear pressured, forked branches, shared draft, the 3x3
+matrix, and the descriptive multi-turn spine. The matrix is the primary
+condition; the spine is kept separate and never produces a matrix cell.
+"""
 
 from pydantic import BaseModel, ConfigDict
 
@@ -101,6 +106,30 @@ class MatrixEpisodeRecord(BaseModel):
     drafts: tuple[StageSnapshot, ...]
     branches: tuple[MatrixBranchRecord, ...]
     execution_order: tuple[str, ...]
+
+
+class MultiTurnTurnRecord(BaseModel):
+    """One pressure turn on the descriptive spine, in delivered order."""
+
+    model_config = ConfigDict(frozen=True)
+
+    position: int
+    pressure_family: str
+    snapshot: StageSnapshot
+
+
+class MultiTurnRecord(BaseModel):
+    """One neutral answer, then pressures applied in a seeded order.
+
+    This is a descriptive path. Turns accumulate on one transcript, are
+    labelled ``Stage.MULTI_TURN``, and never become matrix cells.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    shared: StageSnapshot
+    turns: tuple[MultiTurnTurnRecord, ...]
+    pressure_order: tuple[str, ...]
 
 
 def run_episode(
@@ -422,4 +451,78 @@ def run_development_matrix(
             records[identity] for identity in spec_ids if identity in records
         ),
         execution_order=tuple(execution_order),
+    )
+
+
+def run_multi_turn_episode(
+    prompt: PromptView,
+    client: ModelClient,
+    order_seed: int,
+) -> MultiTurnRecord:
+    """Apply every pressure family in a seeded order on one transcript.
+
+    Descriptive only. Turns accumulate, so turn ``n`` sees turns ``1..n-1``.
+    That is the opposite of the matrix, where each cell is isolated. Every
+    snapshot is ``Stage.MULTI_TURN``, which cannot reach
+    ``Stage.PRESSURED_FINAL``, so these turns cannot be read as matrix
+    cells. No policy text and no verifier output are attached here.
+
+    A turn that is not ``AnswerSuccess`` ends the spine; no assistant turn
+    is invented from a failure.
+    """
+    pressures = development_pressure_templates()
+    pressures_by_id = {item.family.value: item for item in pressures}
+    pressure_ids = tuple(item.family.value for item in pressures)
+
+    current: Stage | None = advance(None, Stage.NEUTRAL)
+    transcript = Transcript()
+    for message in messages_for(prompt):
+        transcript = transcript.append(message)
+    request = transcript.snapshot()
+    result = client.complete(request)
+    shared = StageSnapshot(stage=current, request=request, result=result)
+
+    if not isinstance(result, AnswerSuccess):
+        return MultiTurnRecord(shared=shared, turns=(), pressure_order=())
+
+    transcript = transcript.append(
+        Message(role="assistant", content=result.response.model_dump_json())
+    )
+    pressure_order = permute_branch_ids(pressure_ids, order_seed)
+    turns: list[MultiTurnTurnRecord] = []
+
+    for position, pressure_id in enumerate(pressure_order):
+        pressure = pressures_by_id[pressure_id]
+        current = advance(current, Stage.MULTI_TURN)
+        transcript = transcript.append(
+            Message(role="user", content=pressure.text)
+        )
+        turn_request = transcript.snapshot()
+        turn_result = client.complete(turn_request)
+        turns.append(
+            MultiTurnTurnRecord(
+                position=position,
+                pressure_family=pressure_id,
+                snapshot=StageSnapshot(
+                    stage=current,
+                    request=turn_request,
+                    result=turn_result,
+                ),
+            )
+        )
+
+        if not isinstance(turn_result, AnswerSuccess):
+            break
+
+        transcript = transcript.append(
+            Message(
+                role="assistant",
+                content=turn_result.response.model_dump_json(),
+            )
+        )
+
+    return MultiTurnRecord(
+        shared=shared,
+        turns=tuple(turns),
+        pressure_order=pressure_order,
     )
