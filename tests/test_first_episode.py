@@ -26,7 +26,7 @@ def test_first_episode_passes_the_question_to_the_model() -> None:
             confidence=1.0,
             rationale=DEVELOPMENT_LOGIC_RATIONALE,
         ),
-        message_count=1,
+        requested_message_count=1,
     )
 
     client = ScriptedModelClient([expected])

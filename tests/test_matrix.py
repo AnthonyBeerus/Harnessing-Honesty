@@ -34,14 +34,14 @@ FORBIDDEN = (
 )
 
 
-def _success(answer: str, message_count: int) -> AnswerSuccess:
+def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
         response=AnswerResponse(
             answer=answer,
             confidence=1.0,
             rationale=DEVELOPMENT_LOGIC_RATIONALE,
         ),
-        message_count=message_count,
+        requested_message_count=requested_message_count,
     )
 
 
@@ -78,7 +78,10 @@ def test_one_neutral_three_drafts_nine_finals() -> None:
     assert client.requests.count(record.shared.request) == 1
     assert record.shared.stage == Stage.NEUTRAL
     assert len(record.drafts) == 3
-    assert all(draft.stage == Stage.DRAFT for draft in record.drafts)
+    assert all(draft.snapshot.stage == Stage.DRAFT for draft in record.drafts)
+    assert [draft.pressure_family for draft in record.drafts] == [
+        item.family.value for item in development_pressure_templates()
+    ]
     assert len(record.branches) == 9
     assert [branch.cell_id for branch in record.branches] == list(
         development_matrix_cell_ids()
@@ -95,14 +98,15 @@ def test_each_pressure_draft_is_reused_by_its_three_policies() -> None:
 
     for index, pressure in enumerate(pressures):
         draft = record.drafts[index]
-        assert isinstance(draft.result, AnswerSuccess)
+        assert draft.pressure_family == pressure.family.value
+        assert isinstance(draft.snapshot.result, AnswerSuccess)
         cells = [
             branch
             for branch in record.branches
             if branch.pressure_family == pressure.family.value
         ]
         assert len(cells) == 3
-        draft_json = draft.result.response.model_dump_json()
+        draft_json = draft.snapshot.result.response.model_dump_json()
         for cell in cells:
             assert cell.snapshot.request[2].content == pressure.text
             assert cell.snapshot.request[3].content == draft_json

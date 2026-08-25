@@ -44,14 +44,14 @@ FORBIDDEN = (
 FOLLOW_UPS = policy_follow_ups()
 
 
-def _success(answer: str, message_count: int) -> AnswerSuccess:
+def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
         response=AnswerResponse(
             answer=answer,
             confidence=1.0,
             rationale=DEVELOPMENT_LOGIC_RATIONALE,
         ),
-        message_count=message_count,
+        requested_message_count=requested_message_count,
     )
 
 

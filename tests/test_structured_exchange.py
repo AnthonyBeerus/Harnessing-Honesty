@@ -31,7 +31,7 @@ def test_fake_preserves_exact_role_order() -> None:
                     confidence=0.9,
                     rationale=DEVELOPMENT_LOGIC_RATIONALE,
                 ),
-                message_count=2,
+                requested_message_count=2,
             )
         ]
     )

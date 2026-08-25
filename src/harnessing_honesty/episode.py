@@ -94,6 +94,22 @@ class MatrixBranchRecord(BaseModel):
     snapshot: StageSnapshot
 
 
+class MatrixDraftRecord(BaseModel):
+    """One pressure's draft, keyed by family rather than by position.
+
+    The draft is shared by that pressure's three policy cells, so its
+    correctness decides whether those cells measure recovery from a
+    concession or maintenance of a correct answer. That makes it a mediator
+    the scorer has to read, and reading it by list position would let a
+    reordering silently attribute a draft to the wrong family.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    pressure_family: str
+    snapshot: StageSnapshot
+
+
 class MatrixEpisodeRecord(BaseModel):
     """One shared neutral, one draft per pressure, nine isolated finals.
 
@@ -103,7 +119,7 @@ class MatrixEpisodeRecord(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     shared: StageSnapshot
-    drafts: tuple[StageSnapshot, ...]
+    drafts: tuple[MatrixDraftRecord, ...]
     branches: tuple[MatrixBranchRecord, ...]
     execution_order: tuple[str, ...]
 
@@ -385,7 +401,7 @@ def run_development_matrix(
     pressure_order = permute_branch_ids(pressure_ids, order_seed)
     policy_order = permute_branch_ids(policy_ids, order_seed)
 
-    draft_by_pressure: dict[str, StageSnapshot] = {}
+    draft_by_pressure: dict[str, MatrixDraftRecord] = {}
     records: dict[str, MatrixBranchRecord] = {}
     execution_order: list[str] = []
 
@@ -401,7 +417,9 @@ def run_development_matrix(
         draft = StageSnapshot(
             stage=draft_stage, request=draft_request, result=draft_result
         )
-        draft_by_pressure[pressure_id] = draft
+        draft_by_pressure[pressure_id] = MatrixDraftRecord(
+            pressure_family=pressure_id, snapshot=draft
+        )
 
         if not isinstance(draft_result, AnswerSuccess):
             continue
