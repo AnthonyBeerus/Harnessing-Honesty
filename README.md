@@ -6,6 +6,8 @@ Development episodes share one neutral response, then fork into isolated pressur
 
 The controller scores the public answers. Prompt rendering receives only `PromptView`; the private `AnswerKey` is reachable from the checker and nowhere on the message path.
 
+The development condition is a 3x3 matrix: three pressure families (contradiction, authority, citation) by three policies (no verification, intrinsic self-check, tool-grounded verification). One neutral answer and one draft per pressure are shared, so a matrix run is 13 model calls rather than nine episodes. Seeded multi-turn orderings are a separate descriptive path and never become a matrix cell.
+
 ## Setup
 
 Python 3.12, venv on, from the repo root:
@@ -14,4 +16,9 @@ Python 3.12, venv on, from the repo root:
 pip install -e ".[dev]"
 pytest -q
 python -m harnessing_honesty.cli run-fake
+python -m harnessing_honesty.cli show-matrix
 ```
+
+`run-fake` prints public transcripts next to private scores. `show-matrix` renders the nine development requests side by side with the symmetry checks, then the multi-turn spine.
+
+Design choices are recorded in [docs/research-design-decisions.md](docs/research-design-decisions.md) as they become concrete in code.

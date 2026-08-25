@@ -6,8 +6,9 @@ reconstructed at freeze. Later phases append; they do not silently rewrite
 history.
 
 No confirmatory or main-track outcome data has been inspected. The only
-outputs examined for this phase were scripted fake transcripts used to
-check that public requests and private scores stay separate.
+outputs examined so far are scripted fake transcripts, used to check that
+public requests and private scores stay separate and that the development
+conditions differ only in registered text.
 
 ---
 
@@ -122,3 +123,170 @@ stops research metadata from being rendered as a prompt field.
   would invite premature items.
 
 **Outcome data inspected.** None. There is no main-track data.
+
+---
+
+## 2026-08-25 — Single-pressure primary design
+
+**Decision.** The primary condition applies exactly one pressure turn per
+episode. Each of the nine matrix cells contains one and only one
+registered pressure string; the other two families never appear in that
+cell's request. Repeated or escalating pressure is not part of the
+primary outcome.
+
+**Why.** The outcome is a correct answer abandoned after one unsupported
+challenge. With two or more pressures in the same episode, a regressive
+shift cannot be attributed to a specific family, and the estimate becomes
+a dose-response curve for a dose that was never registered. One pressure
+per episode keeps the unit of analysis interpretable and keeps every cell
+the same length.
+
+**Alternatives considered.**
+
+- Escalate until the model concedes, then report turns-to-concession.
+  Rejected as the primary: the endpoint is a stopping rule chosen by the
+  harness, and a model that never concedes has no defined value.
+- Two pressures per episode to raise the effect size. Rejected: it
+  confounds family with position and doubles the surface where a false
+  proposition can drift.
+- Sample a random family per episode. Rejected: the matrix already fixes
+  the family per cell, which lets the same neutral answer serve all three.
+
+**Outcome data inspected.** None. Request shapes were inspected with
+scripted fakes via `show-matrix`; all nine cells carry one pressure.
+
+---
+
+## 2026-08-25 — Policy-by-pressure matrix from one neutral answer
+
+**Decision.** Three pressure families (contradiction, authority,
+citation) cross three policies (no verification, intrinsic self-check,
+tool-grounded verification) for nine cells. One neutral call is shared by
+all nine. One draft call is shared by the three policies of a given
+pressure. Cells are built by structural cloning of that prefix, so a
+matrix run is 1 + 3 + 9 = 13 `complete()` calls, not 9 independent
+episodes.
+
+**Why.** Sampling variance in the neutral answer is a nuisance factor. If
+each cell re-sampled its own neutral turn, a policy contrast would mix
+policy effects with resampling noise, and cells with different initial
+answers would not even be comparable on eligibility. Sharing the prefix
+makes the policy contrast within-answer. Sharing the draft does the same
+for the post-pressure turn, so policies differ only in the text that
+follows the draft.
+
+**Alternatives considered.**
+
+- Nine independent episodes. Rejected: three times the calls and a
+  within-answer contrast becomes a between-answer one.
+- One draft shared across all three pressures. Rejected: the draft is a
+  response to a specific pressure, so it cannot be reused across
+  families.
+- Sample several neutral answers and average. Deferred: that is a
+  precision decision for the confirmatory phase, not a structural one.
+
+**Outcome data inspected.** None. Verified with fakes that the shared
+question and the per-pressure draft appear byte-identical in the cells
+that descend from them.
+
+---
+
+## 2026-08-25 — Call-matching rule
+
+**Decision.** Every cell gets the same number of model turns. The
+tool-grounded cell has one extra `tool` message carrying deterministic
+verifier output, so its request has six messages against five for the
+comparison policies, but the number of `complete()` calls and assistant
+turns is identical across policies. The verifier output is fixed text,
+not a live tool call.
+
+**Why.** A policy that quietly buys an extra generation step is not a
+verification policy; it is more compute. Holding assistant turns constant
+means any difference between the tool cell and the intrinsic cell is
+attributable to the content the model was shown, not to how many chances
+it had to revise. Fixed verifier text also keeps the cell deterministic,
+so a repeated run is a repeat, not a new tool invocation.
+
+**Alternatives considered.**
+
+- Let the tool policy loop until the model stops calling the tool.
+  Rejected for the primary: variable turn counts break the match and make
+  cost depend on model behaviour.
+- Give the comparison policies a filler `tool` message so all requests
+  have six messages. Rejected: filler content is itself a treatment, and
+  an empty or irrelevant tool result is a different prompt, not a null
+  one.
+- A live verifier. Deferred: nondeterministic output would leak into
+  scoring; the registered design needs the verifier fixed.
+
+**Outcome data inspected.** None. Counted roles and calls on scripted
+fakes: 13 calls per matrix run, `tool` role present in exactly the three
+tool cells.
+
+---
+
+## 2026-08-25 — False-counter-position regime
+
+**Decision.** All pressure in the development matrix asserts the same
+false proposition: that the backup assay failed, the efficacy gate is
+therefore unmet, and Orion should not start Phase-2. The three families
+are rhetorical wrappers around that one proposition (bare contradiction,
+an authority attribution, a citation attribution). No pressure asserts a
+true counter-position.
+
+**Why.** If the challenge were sometimes correct, abandoning the initial
+answer would sometimes be the right move, and the measure would blend
+sycophancy with legitimate updating. Fixing the proposition as false
+makes any shift away from the correct answer an error by construction.
+Holding the proposition constant across families is what makes the family
+contrast a contrast of framing rather than of content.
+
+**Alternatives considered.**
+
+- Mix true and false challenges and score updating separately. Rejected
+  for now: it needs a second outcome and a second checker, and it is a
+  different construct (appropriate deference).
+- Vary the false proposition per family for realism. Rejected: it
+  confounds framing with claim difficulty.
+- Make the pressure vague ("are you sure?"). Rejected: that is a distinct
+  minimal-pressure condition, not a false counter-position.
+
+**Outcome data inspected.** None. The three shared proposition markers
+were asserted present in every cell's pressure turn.
+
+---
+
+## 2026-08-25 — Multi-turn is descriptive only
+
+**Decision.** The seeded multi-turn path applies all three pressure
+families in sequence on one accumulating transcript. It is a separate
+runner with its own `Stage.MULTI_TURN`, which loops to itself and has no
+legal transition to `Stage.PRESSURED_FINAL`. It produces no matrix cell,
+carries no policy text and no verifier output, and contributes nothing to
+the primary outcome. Family order is a deterministic function of a seed.
+
+**Why.** Accumulated pressure is worth looking at, but it violates the
+single-pressure rule and the call-matching rule at once: turn three sees
+the two earlier challenges and two more assistant turns. Reporting it
+next to the nine cells would invite reading it as a tenth condition.
+Making the separation structural, in the stage graph, means a later edit
+that tries to fold a spine turn into the primary path fails as a stage
+transition error rather than silently succeeding. Seeding the order keeps
+position effects visible and the run reproducible.
+
+**Alternatives considered.**
+
+- Add multi-turn as a fourth policy or a tenth cell. Rejected: this is
+  the outcome the separation exists to prevent.
+- Reuse `Stage.PRESSURED_FINAL` for the last spine turn. Rejected: that
+  final turn is not comparable to a matrix final, and sharing the label
+  would let it be aggregated by accident.
+- Fix one canonical family order. Rejected: a single order bakes in a
+  position effect with no way to see it.
+- Continue the spine past a failed turn. Rejected: it would require
+  inventing an assistant turn the model never produced, so a failure ends
+  the spine.
+
+**Outcome data inspected.** None. Fakes confirmed cumulative request
+lengths of 3, 5, and 7 messages, one seeded order per seed, and that a
+mid-spine parse failure stops the run.
