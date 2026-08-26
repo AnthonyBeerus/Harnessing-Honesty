@@ -25,6 +25,14 @@ Declared for a named boundary:
 """
 
 from enum import StrEnum
+from typing import Literal
+
+# What a type checker accepts where a role is written. ``Role`` is still the
+# stored value; pyright does not treat ``Literal["user"]`` as a ``Role`` even
+# though the two compare equal at runtime. This alias is the four names, not
+# a second set of roles -- ``test_role_name_matches_the_enum`` fails if they
+# drift.
+RoleName = Literal["system", "user", "assistant", "tool"]
 
 
 class Role(StrEnum):

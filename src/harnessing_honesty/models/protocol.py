@@ -1,82 +1,41 @@
-from typing import Annotated, Literal, Protocol
+"""Compatibility bridge. The types now live in ``harnessing_honesty.domain``.
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+Only ``ModelClient`` is still defined here; it joins the other protocols in
+``domain/protocols.py`` in 8.6. The re-exports below exist so that no import
+site has to move in this step, and 8.11 deletes them.
+"""
 
-from harnessing_honesty.domain.enums import Role
+from typing import Protocol
 
-
-class Message(BaseModel):
-    """A message in a conversation.
-
-    Frozen so request snapshots cannot be edited after a call.
-    Extra fields are forbidden so harness metadata cannot be smuggled in.
-
-    ``role`` is a ``Role`` rather than a ``Literal`` union so the legal set
-    has one definition. Because ``Role`` is a ``StrEnum``, ``role == "user"``
-    and JSON serialisation are unchanged.
-    """
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    role: Role
-    content: str
+from harnessing_honesty.domain.messages import Message
+from harnessing_honesty.domain.responses import AnswerResponse
+from harnessing_honesty.domain.results import (
+    AnswerSuccess,
+    ModelResult,
+    ParseFailure,
+    ProviderFailure,
+    failure_class,
+)
 
 
-class AnswerResponse(BaseModel):
-    """A response from the model.
-
-    Confidence bounds are enforced in Python only. ``Field(ge=..., le=...)``
-    emits JSON Schema minimum/maximum, which some OpenRouter free providers
-    reject on structured-output tool parameters.
-    """
-
-    model_config = ConfigDict(extra="forbid")
-
-    answer: str
-    confidence: float
-    rationale: str
-
-    @field_validator("confidence")
-    @classmethod
-    def confidence_must_be_unit_interval(cls, value: float) -> float:
-        if not 0.0 <= value <= 1.0:
-            raise ValueError("confidence must be between 0 and 1 inclusive")
-        return value
-
-class AnswerSuccess(BaseModel):
-    """A successful answer from the model.
-
-    Two counts, not one. ``requested_message_count`` is what the harness
-    handed to the client; ``observed_message_count`` is what the client can
-    show actually reached the provider. A single ``message_count`` recorded
-    the harness's intention and so could not witness a transport that
-    silently dropped turns. ``None`` means the client does not measure the
-    wire, not that nothing was sent.
-    """
-
-    kind: Literal["success"] = "success"
-    response: AnswerResponse
-    requested_message_count: int
-    observed_message_count: int | None = None
-
-class ParseFailure(BaseModel):
-    """A failure to parse the model's response."""
-    
-    kind: Literal["parse_failure"] = "parse_failure"
-    detail: str
-
-class ProviderFailure(BaseModel):
-    """A failure to get a response from the model."""
-
-    kind: Literal["provider_failure"] = "provider_failure"
-    detail: str
-
-"""A result from the model."""
-ModelResult = Annotated[
-    AnswerSuccess | ParseFailure | ProviderFailure,
-    Field(discriminator="kind"),
-]
-
-"""A client for the model."""
 class ModelClient(Protocol):
+    """Anything that can turn a conversation into a result.
+
+    One method, and it is total: a client reports a failure as a value rather
+    than raising, so a runner cannot treat an outage as an absent answer by
+    forgetting to catch something.
+    """
+
     def complete(self, messages: tuple[Message, ...]) -> ModelResult: ...
+
+
+__all__ = [
+    "AnswerResponse",
+    "AnswerSuccess",
+    "Message",
+    "ModelClient",
+    "ModelResult",
+    "ParseFailure",
+    "ProviderFailure",
+    "failure_class",
+]

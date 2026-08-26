@@ -1,7 +1,11 @@
+from typing import get_args
+
 import inspect
 
 import pytest
 from pydantic_core import ValidationError
+
+from harnessing_honesty.domain.enums import Role, RoleName
 
 from harnessing_honesty.models import (
     AnswerResponse,
@@ -71,3 +75,16 @@ def test_complete_requires_message_tuple_not_plain_string() -> None:
     signature = inspect.signature(ModelClient.complete)
     parameter = signature.parameters["messages"]
     assert parameter.annotation == tuple[Message, ...]
+
+
+def test_role_name_matches_the_enum() -> None:
+    """RoleName is the four names, not a second vocabulary."""
+    assert set(get_args(RoleName)) == {member.value for member in Role}
+
+
+def test_a_string_role_is_stored_as_the_enum_member() -> None:
+    message = Message(role="user", content="hi")
+
+    assert message.role is Role.USER
+    assert message.role == "user"
+    assert message.model_dump_json() == '{"role":"user","content":"hi"}'
