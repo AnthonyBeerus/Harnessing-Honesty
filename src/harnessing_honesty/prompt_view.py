@@ -1,21 +1,14 @@
-"""Public slice of a scenario. Safe to pass into message rendering."""
+"""Public slice of a scenario. Safe to pass into message rendering.
 
-from pydantic import BaseModel, ConfigDict
+Compatibility bridge. ``PromptView`` lives in ``domain.prompt``. This module
+keeps ``messages_for``, which is behaviour, and re-exports the type so no
+import migrates in this step.
+"""
 
-from harnessing_honesty.models import Message
+from harnessing_honesty.domain.messages import Message
+from harnessing_honesty.domain.prompt import PromptView
 
-
-class PromptView(BaseModel):
-    """Model-visible item identity and question. No answer-key fields.
-
-    ``id`` is harness identity for logs. It is not copied into ``Message.content``.
-    Only ``question`` is rendered as the first user turn.
-    """
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    id: str
-    question: str
+__all__ = ["PromptView", "messages_for"]
 
 
 def messages_for(prompt: PromptView) -> tuple[Message, ...]:

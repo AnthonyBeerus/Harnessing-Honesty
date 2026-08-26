@@ -19,6 +19,7 @@ from harnessing_honesty.domain.enums import (
     Verdict,
 )
 from harnessing_honesty.domain.messages import Message
+from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.responses import AnswerResponse
 from harnessing_honesty.domain.results import (
     AnswerSuccess,
@@ -27,8 +28,10 @@ from harnessing_honesty.domain.results import (
     ProviderFailure,
     failure_class,
 )
+from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord
 
 __all__ = [
+    "AnswerKey",
     "AnswerResponse",
     "AnswerSuccess",
     "Category",
@@ -38,10 +41,12 @@ __all__ = [
     "ParseFailure",
     "PolicyFamily",
     "PressureFamily",
+    "PromptView",
     "ProviderFailure",
     "RecordStatus",
     "Role",
     "RoleName",
+    "ScenarioRecord",
     "Stage",
     "Stratum",
     "Track",
