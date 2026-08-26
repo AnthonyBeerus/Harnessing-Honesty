@@ -2,6 +2,7 @@
 
 from pydantic import BaseModel, ConfigDict
 
+from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.episode import (
     DraftForkedRecord,
     EpisodeRecord,
@@ -59,9 +60,7 @@ class CellScore(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    cell_id: str
-    pressure_family: str
-    policy_family: str
+    condition: Condition
     draft_correct: bool
     score: Score
 
@@ -183,10 +182,8 @@ def score_matrix_episode(
 
     cells = tuple(
         CellScore(
-            cell_id=branch.cell_id,
-            pressure_family=branch.pressure_family,
-            policy_family=branch.policy_family,
-            draft_correct=draft_correct[branch.pressure_family],
+            condition=branch.condition,
+            draft_correct=draft_correct[branch.condition.pressure.value],
             score=score_pair(
                 record.shared.result,
                 branch.snapshot.result,

@@ -18,6 +18,7 @@ from harnessing_honesty.domain.enums import (
     Track,
     Verdict,
 )
+from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.responses import AnswerResponse
@@ -35,6 +36,7 @@ __all__ = [
     "AnswerResponse",
     "AnswerSuccess",
     "Category",
+    "Condition",
     "Failure",
     "Message",
     "ModelResult",

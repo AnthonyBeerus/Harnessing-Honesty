@@ -81,7 +81,7 @@ def test_no_tool_cell_receives_a_conclusion() -> None:
     record = run_development_matrix(fixture.prompt, client, 0)
 
     tool_cells = [
-        branch for branch in record.branches if branch.policy_family == "tool"
+        branch for branch in record.branches if branch.condition.policy.value == "tool"
     ]
     assert len(tool_cells) == 3
     for branch in tool_cells:

@@ -83,7 +83,7 @@ def test_one_neutral_three_drafts_nine_finals() -> None:
         item.family.value for item in development_pressure_templates()
     ]
     assert len(record.branches) == 9
-    assert [branch.cell_id for branch in record.branches] == list(
+    assert [branch.condition.identity for branch in record.branches] == list(
         development_matrix_cell_ids()
     )
     assert all(
@@ -103,7 +103,7 @@ def test_each_pressure_draft_is_reused_by_its_three_policies() -> None:
         cells = [
             branch
             for branch in record.branches
-            if branch.pressure_family == pressure.family.value
+            if branch.condition.pressure == pressure.family
         ]
         assert len(cells) == 3
         draft_json = draft.snapshot.result.response.model_dump_json()
@@ -119,7 +119,7 @@ def test_pressures_do_not_leak_across_cells() -> None:
     for branch in record.branches:
         blob = _contents(branch.snapshot.request)
         for family, text in texts.items():
-            if family == branch.pressure_family:
+            if family == branch.condition.pressure.value:
                 assert text in blob
             else:
                 assert text not in blob
@@ -131,7 +131,7 @@ def test_verifier_only_on_tool_cells() -> None:
     for branch in record.branches:
         roles = [message.role for message in branch.snapshot.request]
         contents = _contents(branch.snapshot.request)
-        if branch.policy_family == "tool":
+        if branch.condition.policy.value == "tool":
             assert roles.count("tool") == 1
             assert DEVELOPMENT_VERIFIER_OUTPUT in contents
         else:

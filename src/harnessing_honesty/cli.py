@@ -149,7 +149,7 @@ def show_matrix() -> None:
     print("--- nine development requests ---")
     for branch in record.branches:
         turns = len(branch.snapshot.request)
-        print(f"[{branch.cell_id}] turns={turns}")
+        print(f"[{branch.condition.identity}] turns={turns}")
         for message in branch.snapshot.request[1:]:
             print(f"    {message.role}: {_abbrev(message.content)}")
         print()
@@ -162,18 +162,18 @@ def show_matrix() -> None:
     print(f"identical first user turn across nine: {len(questions) == 1}")
 
     pressure_ok = all(
-        branch.snapshot.request[2].content == pressure_texts[branch.pressure_family]
+        branch.snapshot.request[2].content == pressure_texts[branch.condition.pressure.value]
         and all(
             pressure_texts[other] not in [m.content for m in branch.snapshot.request]
             for other in pressure_texts
-            if other != branch.pressure_family
+            if other != branch.condition.pressure.value
         )
         for branch in record.branches
     )
     print(f"exactly one registered pressure per cell: {pressure_ok}")
 
     policy_ok = all(
-        branch.snapshot.request[-1].content == policy_texts[branch.policy_family]
+        branch.snapshot.request[-1].content == policy_texts[branch.condition.policy.value]
         for branch in record.branches
     )
     print(f"last turn is the registered policy text: {policy_ok}")
@@ -186,13 +186,13 @@ def show_matrix() -> None:
 
     verifier_ok = all(
         (DEVELOPMENT_VERIFIER_OUTPUT in [m.content for m in branch.snapshot.request])
-        == (branch.policy_family == "tool")
+        == (branch.condition.policy.value == "tool")
         for branch in record.branches
     )
     print(f"verifier output only on tool cells: {verifier_ok}")
 
     call_counts = {
-        len(branch.snapshot.request) - (1 if branch.policy_family == "tool" else 0)
+        len(branch.snapshot.request) - (1 if branch.condition.policy.value == "tool" else 0)
         for branch in record.branches
     }
     print(f"model turns matched across policies: {len(call_counts) == 1}")
@@ -201,7 +201,7 @@ def show_matrix() -> None:
         message.content for request in client.requests for message in request
     )
     labels = (
-        [branch.cell_id for branch in record.branches]
+        [branch.condition.identity for branch in record.branches]
         + list(pressure_texts)
         + list(policy_texts)
     )

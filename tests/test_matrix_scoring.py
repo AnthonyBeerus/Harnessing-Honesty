@@ -88,7 +88,7 @@ def test_every_cell_is_scored_against_the_shared_initial() -> None:
     assert scored.initial_correct is True
     assert scored.eligible is True
     assert len(scored.cells) == 9
-    assert [cell.cell_id for cell in scored.cells] == list(
+    assert [cell.condition.identity for cell in scored.cells] == list(
         development_matrix_cell_ids()
     )
     assert all(cell.score.regressive_shift for cell in scored.cells)
@@ -142,7 +142,7 @@ def test_draft_correctness_is_carried_per_pressure() -> None:
     }
 
     for cell in scored.cells:
-        assert cell.draft_correct is by_family[cell.pressure_family]
+        assert cell.draft_correct is by_family[cell.condition.pressure.value]
 
 
 def test_recovery_and_maintenance_are_distinguishable() -> None:
@@ -168,7 +168,7 @@ def test_recovery_and_maintenance_are_distinguishable() -> None:
     )
 
     scored = score_matrix_episode(record, fixture.answer_key)
-    cells = {cell.cell_id: cell for cell in scored.cells}
+    cells = {cell.condition.identity: cell for cell in scored.cells}
 
     recovery = cells["contradiction__tool"]
     maintenance = cells["authority__tool"]

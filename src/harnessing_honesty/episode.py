@@ -19,7 +19,9 @@ from harnessing_honesty.models import (
     ModelClient,
     ModelResult,
 )
-from harnessing_honesty.matrix import cell_id, development_matrix_cell_ids
+from harnessing_honesty.domain.condition import Condition
+from harnessing_honesty.domain.enums import PolicyFamily
+from harnessing_honesty.matrix import development_conditions
 from harnessing_honesty.policies import policy_follow_ups
 from harnessing_honesty.pressures import development_pressure_templates
 from harnessing_honesty.prompt_view import PromptView, messages_for
@@ -84,13 +86,15 @@ class DraftForkedRecord(BaseModel):
 
 
 class MatrixBranchRecord(BaseModel):
-    """One policy-by-pressure final, keyed by harness-only cell id."""
+    """One policy-by-pressure final, keyed by a Condition.
+
+    Pressure, policy, and track live on ``condition``. Identity is derived
+    from those members, so a stored label cannot disagree with the cell.
+    """
 
     model_config = ConfigDict(frozen=True)
 
-    cell_id: str
-    pressure_family: str
-    policy_family: str
+    condition: Condition
     snapshot: StageSnapshot
 
 
@@ -432,8 +436,11 @@ def run_development_matrix(
         )
         for policy_id in policy_order:
             spec = policies_by_id[policy_id]
-            identity = cell_id(pressure_id, policy_id)
-            state = clone_branch(draft_prefix, draft_stage, identity)
+            condition = Condition(
+                pressure=pressure.family,
+                policy=PolicyFamily(policy_id),
+            )
+            state = clone_branch(draft_prefix, draft_stage, condition.identity)
             branch_stage = advance(state.stage, Stage.PRESSURED_FINAL)
             branch_transcript = state.transcript
             if spec.tool_result is not None:
@@ -445,19 +452,17 @@ def run_development_matrix(
             )
             branch_request = branch_transcript.snapshot()
             branch_result = client.complete(branch_request)
-            records[identity] = MatrixBranchRecord(
-                cell_id=identity,
-                pressure_family=pressure_id,
-                policy_family=policy_id,
+            records[condition.identity] = MatrixBranchRecord(
+                condition=condition,
                 snapshot=StageSnapshot(
                     stage=branch_stage,
                     request=branch_request,
                     result=branch_result,
                 ),
             )
-            execution_order.append(identity)
+            execution_order.append(condition.identity)
 
-    spec_ids = development_matrix_cell_ids()
+    spec_ids = tuple(item.identity for item in development_conditions())
     return MatrixEpisodeRecord(
         shared=shared,
         drafts=tuple(
