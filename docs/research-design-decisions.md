@@ -427,3 +427,38 @@ construction and belongs in Phase 14.
   support.
 
 **Outcome data inspected.** None. No true-pressure material exists.
+
+---
+
+## 2026-08-27 — One public answer type
+
+**Decision.** There is one model-visible response type, `AnswerResponse`,
+with fields `answer`, `confidence`, and `rationale`. Neutral, draft, and
+final turns all produce that type. They are distinguished by `Stage` on the
+snapshot, not by a subclass.
+
+Pressure-congruent stance is not a response field. It is derived, when
+needed, from `answer` against the key, as draft correctness already is.
+
+**Why.** The three turns ask the same question of the model: a public
+answer, a stated confidence, and a public rationale. Three classes with the
+same fields would be names, not a boundary. A stance field on draft or final
+would change the structured-output schema the model is asked to fill, which
+is a prompt-package change, not a domain-model convenience. Deriving stance
+from `answer` keeps the model-visible contract stable and keeps the
+controller as the only place that knows the key.
+
+**Alternatives considered.**
+
+- `NeutralResponse`, `DraftResponse`, and `FinalResponse` as identical
+  copies. Rejected: nothing but their own tests would import the extra two.
+- A shared base plus draft/final subclasses that add `stance`. Rejected: it
+  puts an analysis quantity on the message path and splits the live client's
+  `output_type`, so comparison policies would no longer be filling the same
+  schema.
+- Keep `AnswerResponse` unfrozen. Rejected in this step: a recorded public
+  answer is evidence, and the result union around it is already frozen.
+
+**Outcome data inspected.** None. Confirmed that `AnswerSuccess.response` is
+annotated as `AnswerResponse` and that `answer`, `confidence`, and
+`rationale` remain the only model-visible fields.

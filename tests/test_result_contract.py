@@ -11,6 +11,7 @@ import typing
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+import harnessing_honesty.domain as domain
 from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
@@ -129,3 +130,29 @@ def test_the_bridge_re_exports_the_same_types() -> None:
     assert protocol.AnswerSuccess is AnswerSuccess
     assert protocol.AnswerResponse is AnswerResponse
     assert protocol.ModelResult is ModelResult
+
+
+def test_there_is_one_public_answer_type() -> None:
+    """Neutral, draft, and final share a schema. Stage is what differs."""
+    assert AnswerSuccess.model_fields["response"].annotation is AnswerResponse
+    assert set(AnswerResponse.model_fields) == {"answer", "confidence", "rationale"}
+    assert not hasattr(domain, "DraftResponse")
+    assert not hasattr(domain, "FinalResponse")
+    assert not hasattr(domain, "NeutralResponse")
+
+
+def test_stance_is_not_a_model_visible_field() -> None:
+    with pytest.raises(ValidationError, match="extra_forbidden"):
+        AnswerResponse(
+            answer="yes",
+            confidence=1.0,
+            rationale="from the premises",
+            stance="hold",  # type: ignore[call-arg]
+        )
+
+
+def test_a_recorded_answer_cannot_be_edited() -> None:
+    response = _answer()
+
+    with pytest.raises(ValidationError, match="frozen"):
+        response.answer = "no"  # type: ignore[misc]

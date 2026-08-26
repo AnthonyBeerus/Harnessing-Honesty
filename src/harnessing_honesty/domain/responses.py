@@ -1,7 +1,9 @@
 """The structured answer the model is asked to produce.
 
-Whether this should be three types -- neutral, draft, final -- is decided in
-8.3, not here. This step moves what exists.
+One type, not three. Neutral, draft, and final already differ by ``Stage``
+on the snapshot. They do not differ by the shape of the public answer, and
+inventing ``DraftResponse`` / ``FinalResponse`` aliases would be three names
+for the same fields.
 """
 
 from pydantic import BaseModel, ConfigDict, field_validator
@@ -12,7 +14,10 @@ class AnswerResponse(BaseModel):
 
     Every field here is model-visible and travels back onto the message path
     as the assistant turn of the next request, so nothing private may be
-    added to it.
+    added to it. Stance is not a field: pressure-congruent stance is derived
+    from ``answer`` against the key, the same way draft correctness already
+    is. Putting it on this schema would change what the model is asked to
+    produce.
 
     Confidence bounds are enforced in Python rather than with
     ``Field(ge=..., le=...)``. That form emits JSON Schema
@@ -20,7 +25,7 @@ class AnswerResponse(BaseModel):
     structured-output tool parameters.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     answer: str
     confidence: float
