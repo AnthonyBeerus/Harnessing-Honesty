@@ -19,6 +19,14 @@ from harnessing_honesty.domain.enums import (
     Verdict,
 )
 from harnessing_honesty.domain.condition import Condition
+from harnessing_honesty.domain.events import (
+    DomainEvent,
+    RequestFailed,
+    RequestSent,
+    ResponseReceived,
+    RunClosed,
+    RunStarted,
+)
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.protocols import (
@@ -30,6 +38,7 @@ from harnessing_honesty.domain.protocols import (
     SequencedEvent,
     VerificationTool,
 )
+from harnessing_honesty.domain.records import RunRecord
 from harnessing_honesty.domain.responses import AnswerResponse
 from harnessing_honesty.domain.results import (
     AnswerSuccess,
@@ -48,6 +57,7 @@ __all__ = [
     "Checker",
     "Clock",
     "Condition",
+    "DomainEvent",
     "EventSink",
     "Failure",
     "Message",
@@ -60,8 +70,14 @@ __all__ = [
     "ProviderFailure",
     "RecordStatus",
     "RecordStore",
+    "RequestFailed",
+    "RequestSent",
+    "ResponseReceived",
     "Role",
     "RoleName",
+    "RunClosed",
+    "RunRecord",
+    "RunStarted",
     "ScenarioRecord",
     "SequencedEvent",
     "Stage",
