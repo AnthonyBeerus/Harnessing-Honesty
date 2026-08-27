@@ -21,6 +21,15 @@ from harnessing_honesty.domain.enums import (
 from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.prompt import PromptView
+from harnessing_honesty.domain.protocols import (
+    Checker,
+    Clock,
+    EventSink,
+    ModelClient,
+    RecordStore,
+    SequencedEvent,
+    VerificationTool,
+)
 from harnessing_honesty.domain.responses import AnswerResponse
 from harnessing_honesty.domain.results import (
     AnswerSuccess,
@@ -36,9 +45,13 @@ __all__ = [
     "AnswerResponse",
     "AnswerSuccess",
     "Category",
+    "Checker",
+    "Clock",
     "Condition",
+    "EventSink",
     "Failure",
     "Message",
+    "ModelClient",
     "ModelResult",
     "ParseFailure",
     "PolicyFamily",
@@ -46,12 +59,15 @@ __all__ = [
     "PromptView",
     "ProviderFailure",
     "RecordStatus",
+    "RecordStore",
     "Role",
     "RoleName",
     "ScenarioRecord",
+    "SequencedEvent",
     "Stage",
     "Stratum",
     "Track",
     "Verdict",
+    "VerificationTool",
     "failure_class",
 ]
