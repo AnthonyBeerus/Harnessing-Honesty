@@ -16,8 +16,9 @@ Declared for a named boundary:
     ``Track``      -- wired to ``ScenarioRecord`` in 8.4, where the validator
                       that rejects ``MAIN`` lands. Defining it here without
                       that validator would widen what a scenario accepts.
-    ``Category``   -- the four verification categories of Phase 11, and the
-                      key for the checker registry that 8.9 tests against.
+    ``Category``   -- wired to ``ScenarioRecord`` in 8.9. Only members in
+                      the checker registry may be declared; Phase 11 fills
+                      the registry.
     ``Stratum``    -- registered difficulty bands for the Phase 14 instrument.
     ``Verdict``    -- the ``Checker`` protocol's return in 8.6.
     ``Failure``    -- failure classification on the result types in 8.2.

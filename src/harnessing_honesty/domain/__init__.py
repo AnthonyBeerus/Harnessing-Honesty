@@ -18,6 +18,8 @@ from harnessing_honesty.domain.enums import (
     Track,
     Verdict,
 )
+from harnessing_honesty.domain.binding import CellBinding
+from harnessing_honesty.domain.checkers import REGISTERED_CATEGORIES
 from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.events import (
     DomainEvent,
@@ -54,6 +56,7 @@ __all__ = [
     "AnswerResponse",
     "AnswerSuccess",
     "Category",
+    "CellBinding",
     "Checker",
     "Clock",
     "Condition",
@@ -68,6 +71,7 @@ __all__ = [
     "PressureFamily",
     "PromptView",
     "ProviderFailure",
+    "REGISTERED_CATEGORIES",
     "RecordStatus",
     "RecordStore",
     "RequestFailed",

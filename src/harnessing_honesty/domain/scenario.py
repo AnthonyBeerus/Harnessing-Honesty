@@ -6,7 +6,8 @@ module. The composition lives here; rendering does not.
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from harnessing_honesty.domain.enums import Track
+from harnessing_honesty.domain.checkers import require_registered_checker
+from harnessing_honesty.domain.enums import Category, Track
 from harnessing_honesty.domain.prompt import PromptView
 
 
@@ -25,6 +26,9 @@ class ScenarioRecord(BaseModel):
     be rendered by accident. ``MAIN`` is a value the harness can name and
     refuse: the confirmatory instrument does not exist yet, so a main
     scenario is not a legal record.
+
+    ``category`` selects the checker. Construction fails if that category
+    has no registered checker, so an unsupported item never reaches scoring.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -32,6 +36,7 @@ class ScenarioRecord(BaseModel):
     prompt: PromptView
     answer_key: AnswerKey
     track: Track = Track.DEV
+    category: Category = Category.LOGICAL_WORLD
 
     @field_validator("track")
     @classmethod
@@ -42,3 +47,8 @@ class ScenarioRecord(BaseModel):
                 "does not exist yet"
             )
         return value
+
+    @field_validator("category")
+    @classmethod
+    def category_must_have_a_checker(cls, value: Category) -> Category:
+        return require_registered_checker(value)
