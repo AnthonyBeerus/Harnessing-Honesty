@@ -1,7 +1,7 @@
 """Append-only conversation history for one episode."""
 
 from pydantic import BaseModel, ConfigDict
-from harnessing_honesty.models import Message
+from harnessing_honesty.domain.messages import Message
 
 
 

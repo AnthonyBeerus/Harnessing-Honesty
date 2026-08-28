@@ -8,7 +8,7 @@ from harnessing_honesty.episode import (
     run_multi_turn_episode,
     run_pressured_episode,
 )
-from harnessing_honesty.models import (
+from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
     Message,

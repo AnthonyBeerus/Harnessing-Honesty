@@ -1,14 +1,14 @@
-"""Public slice of a scenario. Safe to pass into message rendering.
+"""Project a public prompt into the first user turn.
 
-Compatibility bridge. ``PromptView`` lives in ``domain.prompt``. This module
-keeps ``messages_for``, which is behaviour, and re-exports the type so no
-import migrates in this step.
+``PromptView`` lives in ``domain.prompt``. This module is the rendering
+function, not a second home for the type. The private checker target is
+unreachable here: this file does not import it.
 """
 
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.prompt import PromptView
 
-__all__ = ["PromptView", "messages_for"]
+__all__ = ["messages_for"]
 
 
 def messages_for(prompt: PromptView) -> tuple[Message, ...]:

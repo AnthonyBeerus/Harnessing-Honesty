@@ -1,12 +1,12 @@
 import pytest
 from pydantic_core import ValidationError
 
+from harnessing_honesty.domain.enums import PressureFamily
 from harnessing_honesty.pressures import (
     AUTHORITY_TEXT,
     CITATION_TEXT,
     CONTRADICTION_TEXT,
     PROPOSITION_MARKERS,
-    PressureFamily,
     PressureTemplate,
     development_pressure_templates,
 )

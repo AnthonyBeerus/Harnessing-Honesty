@@ -1,13 +1,12 @@
 """Stage transitions. Only ``advance`` may move the episode forward.
 
-``Stage`` now lives in ``domain.enums`` and is re-exported here so callers
-keep working while imports migrate. The transition graph stays behaviour and
-does not belong in the domain package.
+``Stage`` lives in ``domain.enums``. This module is the graph, not a second
+home for the type.
 """
 
 from harnessing_honesty.domain.enums import Stage
 
-__all__ = ["Stage", "StageTransitionError", "advance"]
+__all__ = ["StageTransitionError", "advance"]
 
 _ALLOWED: dict[Stage | None, frozenset[Stage]] = {
     None: frozenset({Stage.NEUTRAL}),

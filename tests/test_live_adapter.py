@@ -2,7 +2,7 @@ import pytest
 from pydantic_ai import Agent
 from pydantic_ai.models.test import TestModel
 
-from harnessing_honesty.models import AnswerResponse, AnswerSuccess, Message
+from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.models.pydantic_ai_client import (
     DevelopmentModelConfigurationError,
     PydanticAIModelClient,

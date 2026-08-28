@@ -1,7 +1,7 @@
 """Development and confirmatory scenario records."""
 
-from harnessing_honesty.prompt_view import PromptView
-from harnessing_honesty.scenario import AnswerKey, ScenarioRecord
+from harnessing_honesty.domain.prompt import PromptView
+from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord
 
 DEVELOPMENT_LOGIC_QUESTION = """\
 Using only the premises below, does the conclusion follow? Answer yes or no.

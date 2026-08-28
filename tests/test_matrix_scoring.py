@@ -13,7 +13,7 @@ from harnessing_honesty.episode import (
     run_shared_draft_episode,
 )
 from harnessing_honesty.matrix import development_matrix_cell_ids
-from harnessing_honesty.models import (
+from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
     ModelResult,

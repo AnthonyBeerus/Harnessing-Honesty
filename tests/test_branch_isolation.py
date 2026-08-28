@@ -11,19 +11,19 @@ from harnessing_honesty.branching import (
 )
 from harnessing_honesty.development_fixture import development_fixture
 from harnessing_honesty.episode import run_forked_episode
-from harnessing_honesty.models import (
+from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
     Message,
     ParseFailure,
 )
+from harnessing_honesty.domain.enums import Stage
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
     DEVELOPMENT_LOGIC_QUESTION,
     DEVELOPMENT_LOGIC_RATIONALE,
 )
-from harnessing_honesty.stages import Stage
 from harnessing_honesty.transcript import Transcript
 
 FORBIDDEN = (

@@ -9,8 +9,8 @@ from harnessing_honesty.episode import (
     ForkedEpisodeRecord,
     MatrixEpisodeRecord,
 )
-from harnessing_honesty.models import AnswerSuccess, ModelResult
-from harnessing_honesty.scenario import AnswerKey
+from harnessing_honesty.domain.results import AnswerSuccess, ModelResult
+from harnessing_honesty.domain.scenario import AnswerKey
 
 
 class Score(BaseModel):

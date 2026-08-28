@@ -12,7 +12,7 @@ from harnessing_honesty.episode import (
     run_forked_episode,
     run_pressured_episode,
 )
-from harnessing_honesty.models import (
+from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
     Message,
@@ -20,10 +20,11 @@ from harnessing_honesty.models import (
     ParseFailure,
     ProviderFailure,
 )
+from harnessing_honesty.domain.prompt import PromptView
+from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
-from harnessing_honesty.prompt_view import PromptView, messages_for
-from harnessing_honesty.scenario import AnswerKey, ScenarioRecord
+from harnessing_honesty.prompt_view import messages_for
 from harnessing_honesty.scenarios import DEVELOPMENT_LOGIC_RATIONALE
 from harnessing_honesty.scoring import (
     check_exact_arithmetic,

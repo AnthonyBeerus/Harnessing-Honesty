@@ -21,7 +21,6 @@ from harnessing_honesty.domain import (
     ProviderFailure,
     failure_class,
 )
-from harnessing_honesty.models import protocol
 
 # The classification every case is expected to carry. Keyed by name so the
 # test below can compare this against the union itself.
@@ -118,18 +117,6 @@ def test_a_recorded_outcome_cannot_be_edited() -> None:
 
     with pytest.raises(ValidationError, match="frozen"):
         result.detail = "actually fine"  # type: ignore[misc]
-
-
-def test_the_bridge_re_exports_the_same_types() -> None:
-    """The move is invisible to existing imports until 8.11 deletes the bridge.
-
-    Identity, not just equality: a second definition of ``ParseFailure`` would
-    pass an ``isinstance`` check in one module and fail it in another.
-    """
-    assert protocol.ParseFailure is ParseFailure
-    assert protocol.AnswerSuccess is AnswerSuccess
-    assert protocol.AnswerResponse is AnswerResponse
-    assert protocol.ModelResult is ModelResult
 
 
 def test_there_is_one_public_answer_type() -> None:

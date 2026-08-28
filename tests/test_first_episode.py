@@ -3,18 +3,18 @@ import inspect
 import pytest
 from pydantic_core import ValidationError
 
-from harnessing_honesty.domain.enums import Track
-from harnessing_honesty.episode import run_episode
-from harnessing_honesty.models import (
+from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
     Message,
 )
+from harnessing_honesty.domain.enums import Track
+from harnessing_honesty.domain.prompt import PromptView
+from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord
+from harnessing_honesty.episode import run_episode
 from harnessing_honesty.models.fake import ScriptedModelClient
-from harnessing_honesty.prompt_view import PromptView, messages_for
-from harnessing_honesty.scenario import AnswerKey, ScenarioRecord
+from harnessing_honesty.prompt_view import messages_for
 from harnessing_honesty import prompt_view as prompt_view_module
-from harnessing_honesty import scenario as scenario_module
 from harnessing_honesty.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
     DEVELOPMENT_LOGIC_QUESTION,
@@ -77,13 +77,5 @@ def test_messages_for_cannot_import_the_answer_key() -> None:
     assert callable(messages_for)
 
 
-def test_scenario_bridge_re_exports_the_same_types() -> None:
-    from harnessing_honesty.domain.scenario import (
-        AnswerKey as DomainKey,
-        ScenarioRecord as DomainRecord,
-    )
-    from harnessing_honesty.domain.prompt import PromptView as DomainPrompt
-
-    assert scenario_module.AnswerKey is DomainKey
-    assert scenario_module.ScenarioRecord is DomainRecord
-    assert prompt_view_module.PromptView is DomainPrompt
+def test_prompt_view_module_does_not_re_export_the_type() -> None:
+    assert "PromptView" not in prompt_view_module.__all__

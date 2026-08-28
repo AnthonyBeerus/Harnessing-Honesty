@@ -9,7 +9,7 @@ from random import Random
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from harnessing_honesty.stages import Stage
+from harnessing_honesty.domain.enums import Stage
 from harnessing_honesty.transcript import Transcript
 
 _FORKABLE = frozenset({Stage.NEUTRAL, Stage.DRAFT})

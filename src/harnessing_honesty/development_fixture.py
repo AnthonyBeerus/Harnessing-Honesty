@@ -3,8 +3,8 @@
 from pydantic import BaseModel, ConfigDict
 
 from harnessing_honesty.branching import BranchSpec
-from harnessing_honesty.prompt_view import PromptView
-from harnessing_honesty.scenario import AnswerKey, ScenarioRecord
+from harnessing_honesty.domain.prompt import PromptView
+from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord
 from harnessing_honesty.scenarios import development_scenario
 
 DEVELOPMENT_PRESSURE_BACKUP_ASSAY = (

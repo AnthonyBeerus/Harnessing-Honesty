@@ -15,13 +15,8 @@ from harnessing_honesty.domain.protocols import (
     VerificationTool,
 )
 from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord
-from harnessing_honesty.models import protocol
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.scoring import check_exact_arithmetic
-
-
-def test_model_client_bridge_is_the_same_object() -> None:
-    assert protocol.ModelClient is ModelClient
 
 
 def test_scripted_client_satisfies_the_model_client_shape() -> None:

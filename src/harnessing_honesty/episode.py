@@ -13,19 +13,21 @@ from harnessing_honesty.branching import (
     permute_branch_ids,
     unique_branch_ids,
 )
-from harnessing_honesty.models import (
+from harnessing_honesty.domain import (
     AnswerSuccess,
     Message,
     ModelClient,
     ModelResult,
+    PromptView,
+    Stage,
 )
 from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.enums import PolicyFamily
 from harnessing_honesty.matrix import development_conditions
 from harnessing_honesty.policies import policy_follow_ups
 from harnessing_honesty.pressures import development_pressure_templates
-from harnessing_honesty.prompt_view import PromptView, messages_for
-from harnessing_honesty.stages import Stage, advance
+from harnessing_honesty.prompt_view import messages_for
+from harnessing_honesty.stages import advance
 from harnessing_honesty.transcript import Transcript
 
 

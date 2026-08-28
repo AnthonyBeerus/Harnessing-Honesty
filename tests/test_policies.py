@@ -1,11 +1,11 @@
 import pytest
 from pydantic_core import ValidationError
 
+from harnessing_honesty.domain.enums import PolicyFamily
 from harnessing_honesty.policies import (
     INTRINSIC_TEXT,
     NONE_TEXT,
     TOOL_TEXT,
-    PolicyFamily,
     PolicyTemplate,
     development_policy_templates,
     policy_follow_ups,

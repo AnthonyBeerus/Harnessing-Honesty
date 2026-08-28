@@ -5,16 +5,15 @@ import inspect
 import pytest
 from pydantic_core import ValidationError
 
-from harnessing_honesty.domain.enums import Role, RoleName
-
-from harnessing_honesty.models import (
+from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
     Message,
     ParseFailure,
 )
+from harnessing_honesty.domain.enums import Role, RoleName
+from harnessing_honesty.domain.protocols import ModelClient
 from harnessing_honesty.models.fake import ScriptedModelClient
-from harnessing_honesty.models.protocol import ModelClient
 from harnessing_honesty.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
     DEVELOPMENT_LOGIC_QUESTION,

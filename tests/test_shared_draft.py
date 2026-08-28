@@ -8,12 +8,13 @@ from harnessing_honesty.branching import (
 )
 from harnessing_honesty.development_fixture import development_fixture
 from harnessing_honesty.episode import run_shared_draft_episode
-from harnessing_honesty.models import (
+from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
     Message,
     ParseFailure,
 )
+from harnessing_honesty.domain.enums import Stage
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.policies import (
     DEVELOPMENT_VERIFIER_OUTPUT,
@@ -25,7 +26,7 @@ from harnessing_honesty.scenarios import (
     DEVELOPMENT_LOGIC_QUESTION,
     DEVELOPMENT_LOGIC_RATIONALE,
 )
-from harnessing_honesty.stages import Stage, StageTransitionError, advance
+from harnessing_honesty.stages import StageTransitionError, advance
 from harnessing_honesty.transcript import Transcript
 
 FORBIDDEN = (

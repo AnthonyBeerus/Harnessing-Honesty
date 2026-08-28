@@ -15,7 +15,7 @@ import re
 
 from harnessing_honesty.development_fixture import development_fixture
 from harnessing_honesty.episode import run_development_matrix
-from harnessing_honesty.models import AnswerResponse, AnswerSuccess, ModelResult
+from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, ModelResult
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.policies import (
     CONCLUSION_MARKERS,

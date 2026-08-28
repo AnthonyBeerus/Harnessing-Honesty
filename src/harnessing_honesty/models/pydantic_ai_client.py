@@ -14,10 +14,10 @@ from pydantic_ai.messages import (
 from pydantic_ai.models.openrouter import OpenRouterModel
 from pydantic_ai.providers.openrouter import OpenRouterProvider
 
-from harnessing_honesty.models.protocol import (
-    AnswerResponse,
+from harnessing_honesty.domain.messages import Message
+from harnessing_honesty.domain.responses import AnswerResponse
+from harnessing_honesty.domain.results import (
     AnswerSuccess,
-    Message,
     ModelResult,
     ParseFailure,
     ProviderFailure,

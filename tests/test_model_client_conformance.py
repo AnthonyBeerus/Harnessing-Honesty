@@ -22,14 +22,14 @@ from pydantic_ai.messages import (
 )
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from harnessing_honesty.domain.protocols import ModelClient
-from harnessing_honesty.models import (
+from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
     Message,
     ParseFailure,
     ProviderFailure,
 )
+from harnessing_honesty.domain.protocols import ModelClient
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 

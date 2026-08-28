@@ -24,7 +24,7 @@ from pydantic_ai.messages import (
 )
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from harnessing_honesty.models import AnswerResponse, AnswerSuccess, Message
+from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 
 TOOL_CELL_REQUEST = (
