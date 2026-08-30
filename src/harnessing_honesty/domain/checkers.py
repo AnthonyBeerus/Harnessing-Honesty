@@ -1,4 +1,4 @@
-"""Which categories have a checker. Implementations arrive in Phase 11.
+"""Which categories have a checker. An unregistered category is not a record.
 
 ``ScenarioRecord`` consults this set at construction. An unregistered
 category is then an invalid record, not a surprise at scoring time.
