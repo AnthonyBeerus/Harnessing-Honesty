@@ -154,18 +154,27 @@ class MultiTurnRecord(BaseModel):
     pressure_order: tuple[str, ...]
 
 
+def _bound(client: ModelClient, session: object | None) -> ModelClient:
+    wrap = getattr(session, "wrap", None)
+    if wrap is None:
+        return client
+    return wrap(client)
+
+
 def run_episode(
     prompt: PromptView,
     client: ModelClient,
+    session: object | None = None,
 ) -> ModelResult:
     """Send only the projected question. Used by the live one-call smoke."""
-    return client.complete(messages_for(prompt))
+    return _bound(client, session).complete(messages_for(prompt))
 
 
 def run_pressured_episode(
     prompt: PromptView,
     pressure: str,
     client: ModelClient,
+    session: object | None = None,
 ) -> EpisodeRecord:
     """Run neutral then pressured-final calls.
 
@@ -175,6 +184,7 @@ def run_pressured_episode(
     Rendering receives ``prompt`` only; the answer key never enters this
     function.
     """
+    client = _bound(client, session)
     transcript = Transcript()
     snapshots: list[StageSnapshot] = []
     current: Stage | None = None
@@ -210,6 +220,7 @@ def run_forked_episode(
     branches: tuple[BranchSpec, ...],
     client: ModelClient,
     order_seed: int,
+    session: object | None = None,
 ) -> ForkedEpisodeRecord:
     """Run one neutral call, then isolated pressured-final calls per branch.
 
@@ -221,6 +232,7 @@ def run_forked_episode(
     """
     spec_ids = unique_branch_ids(branches)
     specs_by_id = {spec.branch_id: spec for spec in branches}
+    client = _bound(client, session)
 
     current = advance(None, Stage.NEUTRAL)
     transcript = Transcript()
@@ -277,6 +289,7 @@ def run_shared_draft_episode(
     follow_ups: tuple[BranchSpec, ...],
     client: ModelClient,
     order_seed: int,
+    session: object | None = None,
 ) -> DraftForkedRecord:
     """Run neutral, one post-pressure draft, then isolated finals.
 
@@ -287,6 +300,7 @@ def run_shared_draft_episode(
     """
     spec_ids = unique_branch_ids(follow_ups)
     specs_by_id = {spec.branch_id: spec for spec in follow_ups}
+    client = _bound(client, session)
 
     current = advance(None, Stage.NEUTRAL)
     transcript = Transcript()
@@ -371,6 +385,7 @@ def run_development_matrix(
     prompt: PromptView,
     client: ModelClient,
     order_seed: int,
+    session: object | None = None,
 ) -> MatrixEpisodeRecord:
     """Run the 3×3 matrix from one neutral response.
 
@@ -378,6 +393,7 @@ def run_development_matrix(
     policy finals. ``order_seed`` permutes pressure order and, with the
     same seed, policy order inside each pressure.
     """
+    client = _bound(client, session)
     pressures = development_pressure_templates()
     policies = policy_follow_ups()
     pressure_ids = tuple(item.family.value for item in pressures)
@@ -483,6 +499,7 @@ def run_multi_turn_episode(
     prompt: PromptView,
     client: ModelClient,
     order_seed: int,
+    session: object | None = None,
 ) -> MultiTurnRecord:
     """Apply every pressure family in a seeded order on one transcript.
 
@@ -495,6 +512,7 @@ def run_multi_turn_episode(
     A turn that is not ``AnswerSuccess`` ends the spine; no assistant turn
     is invented from a failure.
     """
+    client = _bound(client, session)
     pressures = development_pressure_templates()
     pressures_by_id = {item.family.value: item for item in pressures}
     pressure_ids = tuple(item.family.value for item in pressures)

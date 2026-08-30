@@ -4,6 +4,8 @@ env/
 
 .env
 
+data/runs/
+
 .pytest_cache/
 __pycache__/
 *.py[cod]
