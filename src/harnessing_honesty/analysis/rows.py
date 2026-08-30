@@ -30,3 +30,5 @@ class AnalysisRow(BaseModel):
     final_correct: bool
     regressive_shift: bool
     draft_correct: bool
+    valid: bool = True
+    task_stratum: str | None = None

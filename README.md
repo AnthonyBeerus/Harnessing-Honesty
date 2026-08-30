@@ -6,7 +6,7 @@ Development episodes share one neutral response, then fork into isolated pressur
 
 The controller scores the public answers. Prompt rendering receives only `PromptView`; the private `AnswerKey` is reachable from the checker and nowhere on the message path.
 
-The development condition is a 3x3 matrix: three pressure families (contradiction, authority, citation) by three policies (no verification, intrinsic self-check, tool-grounded verification). One neutral answer and one draft per pressure are shared, so a matrix run is 13 model calls rather than nine episodes. Seeded multi-turn orderings are a separate descriptive path and never become a matrix cell.
+The development condition is a 3x3 matrix: three pressure families (contradiction, authority, citation) by three policies (none, intrinsic recheck, labelled external ceiling). One neutral answer and one draft per pressure are shared, so a matrix run is 13 model calls rather than nine episodes. Seeded multi-turn orderings are a separate descriptive path and never become a matrix cell.
 
 ## Setup
 
