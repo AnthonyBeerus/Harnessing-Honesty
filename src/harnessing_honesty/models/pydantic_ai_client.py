@@ -14,55 +14,70 @@ from pydantic_ai.messages import (
 from pydantic_ai.models.openrouter import OpenRouterModel
 from pydantic_ai.providers.openrouter import OpenRouterProvider
 
+from harnessing_honesty.config import ServingManifest
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.responses import AnswerResponse
 from harnessing_honesty.domain.results import (
     AnswerSuccess,
     ModelResult,
     ParseFailure,
+    ProtocolFailure,
     ProviderFailure,
 )
+from harnessing_honesty.models.routing import classify_envelope
 
 
 class DevelopmentModelConfigurationError(RuntimeError):
-    """Raised when required development model environment variables are missing."""
+    """Raised when the serving manifest or API key is missing."""
 
 
 class PydanticAIModelClient:
-    def __init__(self, agent: Agent[None, AnswerResponse]) -> None:
+    def __init__(
+        self,
+        agent: Agent[None, AnswerResponse],
+        manifest: ServingManifest | None = None,
+    ) -> None:
         self._agent = agent
+        self._manifest = manifest
+        self.last_envelope: dict[str, object] | None = None
 
     @classmethod
     def from_environment(cls) -> "PydanticAIModelClient":
-        """Build a client from environment variables via OpenRouter.
+        """Closed. A key plus a slug is not a served-system identity."""
+        raise DevelopmentModelConfigurationError(
+            "from_environment is closed: use from_manifest with a routing card"
+        )
 
-        Requires ``OPENROUTER_API_KEY`` and ``HARNESS_DEV_MODEL`` to be set,
-        typically in a ``.env`` file loaded by ``python-dotenv``.
-        """
+    @classmethod
+    def from_manifest(
+        cls,
+        manifest: ServingManifest,
+        api_key: str | None = None,
+    ) -> "PydanticAIModelClient":
+        """Build a fail-closed OpenRouter client from a serving card."""
         load_dotenv()
-        api_key = os.getenv("OPENROUTER_API_KEY")
-        model_name = os.getenv("HARNESS_DEV_MODEL")
-
-        missing = [
-            name
-            for name, value in (
-                ("OPENROUTER_API_KEY", api_key),
-                ("HARNESS_DEV_MODEL", model_name),
-            )
-            if not value
-        ]
-        if missing:
-            names = ", ".join(missing)
+        key = api_key or os.getenv("OPENROUTER_API_KEY")
+        if not key:
             raise DevelopmentModelConfigurationError(
-                f"Missing development model configuration: {names}"
+                "Missing development model configuration: OPENROUTER_API_KEY"
             )
-        assert api_key is not None
-        assert model_name is not None
-
-        provider = OpenRouterProvider(api_key=api_key)
-        model = OpenRouterModel(model_name, provider=provider)
-        agent = Agent(model, output_type=AnswerResponse)
-        return cls(agent)
+        provider = OpenRouterProvider(api_key=key)
+        model = OpenRouterModel(manifest.requested_model, provider=provider)
+        settings = {
+            "temperature": manifest.decoding.temperature,
+            "seed": manifest.decoding.seed,
+            "openrouter_provider": {
+                "only": list(manifest.routing.provider_only),
+                "order": list(manifest.routing.provider_order),
+                "allow_fallbacks": False,
+                "require_parameters": True,
+            },
+            "openrouter_usage": {"include": True},
+        }
+        if manifest.decoding.max_tokens is not None:
+            settings["max_tokens"] = manifest.decoding.max_tokens
+        agent = Agent(model, output_type=AnswerResponse, model_settings=settings)
+        return cls(agent, manifest=manifest)
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
         try:
@@ -84,6 +99,13 @@ class PydanticAIModelClient:
         except Exception as exc:  # provider / transport / unexpected
             return ProviderFailure(detail=str(exc))
 
+        envelope = self._extract_envelope(result)
+        if envelope is not None:
+            self.last_envelope = envelope
+            failure = self.inspect_envelope(envelope)
+            if failure is not None:
+                return failure
+
         return AnswerSuccess(
             response=result.output,
             requested_message_count=len(messages),
@@ -91,6 +113,21 @@ class PydanticAIModelClient:
                 messages, result.all_messages()
             ),
         )
+
+    def inspect_envelope(self, envelope: dict[str, object]) -> ProtocolFailure | None:
+        """Classify a captured envelope. Called before the parse is accepted."""
+        self.last_envelope = envelope
+        if self._manifest is None:
+            return None
+        return classify_envelope(envelope, self._manifest)
+
+    def _extract_envelope(self, result: object) -> dict[str, object] | None:
+        provider = getattr(result, "provider_details", None) or getattr(
+            result, "provider_response", None
+        )
+        if isinstance(provider, dict):
+            return provider
+        return None
 
 
 class UnmappableRequestError(ValueError):

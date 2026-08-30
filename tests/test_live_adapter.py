@@ -35,6 +35,6 @@ def test_environment_factory_fails_before_a_request(
 
     with pytest.raises(
         DevelopmentModelConfigurationError,
-        match="OPENROUTER_API_KEY, HARNESS_DEV_MODEL",
+        match="from_environment is closed",
     ):
         PydanticAIModelClient.from_environment()

@@ -14,6 +14,7 @@ from harnessing_honesty.domain import (
     Message,
     ModelResult,
     ParseFailure,
+    ProtocolFailure,
     ProviderFailure,
 )
 from harnessing_honesty.models.fake import ScriptedModelClient
@@ -54,6 +55,8 @@ def _print_result(result: ModelResult) -> None:
         print(f"Parse Failure: {result.detail}")
     elif isinstance(result, ProviderFailure):
         print(f"Provider Failure: {result.detail}")
+    elif isinstance(result, ProtocolFailure):
+        print(f"Protocol Failure: {result.detail}")
 
 
 def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
@@ -227,9 +230,15 @@ def show_matrix() -> None:
 
 def run_live() -> None:
     """Development-only live smoke. Still a single call, not the pressured episode."""
+    from pathlib import Path
+
+    from harnessing_honesty.config import load_run_config
+
     print("development-only live smoke run")
     scenario = development_scenario()
-    client = PydanticAIModelClient.from_environment()
+    config_path = Path("config/development.example.yaml")
+    config = load_run_config(config_path)
+    client = PydanticAIModelClient.from_manifest(config.serving)
     result = run_episode(scenario.prompt, client)
     print(f"Scenario: {scenario.prompt.id}")
     _print_result(result)
