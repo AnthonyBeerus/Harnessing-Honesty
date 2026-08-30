@@ -18,6 +18,7 @@ from harnessing_honesty.domain import (
     Failure,
     ModelResult,
     ParseFailure,
+    ProtocolFailure,
     ProviderFailure,
     failure_class,
 )
@@ -28,6 +29,7 @@ EXPECTED_CLASSIFICATION: dict[str, Failure | None] = {
     "AnswerSuccess": None,
     "ParseFailure": Failure.PARSE,
     "ProviderFailure": Failure.PROVIDER,
+    "ProtocolFailure": Failure.PROTOCOL,
 }
 
 
@@ -67,6 +69,7 @@ def test_only_the_success_case_classifies_as_no_failure() -> None:
         (AnswerSuccess(response=_answer(), requested_message_count=2), None),
         (ParseFailure(detail="not json"), Failure.PARSE),
         (ProviderFailure(detail="429"), Failure.PROVIDER),
+        (ProtocolFailure(detail="cache HIT"), Failure.PROTOCOL),
     ],
 )
 def test_classification_matches_the_case(
@@ -79,8 +82,8 @@ def test_classification_matches_the_case(
 def test_the_discriminator_selects_the_case_when_parsing() -> None:
     """A stored result reloads as the same case, not as a guess.
 
-    Phase 9 writes these to disk, so the discriminator is what makes a
-    round-trip lossless.
+    Stored results reload as the same case. The discriminator is what
+    makes a round-trip lossless.
     """
     adapter = TypeAdapter(ModelResult)
 

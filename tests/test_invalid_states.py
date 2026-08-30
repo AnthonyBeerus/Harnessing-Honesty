@@ -17,6 +17,7 @@ from harnessing_honesty.domain import (
     Message,
     ParseFailure,
     PromptView,
+    ProtocolFailure,
     ProviderFailure,
     RecordStatus,
     RequestFailed,
@@ -74,6 +75,7 @@ _UNKNOWN_FIELD_CASES: tuple[tuple[type[BaseModel], dict[str, object]], ...] = (
     (AnswerSuccess, {"response": _ANSWER, "requested_message_count": 1}),
     (ParseFailure, {"detail": "bad"}),
     (ProviderFailure, {"detail": "down"}),
+    (ProtocolFailure, {"detail": "cache HIT"}),
     (RunStarted, {"sequence": 0, "run_id": "run-1", "occurred_at": STAMP}),
     (
         RequestSent,

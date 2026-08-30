@@ -7,20 +7,27 @@ that happens to satisfy it today.
 
 from harnessing_honesty.domain.enums import (
     Category,
+    CompilerStage,
     Failure,
+    OracleStatus,
     PolicyFamily,
     PressureFamily,
     RecordStatus,
     Role,
     RoleName,
+    SourceRole,
     Stage,
     Stratum,
+    TaskFamily,
+    TaskStratum,
     Track,
     Verdict,
+    VerificationOutcome,
 )
 from harnessing_honesty.domain.binding import CellBinding
 from harnessing_honesty.domain.checkers import REGISTERED_CATEGORIES
 from harnessing_honesty.domain.condition import Condition
+from harnessing_honesty.domain.instrument import DependencyRecord, InstrumentItem
 from harnessing_honesty.domain.events import (
     DomainEvent,
     RequestFailed,
@@ -28,6 +35,7 @@ from harnessing_honesty.domain.events import (
     ResponseReceived,
     RunClosed,
     RunStarted,
+    UsageCounts,
 )
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.prompt import PromptView
@@ -41,11 +49,13 @@ from harnessing_honesty.domain.protocols import (
     VerificationTool,
 )
 from harnessing_honesty.domain.records import RunRecord
+from harnessing_honesty.domain.report import VerificationReport
 from harnessing_honesty.domain.responses import AnswerResponse
 from harnessing_honesty.domain.results import (
     AnswerSuccess,
     ModelResult,
     ParseFailure,
+    ProtocolFailure,
     ProviderFailure,
     failure_class,
 )
@@ -59,17 +69,22 @@ __all__ = [
     "CellBinding",
     "Checker",
     "Clock",
+    "CompilerStage",
     "Condition",
+    "DependencyRecord",
     "DomainEvent",
     "EventSink",
     "Failure",
+    "InstrumentItem",
     "Message",
     "ModelClient",
     "ModelResult",
+    "OracleStatus",
     "ParseFailure",
     "PolicyFamily",
     "PressureFamily",
     "PromptView",
+    "ProtocolFailure",
     "ProviderFailure",
     "REGISTERED_CATEGORIES",
     "RecordStatus",
@@ -79,6 +94,7 @@ __all__ = [
     "ResponseReceived",
     "Role",
     "RoleName",
+    "SourceRole",
     "RunClosed",
     "RunRecord",
     "RunStarted",
@@ -86,8 +102,13 @@ __all__ = [
     "SequencedEvent",
     "Stage",
     "Stratum",
+    "TaskFamily",
+    "TaskStratum",
     "Track",
+    "UsageCounts",
     "Verdict",
+    "VerificationOutcome",
+    "VerificationReport",
     "VerificationTool",
     "failure_class",
 ]

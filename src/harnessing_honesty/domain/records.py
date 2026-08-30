@@ -25,9 +25,12 @@ class RunRecord(BaseModel):
     seed: int
     status: RecordStatus
     observed_model: str | None = None
+    observed_endpoint: str | None = None
     config_hash: str | None = None
     track: Track = Track.DEV
     freeze_id: str | None = None
+    scheduler_seed: int | None = None
+    sampling_seed: int | None = None
 
     @field_validator("run_id", "requested_model")
     @classmethod

@@ -23,9 +23,8 @@ class ScenarioRecord(BaseModel):
     """A scenario with a projected public view and a private key.
 
     ``track`` is research metadata. It stays off ``PromptView`` so it cannot
-    be rendered by accident. ``MAIN`` is a value the harness can name and
-    refuse: the confirmatory instrument does not exist yet, so a main
-    scenario is not a legal record.
+    be rendered by accident. ``MAIN`` is refused here; confirmatory items
+    load from a freeze manifest.
 
     ``category`` selects the checker. Construction fails if that category
     has no registered checker, so an unsupported item never reaches scoring.
@@ -43,8 +42,8 @@ class ScenarioRecord(BaseModel):
     def main_track_is_not_open(cls, value: Track) -> Track:
         if value is Track.MAIN:
             raise ValueError(
-                "track 'main' is not open: the confirmatory instrument "
-                "does not exist yet"
+                "track 'main' is refused: confirmatory items load from a "
+                "freeze manifest"
             )
         return value
 

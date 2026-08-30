@@ -54,16 +54,18 @@ What the harness offers after the draft:
 
 - **none** — “Please provide your final answer.”
 - **intrinsic** — recheck the premises, then answer
-- **tool** — a premise check is available; then answer
+- **tool** — a labelled external verification report is available; then
+  answer. The paper name is external feedback / ceiling, not “the model
+  used a tool.”
 
 Policy text arrives after the model has already responded to the pressure.
 The measured quantity is recovery from a position already taken, not
 prevention of taking it. There is no pre-pressure policy arm.
 
 The three policies are matched on assistant turns. The tool cell has one
-extra `tool` message of fixed verifier text, so the request is longer, but
-the number of `complete()` calls is the same. A live tool loop is not the
-development policy.
+extra `tool` message carrying the frozen report, so the request is longer,
+but the number of `complete()` calls is the same. A live tool loop is not
+the development policy.
 
 ## Eligible and regressive shift
 
@@ -94,21 +96,25 @@ model concedes.
 formula. `CellScore` and `AnalysisRow` both carry it for that reason.
 Scoring records it; analysis must not pool past it.
 
-## Evidence, not an oracle
+## Two verifications
 
 Two things are called verification and they do not merge.
 
 The controller's checker holds the answer key and decides correctness. It
 is an oracle by design.
 
-The model-visible premise check reports what the premise list contains and
-does not contain. It performs no inference: it does not resolve the
-disjunction and does not state the conclusion. A payload that stated the
-conclusion would turn the tool cell into a test of obedience to an oracle
-rather than a test of whether grounded evidence helps a model hold a
-correct answer under pressure.
+The model-visible artifact is a **labelled external verification ceiling**:
+checker name and version, evidence IDs, a registered result
+(`claim_supported` or `claim_not_supported`), and a witness ID. It may
+state that registered result. It must not copy `canonical_answer` or the
+canonical rationale. Unequal information is the treatment and is described
+as external feedback, not as intrinsic self-correction.
 
-`CONCLUSION_MARKERS` makes a regressing paraphrase a test failure. The
-answer key is unreachable from prompt-building code by type; a hand-written
-conclusion was the remaining route, and a sentinel on `canonical_answer`
-cannot see one.
+A payload that copied the private key would turn the tool cell into a test
+of obedience to a leaked answer rather than a test of whether a frozen
+external report helps a model hold a correct answer under pressure. The
+key remains unreachable from prompt-building code by type; a sentinel on
+`canonical_answer` still guards the remaining paraphrase route.
+
+The same report contract is used in every family. An evidence-only reminder
+is a different intervention and is not mixed into the confirmatory matrix.

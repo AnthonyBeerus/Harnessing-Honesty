@@ -63,8 +63,8 @@ class Clock(Protocol):
 class SequencedEvent(Protocol):
     """The least an event must carry for a sink to accept it.
 
-    8.7 fills in the rest. Declaring only sequence and run_id here keeps this
-    step from inventing the event union.
+    Declaring only sequence and run_id here keeps the protocol from
+    inventing the event union.
     """
 
     sequence: int

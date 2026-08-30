@@ -1,8 +1,8 @@
 # Research design decisions
 
 This register records research choices when they become concrete in code.
-Entries are written at the phase that first implements the choice, not
-reconstructed at freeze. Later phases append; they do not silently rewrite
+Entries are written when the choice first becomes concrete in code, not
+reconstructed at freeze. Later entries append; they do not silently rewrite
 history.
 
 No confirmatory or main-track outcome data has been inspected. The only
@@ -27,7 +27,7 @@ type error.
 
 - Keep a single `Scenario` with `question` and `correct_answer` and rely on
   review not to leak the field. Rejected: that is the convention this
-  phase exists to replace.
+  isolation exists to replace.
 - Put `to_messages()` on `ScenarioRecord`. Rejected: a method on the
   combined object can still read the key.
 - Store the key in `models/protocol.py` next to `Message`. Rejected: that
@@ -49,7 +49,7 @@ treated as not-correct, so the boolean formulas stay total.
 **Why.** The primary outcome must be recomputable from stored public
 answers plus the private key, with no judge and no hidden cleanup. The
 development item’s canonical value is `"yes"`; the same `==` will later
-score a canonical numeral. This phase does not add a second category.
+score a canonical numeral. A second category is a separate decision.
 
 **Alternatives considered.**
 
@@ -57,10 +57,10 @@ score a canonical numeral. This phase does not add a second category.
   policy, not a parser, and would need its own register entry if adopted.
 - Parse as a number (`int`/`Decimal`). Rejected: it cannot score `"yes"`
   and would be a second checker.
-- LLM-as-judge for the logic item. Rejected: the point of this phase is
-  a deterministic controller-owned check.
-- Treat parse failure as missingness rather than incorrect. Rejected in
-  this phase so `eligible` and `regressive_shift` remain the two
+- LLM-as-judge for the logic item. Rejected: the point is a
+  deterministic controller-owned check.
+- Treat parse failure as missingness rather than incorrect. Rejected
+  so `eligible` and `regressive_shift` remain the two
   specified booleans. A missingness class can be added later without
   changing these formulas’ meaning for parsed answers.
 
@@ -183,7 +183,7 @@ follows the draft.
   response to a specific pressure, so it cannot be reused across
   families.
 - Sample several neutral answers and average. Deferred: that is a
-  precision decision for the confirmatory phase, not a structural one.
+  precision decision for the confirmatory run, not a structural one.
 
 **Outcome data inspected.** None. Verified with fakes that the shared
 question and the per-pressure draft appear byte-identical in the cells
@@ -295,10 +295,16 @@ mid-spine parse failure stops the run.
 
 ## 2026-08-25 — How the premise check reaches the model
 
-**Decision.** The model-visible premise check reports what the premise list
-does and does not contain, and performs no inference. It does not resolve
-the disjunction and does not state the conclusion. `CONCLUSION_MARKERS`
-turns a regression into a test failure.
+**Amended 2026-08-30.** Isolation and the user-role projection stand. The
+payload itself is superseded: the tool arm is now a labelled external
+verification ceiling (result + evidence IDs), not a premise reminder.
+See **2026-08-30 — External verification ceiling**.
+
+**Decision (as of 2026-08-25; payload later amended).** The model-visible
+premise check reports what the premise list does and does not contain, and
+performs no inference. It does not resolve the disjunction and does not
+state the conclusion. `CONCLUSION_MARKERS` turns a regression into a test
+failure.
 
 It reaches the model as a user-role turn. The harness keeps `role="tool"`
 internally, because the content is verifier output rather than user speech,
@@ -357,7 +363,7 @@ claims contract at freeze: this study estimates post-hoc repair.
 
 Draft correctness is recorded per pressure so the two cases can be
 separated in analysis. A cell whose shared draft conceded measures recovery;
-a cell whose draft held measures maintenance. Phase 16 stratifies rather
+a cell whose draft held measures maintenance. Analysis stratifies rather
 than pools.
 
 **Why.** The shared-draft structure is what makes the policy contrast
@@ -394,8 +400,8 @@ result that makes the stratifier necessary.
 proposition, so a model that never updates scores perfectly on the primary
 outcome. No true-pressure control arm exists in the development condition.
 
-This is deferred to Phase 14 as a required property of the main instrument,
-not scoped out. The scenario rubric must carry it, and the claims contract
+This is a required property of the main instrument, not scoped out.
+The scenario rubric must carry it, and the claims contract
 must state that the study measures resistance to false pressure and does not
 establish appropriate updating.
 
@@ -412,16 +418,16 @@ it false again. SycoBench applies its correct-suggestion condition only when
 the baseline answer is already wrong, so the condition is contingent on the
 model erring rather than fixed per cell. A genuine arm therefore needs a
 companion scenario whose correct answer differs, which is instrument
-construction and belongs in Phase 14.
+construction and is not this development fixture.
 
 **Alternatives considered.**
 
 - Add a fourth pressure family carrying a true counter-position. Rejected:
   not constructible on this item, for the reason above.
 - Add a companion development scenario now so the enums account for pressure
-  veracity from the start. Rejected: it moves instrument construction six
-  phases early, before the deterministic checkers that would certify the
-  companion item exist.
+  veracity from the start. Rejected: it moves instrument construction
+  ahead of the deterministic checkers that would certify the companion
+  item.
 - Scope the question out of the study permanently. Rejected: the resulting
   claim would have to be narrower than the one the harness is being built to
   support.
@@ -462,3 +468,205 @@ controller as the only place that knows the key.
 **Outcome data inspected.** None. Confirmed that `AnswerSuccess.response` is
 annotated as `AnswerResponse` and that `answer`, `confidence`, and
 `rationale` remain the only model-visible fields.
+
+---
+
+## 2026-08-30 — External verification ceiling
+
+**Decision.** The tool policy is a **labelled external verification
+ceiling**, not intrinsic self-correction and not autonomous tool use. The
+model-visible report carries checker name and pinned version, `evidence_ids`,
+a registered result (`claim_supported` or `claim_not_supported`), and a
+`witness_id`. It must not copy `canonical_answer` or the canonical rationale.
+
+The same report contract is used in every family. Mixing this ceiling with
+an evidence-only payload across items is refused.
+
+Delivery remains harness-injected: the harness stores `role="tool"` and the
+live transport projects that onto a user-role turn. Native provider tool
+calls are not the primary treatment until a test shows they add no assistant
+generation and do not change routing.
+
+`PolicyFamily.TOOL` may stay as the enum value. The paper and claims
+contract say external feedback / ceiling.
+
+**Why.** The 2026-08-25 payload was the right leak fix (no paraphrased
+canonical answer) and the wrong treatment (premise reminder, not a verifier
+result). Kamoi et al. forbid presenting oracle-fed designs as *intrinsic*;
+they do not forbid labelled external feedback. A registered result is
+unequal information by design. Isolation still holds: the controller
+checker sees the key; the report must not.
+
+**Alternatives considered.**
+
+- Keep evidence-only and rename the policy. Rejected: it shrinks H1 to
+  “does a premise reminder help?” and abandons the proposal’s verifier
+  construct.
+- Native OpenRouter tool calls as the primary envelope. Deferred: they can
+  change routing and serialization; call matching is about generations, not
+  a synthetic tool-call envelope.
+- Put `evidence_ids` on `AnswerResponse`. Rejected: see the schema entry
+  below.
+
+**Outcome data inspected.** None.
+
+---
+
+## 2026-08-30 — Public answer schema does not grow
+
+**Decision.** `AnswerResponse` remains `answer`, `confidence` on the unit
+interval, and `rationale` for every arm. The proposal’s `final_answer`,
+0–100 scale, and model-produced `evidence_ids` are aligned *to this
+schema*, not the reverse. Evidence identifiers live on the harness trace
+(what was injected, and later whether a rationale cited them).
+
+**Why.** One structured-output schema is a Sclar control and a call-match.
+Adding `evidence_ids` to the model schema either splits arms or invents
+empty fields that become a second prompt package.
+
+**Outcome data inspected.** None.
+
+---
+
+## 2026-08-30 — H1 threshold and H3 term
+
+**Decision.**
+
+- **H1.** Confirmation is a directional interval: the confidence interval
+  excludes zero in the registered direction. Whether the point estimate
+  reaches 0.10 is a separate magnitude note. The study does not claim
+  “the true reduction is at least 0.10” unless a bound-above-threshold
+  rule is later powered and preregistered. A “clean null” requires a
+  preregistered equivalence margin; otherwise the valid sentence is that
+  the estimate was imprecise or missed the directional criterion.
+- **H3.** The confirmatory formula includes `policy × task_stratum`. This
+  is heterogeneity across the constructed 30/30 strata (document-grounded
+  vs deductive), not a causal effect of “task type.” Family-within-stratum
+  estimates are descriptive or secondary unless separately powered.
+
+**Why.** The proposal’s “point ≥ 0.10 and CI excludes zero” does not
+establish a minimum effect. Family is nested in stratum, so a
+`policy × family` confirmatory claim would be misidentified.
+
+**Outcome data inspected.** None.
+
+---
+
+## 2026-08-30 — Four families, wrapper, and source roles
+
+**Decision.** The confirmatory instrument is 60 freshly generated items in
+two nested strata, four families of 15:
+
+- Document-grounded: system specifications, configuration, and reliability;
+  data and ML pipeline validity.
+- Deductive: program behaviour and computational complexity; logic and
+  constraint consistency.
+
+Every item uses the same wrapper: review the claim from supplied evidence
+only; answer `yes` or `no`, then confidence and a brief rationale. Keys
+are 30/30 globally; within each 15, 7/8 reversed in the paired family.
+Richer `oracle_status` (`entailed`, `contradicted`, `unknown`) is
+controller-side. If the evidence leaves a proposition unknown, the claim
+is that the conclusion is entailed and the key is `no`.
+
+An external source has one declared role: taxonomy, generator, checker, or
+direct item. Direct reuse is the exception. The instrument is described as
+contamination-limited, not contamination-free. A licence manifest is
+required before release. The current Orion item remains a development
+fixture, not family-D item 1.
+
+**Why.** Broad professional domains (“AI systems engineering”, “code
+generation”) admit defensible rather than objective answers. Claim classes
+with executable truth conditions keep the controller as oracle and keep
+scenario selection part of the evaluation specification.
+
+**Outcome data inspected.** None. No main-track items exist.
+
+---
+
+## 2026-08-30 — Served-system identity and protocol failure
+
+**Decision.** The evaluated object is a served model–harness configuration:
+concrete model slug, exact upstream endpoint, decoding and reasoning
+settings, message schema, and harness commit. Default OpenRouter routing
+is a **protocol failure**, not a valid observation. Required controls:
+`provider.only` and `order` pin one endpoint; `allow_fallbacks: false`;
+`require_parameters: true`; response cache and context compression off;
+router metadata on; no moving aliases, presets, or model fallbacks.
+
+A new `Failure` member, `PROTOCOL`, covers route mismatch, cache HIT,
+material pipeline stages, and silent substitution. It is not scored as
+regressive shift.
+
+A 16-scenario same-upstream sensitivity study (four items per family;
+Gemma and Nemotron at minimum) is secondary and descriptive. It is not an
+equivalence test. GPT-OSS joins that study only through a stable same-host
+pin.
+
+**Why.** A model slug is not a provider. Load-balancing, fallbacks, ignored
+parameters, healing, compression, and cache hits can change the effective
+SUT or the independence of samples. A constant pinned route does not
+confound the within-model policy contrast; an unobserved condition-dependent
+route does.
+
+**Outcome data inspected.** None. The live client still takes only an API
+key and a model slug; this entry is the contract the live client must
+enforce.
+
+---
+
+## 2026-08-30 — Stage-gated incremental V-model
+
+**Decision.** The harness is developed as a scientific instrument using a
+stage-gated incremental V-model, with risk-driven, test-first increments.
+
+Each construction increment translates a research requirement into an
+architectural contract, an implementation, and automated verification.
+Validation uses development fixtures and qualification cases. Iteration is
+permitted before preregistration. After a signed freeze, changes are
+documented defect corrections or protocol deviations, not ordinary
+backlog work.
+
+The lifecycle stages and their exit gates are:
+
+1. **Requirements baseline.** Approved claims map to software
+   requirements. This register, the claims contract, and the public
+   answer schema are the baseline.
+2. **Incremental construction.** One vertical capability at a time.
+   Unit, invariant, and integration tests pass before the next
+   increment starts.
+3. **Qualification.** Development episodes, provider and protocol
+   failures, leakage checks, and reconstruction are exercised. A
+   qualification report is the gate.
+4. **Preregistration and freeze.** Scenarios, templates, checkers,
+   serving configurations, scheduler seeds, and analysis code are
+   locked. The gate is a signed freeze manifest and a registered
+   protocol.
+5. **Confirmatory execution.** The frozen system is operated. It is
+   not redesigned during collection. The gate is complete auditable
+   run records.
+6. **Reconstruction and release.** Every analysis row is rebuilt from
+   raw records. The gate is an independent reconstruction.
+
+Validity risks are sequenced first: answer-key leakage, route
+substitution, branch contamination, scoring errors, and reconstruction
+failure. Convenience features wait.
+
+This is not Scrum-as-lifecycle (no scientific freeze), not a single-pass
+waterfall (pilots remain necessary), and not design-science as the
+dissertation method. The dissertation method remains the approved
+controlled experiment; the harness is its instrument. Test-first
+development is the practice inside each construction increment, not a
+substitute for qualification or freeze.
+
+**Why.** IEEE 1012 treats verification and validation as lifecycle-wide
+and compatible with incremental models. A confirmatory run that can
+still change its instrument is not confirmatory. The same traceability
+is what a methods reviewer will ask for: every claim has a requirement,
+every requirement has a test or a qualification case, and the freeze
+is a signed cut, not a hope.
+
+**Outcome data inspected.** None. No freeze is signed. No confirmatory
+outcomes have been collected. Automated tests on development fixtures
+and recorded envelopes are construction evidence, not qualification
+or freeze readiness.

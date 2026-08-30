@@ -6,23 +6,8 @@ existing comparisons against bare strings keep working, and Pydantic
 serialises a member to its value, so a request snapshot is still plain JSON.
 An ``Enum`` would break both and turn this move into a rewrite.
 
-Some of these have call sites today and some are declared for a named later
-boundary. Phase 8's inspect step deletes anything that never acquires one.
-
-In use now:
-    ``Role``, ``Stage``, ``PressureFamily``, ``PolicyFamily``
-
-Declared for a named boundary:
-    ``Track``      -- wired to ``ScenarioRecord`` in 8.4, where the validator
-                      that rejects ``MAIN`` lands. Defining it here without
-                      that validator would widen what a scenario accepts.
-    ``Category``   -- wired to ``ScenarioRecord`` in 8.9. Only members in
-                      the checker registry may be declared; Phase 11 fills
-                      the registry.
-    ``Stratum``    -- registered difficulty bands for the Phase 14 instrument.
-    ``Verdict``    -- the ``Checker`` protocol's return in 8.6.
-    ``Failure``    -- failure classification on the result types in 8.2.
-    ``RecordStatus`` -- run completeness, written by Phase 9.7.
+The vocabulary is closed here so a stored run cannot invent a second set
+of names.
 """
 
 from enum import StrEnum
@@ -63,8 +48,8 @@ class Track(StrEnum):
     """Development or confirmatory material.
 
     Kept off ``PromptView`` so research metadata cannot be rendered as a
-    prompt field. ``MAIN`` exists as a value the harness can name and refuse;
-    it is not yet a track anything may run on.
+    prompt field. ``MAIN`` is refused on ``ScenarioRecord``. A
+    ``RunRecord`` on this track requires a freeze ID.
     """
 
     DEV = "dev"
@@ -125,14 +110,17 @@ class Verdict(StrEnum):
 class Failure(StrEnum):
     """Why a call produced no answer.
 
-    ``PARSE`` is a response that did not match the output schema; ``PROVIDER``
-    is a transport or service failure. Phase 10 classifies provider failures
-    further into retryable and terminal, which is a scheduling concern and
-    does not belong here yet.
+    ``PARSE`` is a response that did not match the output schema.
+    ``PROVIDER`` is a transport or service failure.
+    ``PROTOCOL`` is a served-system identity failure: route mismatch, cache
+    HIT, material pipeline, or silent substitution. It is not scored as
+    regressive shift. Retryability of provider failures is a scheduling
+    concern and does not belong on this enum.
     """
 
     PARSE = "parse"
     PROVIDER = "provider"
+    PROTOCOL = "protocol"
 
 
 class RecordStatus(StrEnum):
@@ -145,3 +133,56 @@ class RecordStatus(StrEnum):
 
     INCOMPLETE = "incomplete"
     COMPLETE = "complete"
+
+
+class TaskStratum(StrEnum):
+    """Constructed 30/30 instrument stratum. Heterogeneity term for H3."""
+
+    DOCUMENT_GROUNDED = "document_grounded"
+    DEDUCTIVE = "deductive"
+
+
+class TaskFamily(StrEnum):
+    """The four confirmatory families. Nested inside ``TaskStratum``."""
+
+    SYSTEMS = "systems"
+    PIPELINES = "pipelines"
+    PROGRAMS = "programs"
+    LOGIC = "logic"
+
+
+class SourceRole(StrEnum):
+    """How an external dependency may enter the instrument."""
+
+    TAXONOMY = "taxonomy"
+    GENERATOR = "generator"
+    CHECKER = "checker"
+    DIRECT = "direct"
+
+
+class OracleStatus(StrEnum):
+    """Controller-side richer status. The public key is still yes/no."""
+
+    ENTAILED = "entailed"
+    CONTRADICTED = "contradicted"
+    UNKNOWN = "unknown"
+
+
+class CompilerStage(StrEnum):
+    """Eight-stage construction protocol. An item is frozen only after all eight."""
+
+    SELECT_ARCHETYPE = "select_archetype"
+    GENERATE_INSTANCE = "generate_instance"
+    SOLVE_ORACLE = "solve_oracle"
+    RENDER_WRAPPER = "render_wrapper"
+    ATTACH_COUNTER = "attach_counter"
+    DUAL_VALIDATE = "dual_validate"
+    AUDIT_CUES = "audit_cues"
+    SIGN_OFF = "sign_off"
+
+
+class VerificationOutcome(StrEnum):
+    """Registered result on the model-visible ceiling report."""
+
+    CLAIM_SUPPORTED = "claim_supported"
+    CLAIM_NOT_SUPPORTED = "claim_not_supported"

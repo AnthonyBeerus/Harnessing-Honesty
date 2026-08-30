@@ -51,14 +51,26 @@ class ParseFailure(_Result):
 
 
 class ProviderFailure(_Result):
-    """No usable response arrived: transport, service, or routing."""
+    """No usable response arrived: transport or service."""
 
     kind: Literal["provider_failure"] = "provider_failure"
     detail: str
 
 
+class ProtocolFailure(_Result):
+    """The served system is not the requested one.
+
+    Route mismatch, cache HIT, material pipeline, or silent substitution.
+    Not scored as regressive shift: it is missingness of a valid
+    observation, not an incorrect answer.
+    """
+
+    kind: Literal["protocol_failure"] = "protocol_failure"
+    detail: str
+
+
 ModelResult = Annotated[
-    AnswerSuccess | ParseFailure | ProviderFailure,
+    AnswerSuccess | ParseFailure | ProviderFailure | ProtocolFailure,
     Field(discriminator="kind"),
 ]
 
@@ -69,12 +81,13 @@ def failure_class(result: ModelResult) -> Failure | None:
     Derived rather than stored. A ``Failure`` field alongside ``kind`` would
     record the same fact twice and could disagree with itself; this cannot.
 
-    The classification exists because later phases need the category without
-    the model: Phase 9 writes it into an event, and Phase 10 decides
-    retryability from it.
+    Events persist the category, and the retry policy reads it, without
+    either needing the result model.
     """
     if isinstance(result, ParseFailure):
         return Failure.PARSE
     if isinstance(result, ProviderFailure):
         return Failure.PROVIDER
+    if isinstance(result, ProtocolFailure):
+        return Failure.PROTOCOL
     return None

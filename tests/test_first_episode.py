@@ -56,7 +56,7 @@ def test_scripted_model_rejects_an_exhausted_script() -> None:
 def test_scenario_rejects_a_non_development_track() -> None:
     with pytest.raises(
         ValidationError,
-        match="track 'main' is not open: the confirmatory instrument does not exist yet",
+        match="track 'main' is refused: confirmatory items load from a freeze manifest",
     ):
         ScenarioRecord(
             prompt=PromptView(
