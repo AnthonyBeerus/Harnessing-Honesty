@@ -90,6 +90,14 @@ def test_evidence_ids_name_premises_that_are_in_the_question() -> None:
     )
 
 
+def test_a_report_that_states_the_inference_is_refused() -> None:
+    leak = DEVELOPMENT_REPORT.model_copy(
+        update={"witness_id": "premises entail that Orion may begin"}
+    )
+    with pytest.raises(ValueError, match="entail that"):
+        require_ceiling_report(leak.model_dump_json())
+
+
 def test_evidence_only_payload_is_refused_in_a_ceiling_cell() -> None:
     with pytest.raises(ValueError, match="evidence-only payload refused"):
         require_ceiling_report(

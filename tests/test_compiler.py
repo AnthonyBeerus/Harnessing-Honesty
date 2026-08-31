@@ -1,16 +1,19 @@
 """Confirmatory pool: wrapper, balance, dual validation, licence, exclusion."""
 
+import json
+
 from harnessing_honesty.compiler.audit import AuditError, audit_pool
-from harnessing_honesty.compiler.freeze import build_freeze
+from harnessing_honesty.compiler.freeze import build_freeze, freeze_template_payload
 from harnessing_honesty.compiler.manifests import licence_rows, overlap_rows
 from harnessing_honesty.compiler.oracles import (
     has_leakage,
-    register_valid,
     sat,
+    sequential_register,
 )
 from harnessing_honesty.compiler.pool import EXCLUDED_DEVELOPMENT_IDS, confirmatory_pool
 from harnessing_honesty.compiler.wrapper import WRAPPER_PREFIX
-from harnessing_honesty.domain.enums import OracleStatus, TaskFamily, TaskStratum
+from harnessing_honesty.domain.enums import OracleStatus, SourceRole, TaskFamily, TaskStratum
+from harnessing_honesty.pressures import confirmatory_wrapper_stems
 
 
 def test_pool_meets_the_registered_counts() -> None:
@@ -37,9 +40,9 @@ def test_orion_is_excluded() -> None:
     assert len(EXCLUDED_DEVELOPMENT_IDS) >= 8
 
 
-def test_every_item_is_signed_off_and_wrapped() -> None:
+def test_every_item_is_dual_validated_and_wrapped() -> None:
     for item in confirmatory_pool():
-        assert item.review_status == "signed_off"
+        assert item.review_status == "constructed"
         assert item.dual_validated is True
         assert item.prompt.question.startswith(WRAPPER_PREFIX)
         assert item.dependencies
@@ -59,8 +62,8 @@ def test_unknown_oracle_status_has_key_no() -> None:
 
 
 def test_blueprints_agree_with_the_oracles() -> None:
-    assert register_valid((("W", "x", 1, None), ("R", "x", None, 1))) is True
-    assert register_valid((("W", "x", 2, None), ("R", "x", None, 1))) is False
+    assert sequential_register((("W", "x", 1), ("R", "x", 1))) is True
+    assert sequential_register((("W", "x", 2), ("R", "x", 1))) is False
     assert (
         has_leakage((("test_y", "feat"), ("feat", "train_x")), frozenset({"test_y"}), frozenset({"train_x"}))
         is True
@@ -75,6 +78,8 @@ def test_licence_manifest_has_no_forbidden_direct_items() -> None:
     assert overlap_rows(items) == ()
     names = {dep.name for dep in licence_rows(items)}
     assert "harness-compiler" in names
+    assert "z3" in names
+    assert "sqlite3" in names
     assert "SAKE" not in names
 
 
@@ -101,3 +106,24 @@ def test_freeze_records_hashes_and_exclusions() -> None:
     assert freeze.pool_hash
     assert freeze.wrapper_hash
     assert freeze.template_hash
+
+
+def test_freeze_templates_hash_stems_not_orion_pressures() -> None:
+    payload = freeze_template_payload()
+    blob = json.dumps(payload)
+
+    assert payload["confirmatory_stems"] == list(confirmatory_wrapper_stems())
+    assert "pressures" not in payload
+    assert "Orion" not in blob
+    assert "backup assay" not in blob
+
+
+def test_z3_is_a_checker_and_tla_is_taxonomy() -> None:
+    rows = licence_rows(confirmatory_pool())
+    by_name = {dep.name: dep for dep in rows}
+    assert by_name["z3"].role is SourceRole.CHECKER
+    assert by_name["sqlite3"].role is SourceRole.CHECKER
+    assert by_name["tla+"].role is SourceRole.TAXONOMY
+    assert by_name["porcupine"].role is SourceRole.TAXONOMY
+    assert by_name["bigobench"].role is SourceRole.TAXONOMY
+    assert by_name["cruxeval-recipe"].role is SourceRole.TAXONOMY

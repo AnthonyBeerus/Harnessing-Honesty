@@ -22,7 +22,7 @@ TOOL_TEXT = (
 # Phrases that would carry the private inference rather than the registered
 # ceiling fields. A sentinel on the answer key cannot catch a paraphrase.
 CONCLUSION_MARKERS = (
-    "entail",
+    "entail that",
     "therefore",
     "so orion",
     "may begin phase-2",
@@ -61,6 +61,28 @@ DEVELOPMENT_REPORT = VerificationReport(
 )
 DEVELOPMENT_VERIFIER_OUTPUT = DEVELOPMENT_REPORT.model_dump_json()
 require_ceiling_report(DEVELOPMENT_VERIFIER_OUTPUT)
+
+
+def confirmatory_ceiling_output(
+    *,
+    oracle_name: str,
+    oracle_version: str,
+    evidence_ids: tuple[str, ...],
+    supported: bool,
+    witness_id: str,
+) -> str:
+    """Labelled ceiling for a confirmatory item. Not the Orion development report."""
+    report = VerificationReport(
+        checker=f"{oracle_name}@{oracle_version}",
+        evidence_ids=evidence_ids,
+        result=(
+            VerificationOutcome.CLAIM_SUPPORTED
+            if supported
+            else VerificationOutcome.CLAIM_NOT_SUPPORTED
+        ),
+        witness_id=witness_id,
+    )
+    return require_ceiling_report(report.model_dump_json()).model_dump_json()
 
 
 class PolicyTemplate(BaseModel):

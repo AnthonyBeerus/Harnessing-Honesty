@@ -1,35 +1,122 @@
 """Deterministic construction oracles. Two implementations per check."""
 
 from collections import deque
+from itertools import permutations
+from typing import TypeAlias
+
+from harnessing_honesty.compiler.dual import DualOracleError
+
+# History operation: kind ("W"|"R"), key, value, start, end.
+HistoryOp: TypeAlias = tuple[str, str, int, int, int]
+BareOp: TypeAlias = tuple[str, str, int]
+JoinRow: TypeAlias = tuple[int, str]
+JoinResult: TypeAlias = tuple[tuple[int, str, int, str], ...]
+RuleRow: TypeAlias = tuple[str, str, bool]
+Expr: TypeAlias = tuple[object, ...]
+Stmt: TypeAlias = tuple[object, ...]
+LoopTree: TypeAlias = tuple[object, ...]
 
 
-def register_valid(ops: tuple[tuple[str, str, int | None, int | None], ...]) -> bool:
-    """Sequential register: each read must match the last write to that key."""
+def _apply_register(state: dict[str, int], op: HistoryOp | BareOp) -> dict[str, int] | None:
+    kind, key, value = op[0], op[1], op[2]
+    if kind == "W":
+        nxt = dict(state)
+        nxt[key] = value
+        return nxt
+    if kind == "R":
+        if state.get(key, 0) != value:
+            return None
+        return state
+    return None
+
+
+def sequential_register(ops: tuple[HistoryOp | BareOp, ...]) -> bool:
+    """Sequential witness: replay ops in the given order from initial 0."""
     state: dict[str, int] = {}
-    for kind, key, written, read in ops:
-        if kind == "W":
-            if written is None:
-                return False
-            state[key] = written
-        elif kind == "R":
-            if state.get(key) != read:
-                return False
-        else:
+    for op in ops:
+        nxt = _apply_register(state, op)
+        if nxt is None:
             return False
+        state = nxt
     return True
 
 
-def register_valid_alt(ops: tuple[tuple[str, str, int | None, int | None], ...]) -> bool:
-    """Independent replay used for dual validation."""
-    last: dict[str, int] = {}
-    for kind, key, written, read in ops:
-        if kind == "W" and written is not None:
-            last[key] = written
-        elif kind == "R" and last.get(key) != read:
-            return False
-        elif kind not in {"W", "R"}:
-            return False
-    return True
+def _happens_before(first: HistoryOp, second: HistoryOp) -> bool:
+    return first[4] < second[3]
+
+
+def linearizable_by_search(ops: tuple[HistoryOp, ...]) -> bool:
+    """Porcupine-style DFS: spec-guided search over happens-before."""
+    if any(op[3] > op[4] for op in ops):
+        return False
+    n = len(ops)
+    if n > 8:
+        raise DualOracleError("history is too long for exhaustive linearizability")
+
+    def dfs(used: int, state: dict[str, int]) -> bool:
+        if used.bit_count() == n:
+            return True
+        for i, op in enumerate(ops):
+            if used & (1 << i):
+                continue
+            blocked = False
+            for j, other in enumerate(ops):
+                if used & (1 << j):
+                    continue
+                if _happens_before(other, op):
+                    blocked = True
+                    break
+            if blocked:
+                continue
+            nxt = _apply_register(state, op)
+            if nxt is None:
+                continue
+            if dfs(used | (1 << i), nxt):
+                return True
+        return False
+
+    return dfs(0, {})
+
+
+def linearizable_by_extensions(ops: tuple[HistoryOp, ...]) -> bool:
+    """Independent witness: every happens-before linear extension."""
+    if any(op[3] > op[4] for op in ops):
+        return False
+    n = len(ops)
+    if n > 8:
+        raise DualOracleError("history is too long for exhaustive linearizability")
+    for order in permutations(range(n)):
+        position = {index: place for place, index in enumerate(order)}
+        illegal = False
+        for i, first in enumerate(ops):
+            for j, second in enumerate(ops):
+                if _happens_before(first, second) and position[i] > position[j]:
+                    illegal = True
+                    break
+            if illegal:
+                break
+        if illegal:
+            continue
+        if sequential_register(tuple(ops[i] for i in order)):
+            return True
+    return False
+
+
+def rule_allows_scan(left: str, right: str, rules: tuple[RuleRow, ...]) -> bool:
+    """Last matching row in the rule table."""
+    allowed = False
+    matched = False
+    for row_left, row_right, row_allowed in rules:
+        if row_left == left and row_right == right:
+            matched = True
+            allowed = row_allowed
+    return matched and allowed
+
+
+def rule_allows_index(left: str, right: str, rules: tuple[RuleRow, ...]) -> bool:
+    """Compiled map; missing keys are denied."""
+    index = {(row_left, row_right): allowed for row_left, row_right, allowed in rules}
+    return index.get((left, right), False)
 
 
 def has_leakage(
@@ -76,14 +163,225 @@ def has_leakage_alt(
     return False
 
 
+def sqlite_inner_join(left: tuple[JoinRow, ...], right: tuple[JoinRow, ...]) -> JoinResult:
+    """Engine join on id. Stdlib sqlite3; not a benchmark item bank."""
+    import sqlite3
+
+    conn = sqlite3.connect(":memory:")
+    try:
+        conn.execute("CREATE TABLE left_t (id INTEGER, label TEXT)")
+        conn.execute("CREATE TABLE right_t (id INTEGER, label TEXT)")
+        conn.executemany("INSERT INTO left_t VALUES (?, ?)", left)
+        conn.executemany("INSERT INTO right_t VALUES (?, ?)", right)
+        rows = conn.execute(
+            "SELECT left_t.id, left_t.label, right_t.id, right_t.label "
+            "FROM left_t INNER JOIN right_t ON left_t.id = right_t.id"
+        ).fetchall()
+        return tuple(sorted(tuple(row) for row in rows))
+    finally:
+        conn.close()
+
+
+def python_inner_join(left: tuple[JoinRow, ...], right: tuple[JoinRow, ...]) -> JoinResult:
+    """Nested-loop join, independent of sqlite3."""
+    rows = [
+        (lid, llab, rid, rlab)
+        for lid, llab in left
+        for rid, rlab in right
+        if lid == rid
+    ]
+    return tuple(sorted(rows))
+
+
+def accuracy(preds: tuple[int, ...], labels: tuple[int, ...]) -> float:
+    if len(preds) != len(labels) or not preds:
+        raise DualOracleError("metric vectors must be nonempty and aligned")
+    hits = 0
+    for pred, label in zip(preds, labels, strict=True):
+        if pred == label:
+            hits += 1
+    return hits / len(preds)
+
+
+def accuracy_from_confusion(preds: tuple[int, ...], labels: tuple[int, ...]) -> float:
+    if len(preds) != len(labels) or not preds:
+        raise DualOracleError("metric vectors must be nonempty and aligned")
+    values = tuple(sorted(set(preds) | set(labels)))
+    index = {value: i for i, value in enumerate(values)}
+    matrix = [[0] * len(values) for _ in values]
+    for pred, label in zip(preds, labels, strict=True):
+        matrix[index[label]][index[pred]] += 1
+    diagonal = sum(matrix[i][i] for i in range(len(values)))
+    return diagonal / len(preds)
+
+
+def _eval_expr(expr: Expr, env: dict[str, int]) -> int:
+    tag = expr[0]
+    if tag == "const":
+        return int(expr[1])
+    if tag == "var":
+        return env[str(expr[1])]
+    if tag == "add":
+        return _eval_expr(expr[1], env) + _eval_expr(expr[2], env)
+    if tag == "sub":
+        return _eval_expr(expr[1], env) - _eval_expr(expr[2], env)
+    raise DualOracleError(f"unknown expression {tag!r}")
+
+
+def run_ast(stmts: tuple[Stmt, ...], env0: dict[str, int]) -> int:
+    """Recursive interpreter for the tiny trace language."""
+    env = dict(env0)
+
+    def run_block(block: tuple[Stmt, ...]) -> int | None:
+        for stmt in block:
+            tag = stmt[0]
+            if tag == "assign":
+                env[str(stmt[1])] = _eval_expr(stmt[2], env)
+                continue
+            if tag == "return":
+                return _eval_expr(stmt[1], env)
+            if tag == "while_gt":
+                guard_steps = 0
+                while env[str(stmt[1])] > int(stmt[2]):
+                    guard_steps += 1
+                    if guard_steps > 1000:
+                        raise DualOracleError("trace exceeded step bound")
+                    inner = run_block(stmt[3])
+                    if inner is not None:
+                        return inner
+                continue
+            raise DualOracleError(f"unknown statement {tag!r}")
+        return None
+
+    result = run_block(stmts)
+    if result is None:
+        raise DualOracleError("program did not return")
+    return result
+
+
+def run_stepper(stmts: tuple[Stmt, ...], env0: dict[str, int]) -> int:
+    """Independent stepper: flattened ops and an instruction pointer."""
+    ops: list[tuple[object, ...]] = []
+
+    def flatten(block: tuple[Stmt, ...]) -> None:
+        for stmt in block:
+            tag = stmt[0]
+            if tag == "assign":
+                ops.append(("assign", stmt[1], stmt[2]))
+                continue
+            if tag == "return":
+                ops.append(("return", stmt[1]))
+                continue
+            if tag == "while_gt":
+                head = len(ops)
+                ops.append(("loop_head", stmt[1], stmt[2], 0))
+                flatten(stmt[3])
+                ops.append(("jmp", head))
+                ops[head] = ("loop_head", stmt[1], stmt[2], len(ops))
+                continue
+            raise DualOracleError(f"unknown statement {tag!r}")
+
+    flatten(stmts)
+    env = dict(env0)
+    ip = 0
+    steps = 0
+    while ip < len(ops):
+        steps += 1
+        if steps > 1000:
+            raise DualOracleError("trace exceeded step bound")
+        op = ops[ip]
+        tag = op[0]
+        if tag == "assign":
+            env[str(op[1])] = _eval_expr(op[2], env)
+            ip += 1
+            continue
+        if tag == "return":
+            return _eval_expr(op[1], env)
+        if tag == "loop_head":
+            if env[str(op[1])] > int(op[2]):
+                ip += 1
+            else:
+                ip = int(op[3])
+            continue
+        if tag == "jmp":
+            ip = int(op[1])
+            continue
+        raise DualOracleError(f"unknown op {tag!r}")
+    raise DualOracleError("program did not return")
+
+
+def loop_states(start: int, step: int, guard_gt: int) -> tuple[int, ...]:
+    """Execute x = start; while x > guard: x = x - step. Bound the run."""
+    values = [start]
+    current = start
+    for _ in range(64):
+        if current <= guard_gt:
+            break
+        current = current - step
+        values.append(current)
+    else:
+        raise DualOracleError("loop did not terminate")
+    return tuple(values)
+
+
+def loop_nonneg_trace(start: int, step: int, guard_gt: int) -> bool:
+    """Invariant holds iff every executed value is >= 0."""
+    return all(value >= 0 for value in loop_states(start, step, guard_gt))
+
+
+def loop_nonneg_closed(start: int, step: int, guard_gt: int) -> bool:
+    """Independent assertion: arithmetic sequence stays non-negative."""
+    if start < 0:
+        return False
+    if step <= 0:
+        return start >= 0 and not (start > guard_gt)
+    current = start
+    while current > guard_gt:
+        current = current - step
+        if current < 0:
+            return False
+    return True
+
+
+def loop_nest_depth(tree: LoopTree) -> int:
+    """Static nest depth. ("body",) is 0; ("for", inner) adds one."""
+    tag = tree[0]
+    if tag == "body":
+        return 0
+    if tag == "for":
+        inner = tree[1]
+        if not isinstance(inner, tuple):
+            raise DualOracleError("for-node is missing its inner tree")
+        return 1 + loop_nest_depth(inner)
+    raise DualOracleError(f"unknown loop tree {tag!r}")
+
+
+def loop_nest_depth_alt(tree: LoopTree) -> int:
+    """Independent static count via an explicit stack."""
+    best = 0
+    stack: list[tuple[LoopTree, int]] = [(tree, 0)]
+    while stack:
+        node, depth = stack.pop()
+        tag = node[0]
+        if tag == "body":
+            best = max(best, depth)
+            continue
+        if tag == "for":
+            inner = node[1]
+            if not isinstance(inner, tuple):
+                raise DualOracleError("for-node is missing its inner tree")
+            stack.append((inner, depth + 1))
+            continue
+        raise DualOracleError(f"unknown loop tree {tag!r}")
+    return best
+
+
 def sat(clauses: tuple[tuple[int, ...], ...]) -> bool:
     """Brute-force SAT on a small CNF (variables are nonzero ints)."""
     variables = sorted({abs(lit) for clause in clauses for lit in clause})
     n = len(variables)
     for mask in range(1 << n):
-        assignment = {
-            variables[i]: bool(mask & (1 << i)) for i in range(n)
-        }
+        assignment = {variables[i]: bool(mask & (1 << i)) for i in range(n)}
         if all(
             any(
                 (lit > 0 and assignment[lit]) or (lit < 0 and not assignment[-lit])
@@ -95,31 +393,27 @@ def sat(clauses: tuple[tuple[int, ...], ...]) -> bool:
     return False
 
 
-def sat_alt(clauses: tuple[tuple[int, ...], ...]) -> bool:
-    """Recursive DPLL-shaped search, independent of the bit-mask walk."""
-    variables = sorted({abs(lit) for clause in clauses for lit in clause})
+def sat_z3(clauses: tuple[tuple[int, ...], ...]) -> bool:
+    """Pinned Z3 on the same small CNF. Brute force is the dual."""
+    try:
+        from z3 import Bool, Not, Or, Solver, sat as z3_sat
+    except ImportError as exc:
+        raise DualOracleError("z3-solver is required for SAT items") from exc
 
-    def ok(partial: dict[int, bool]) -> bool:
-        for clause in clauses:
-            if all(abs(lit) in partial for lit in clause):
-                if not any(
-                    (lit > 0 and partial[lit]) or (lit < 0 and not partial[-lit])
+    variables = {
+        abs(lit): Bool(f"v{abs(lit)}") for clause in clauses for lit in clause
+    }
+    solver = Solver()
+    for clause in clauses:
+        solver.add(
+            Or(
+                *[
+                    variables[lit] if lit > 0 else Not(variables[-lit])
                     for lit in clause
-                ):
-                    return False
-        return True
-
-    def search(index: int, partial: dict[int, bool]) -> bool:
-        if not ok(partial):
-            return False
-        if index == len(variables):
-            return True
-        var = variables[index]
-        return search(index + 1, {**partial, var: True}) or search(
-            index + 1, {**partial, var: False}
+                ]
+            )
         )
-
-    return search(0, {})
+    return solver.check() == z3_sat
 
 
 def entailed(

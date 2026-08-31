@@ -15,7 +15,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=9,<10"]
+dev = ["pytest>=9,<10", "z3-solver>=4.13,<5"]
+oracles = ["z3-solver>=4.13,<5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

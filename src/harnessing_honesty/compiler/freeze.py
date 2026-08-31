@@ -8,10 +8,11 @@ from pydantic import BaseModel, ConfigDict
 from harnessing_honesty.compiler.manifests import licence_rows, overlap_rows
 from harnessing_honesty.compiler.pool import EXCLUDED_DEVELOPMENT_IDS, confirmatory_pool
 from harnessing_honesty.compiler.wrapper import WRAPPER_PREFIX
+from harnessing_honesty.domain.enums import OracleStatus
 from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.observability.hashing import config_hash
-from harnessing_honesty.policies import DEVELOPMENT_VERIFIER_OUTPUT, INTRINSIC_TEXT, NONE_TEXT, TOOL_TEXT
-from harnessing_honesty.pressures import development_pressure_templates
+from harnessing_honesty.policies import INTRINSIC_TEXT, NONE_TEXT, TOOL_TEXT, confirmatory_ceiling_output
+from harnessing_honesty.pressures import confirmatory_wrapper_stems
 
 
 class FreezeManifest(BaseModel):
@@ -39,6 +40,26 @@ def _sha(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def freeze_template_payload() -> dict[str, object]:
+    """Policy texts and confirmatory stems. Orion pressures are not hashed here."""
+    return {
+        "none": NONE_TEXT,
+        "intrinsic": INTRINSIC_TEXT,
+        "tool": TOOL_TEXT,
+        "confirmatory_stems": list(confirmatory_wrapper_stems()),
+    }
+
+
+def _item_ceiling(item: InstrumentItem) -> str:
+    return confirmatory_ceiling_output(
+        oracle_name=item.oracle_name,
+        oracle_version=item.oracle_version,
+        evidence_ids=item.evidence_ids,
+        supported=item.oracle_status is OracleStatus.ENTAILED,
+        witness_id=item.evidence_ids[0],
+    )
+
+
 def build_freeze(
     items: tuple[InstrumentItem, ...] | None = None,
     *,
@@ -49,15 +70,8 @@ def build_freeze(
     analysis_code_hash: str | None = None,
 ) -> FreezeManifest:
     pool = items if items is not None else confirmatory_pool()
-    template_blob = json.dumps(
-        {
-            "none": NONE_TEXT,
-            "intrinsic": INTRINSIC_TEXT,
-            "tool": TOOL_TEXT,
-            "pressures": [item.text for item in development_pressure_templates()],
-        },
-        sort_keys=True,
-    )
+    template_blob = json.dumps(freeze_template_payload(), sort_keys=True)
+    report_blob = json.dumps([_item_ceiling(item) for item in pool], sort_keys=True)
     pool_blob = json.dumps(
         [item.model_dump(mode="json") for item in pool],
         sort_keys=True,
@@ -71,7 +85,7 @@ def build_freeze(
         wrapper_hash=_sha(WRAPPER_PREFIX),
         template_hash=_sha(template_blob),
         checker_hash=_sha("exact-checker@0.1"),
-        report_hash=_sha(DEVELOPMENT_VERIFIER_OUTPUT),
+        report_hash=_sha(report_blob),
         pool_hash=_sha(pool_blob),
         item_ids=tuple(item.item_id for item in pool),
         excluded_development_ids=tuple(sorted(EXCLUDED_DEVELOPMENT_IDS)),
