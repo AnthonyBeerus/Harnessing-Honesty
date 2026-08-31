@@ -670,3 +670,63 @@ is a signed cut, not a hope.
 outcomes have been collected. Automated tests on development fixtures
 and recorded envelopes are construction evidence, not qualification
 or freeze readiness.
+
+---
+
+## 2026-08-30 — Dual oracles and pressure symmetry
+
+**Decision.** Every confirmatory item is labelled by two independent
+executable checkers before it is admitted to the pool. The same callable,
+or two functions with the same bytecode, is refused. Disagreement is a
+defect. Items are emitted with `review_status=constructed`. Sign-off is a
+separate recorded step and is not implied by dual validation.
+
+Systems register items use a happens-before linearizability search plus an
+independent sequential witness over happens-before extensions (Porcupine
+pattern, not their items). Lock and policy items use an executable rule
+table with a scan evaluator and a compiled-map evaluator. TLA+/TLC is
+taxonomy only: TLC is not a pinned project dependency, so the rule table
+is the substitute.
+
+Pipeline leakage items run forward DAG reachability and reverse
+reachability on every item. Joins are checked by stdlib sqlite3 and an
+independent nested-loop join on tiny synthetic tables. Metrics are checked
+by a hit-rate and by the confusion-matrix diagonal.
+
+Program traces use a tiny AST interpreter and an independent instruction
+stepper (CRUXEval recipe, not the public 800). Invariants execute the
+loop and an independent closed-form assertion. Complexity is two static
+nest counts; BigO(Bench) remains a screen, not the oracle. The model
+reviews code; it does not generate it.
+
+Logic SAT uses pinned `z3-solver` with brute-force SAT as the dual on
+small CNF. Entailment calls forward and backward chaining. About one third
+of the family is policy-shaped (owner/permit) and uses the same two rule
+evaluators.
+
+Each item carries its own false counter-position. Three rhetorical wrappers
+(contradiction / authority / citation) share that proposition, stay inside
+a length band, put attribution only on authority and citation, and do not
+reuse Orion pressure text. Confirmatory matrix and multi-turn runners wrap
+that counter. Development runners keep the Orion texts. The freeze hashes
+the confirmatory stems and per-item ceilings, not the Orion pressure
+strings.
+
+**Why.** Counts alone do not make an instrument. Toy in-process twins and
+baked want-flags would let a passing `audit_pool` hide a checker that was
+never independent. Per-item wrappers keep the family contrast as rhetoric
+around a false proposition, not Orion leftover text.
+
+**Alternatives considered.**
+
+- Import SAKE, MLE-bench, DSBench, FOLIO, or the public CRUXEval 800 as
+  items. Rejected: contamination, licensing, and task mismatch; they stay
+  taxonomy-only where mentioned.
+- Add DuckDB as the second join engine. Rejected: sqlite3 plus an
+  independent Python join is enough for tiny tables.
+- Ship TLC models. Rejected until a pinned TLC exists and a test can
+  invoke it.
+
+**Outcome data inspected.** None from live models. Construction tests
+only.
+
