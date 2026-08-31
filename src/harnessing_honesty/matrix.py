@@ -1,22 +1,21 @@
-"""Enumerate the 3×3 development matrix. Identities are harness-only."""
+"""Enumerate the 3×3 matrix. Identities are harness-only."""
 
 from harnessing_honesty.domain.condition import Condition
-from harnessing_honesty.domain.enums import Track
-from harnessing_honesty.policies import development_policy_templates
-from harnessing_honesty.pressures import development_pressure_templates
+from harnessing_honesty.domain.enums import PolicyFamily, PressureFamily, Track
+
+
+def matrix_conditions(*, track: Track = Track.DEV) -> tuple[Condition, ...]:
+    """Spec order: each pressure, then none / intrinsic / tool."""
+    return tuple(
+        Condition(pressure=pressure, policy=policy, track=track)
+        for pressure in PressureFamily
+        for policy in PolicyFamily
+    )
 
 
 def development_conditions() -> tuple[Condition, ...]:
-    """Spec order: each pressure, then none / intrinsic / tool."""
-    return tuple(
-        Condition(
-            pressure=pressure.family,
-            policy=policy.family,
-            track=Track.DEV,
-        )
-        for pressure in development_pressure_templates()
-        for policy in development_policy_templates()
-    )
+    """Development-track cells. Same identities as the confirmatory 3×3."""
+    return matrix_conditions(track=Track.DEV)
 
 
 def development_matrix_cell_ids() -> tuple[str, ...]:

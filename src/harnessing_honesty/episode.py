@@ -24,8 +24,12 @@ from harnessing_honesty.domain import (
 from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.enums import PolicyFamily
 from harnessing_honesty.matrix import development_conditions
-from harnessing_honesty.policies import policy_follow_ups
-from harnessing_honesty.pressures import development_pressure_templates
+from harnessing_honesty.policies import DEVELOPMENT_VERIFIER_OUTPUT, policy_follow_ups
+from harnessing_honesty.pressures import (
+    PressureTemplate,
+    development_pressure_templates,
+    wrap_false_counter_position,
+)
 from harnessing_honesty.prompt_view import messages_for
 from harnessing_honesty.stages import advance
 from harnessing_honesty.transcript import Transcript
@@ -381,21 +385,18 @@ def run_shared_draft_episode(
     )
 
 
-def run_development_matrix(
+def _run_matrix(
     prompt: PromptView,
+    pressures: tuple[PressureTemplate, ...],
     client: ModelClient,
     order_seed: int,
     session: object | None = None,
+    *,
+    verifier_output: str,
 ) -> MatrixEpisodeRecord:
-    """Run the 3×3 matrix from one neutral response.
-
-    Each pressure family gets one draft. Each draft is cloned into three
-    policy finals. ``order_seed`` permutes pressure order and, with the
-    same seed, policy order inside each pressure.
-    """
+    """Run the 3×3 from one neutral response and the supplied pressure texts."""
     client = _bound(client, session)
-    pressures = development_pressure_templates()
-    policies = policy_follow_ups()
+    policies = policy_follow_ups(verifier_output)
     pressure_ids = tuple(item.family.value for item in pressures)
     pressures_by_id = {item.family.value: item for item in pressures}
     policy_ids = tuple(spec.branch_id for spec in policies)
@@ -495,25 +496,52 @@ def run_development_matrix(
     )
 
 
-def run_multi_turn_episode(
+def run_development_matrix(
     prompt: PromptView,
     client: ModelClient,
     order_seed: int,
     session: object | None = None,
+) -> MatrixEpisodeRecord:
+    """Development 3×3. Orion pressure texts stay on this path only."""
+    return _run_matrix(
+        prompt,
+        development_pressure_templates(),
+        client,
+        order_seed,
+        session,
+        verifier_output=DEVELOPMENT_VERIFIER_OUTPUT,
+    )
+
+
+def run_confirmatory_matrix(
+    prompt: PromptView,
+    counter_position: str,
+    client: ModelClient,
+    order_seed: int,
+    session: object | None = None,
+    *,
+    verifier_output: str,
+) -> MatrixEpisodeRecord:
+    """Confirmatory 3×3. Pressure texts wrap the item's false counter-position."""
+    return _run_matrix(
+        prompt,
+        wrap_false_counter_position(counter_position),
+        client,
+        order_seed,
+        session,
+        verifier_output=verifier_output,
+    )
+
+
+def _run_multi_turn(
+    prompt: PromptView,
+    pressures: tuple[PressureTemplate, ...],
+    client: ModelClient,
+    order_seed: int,
+    session: object | None = None,
 ) -> MultiTurnRecord:
-    """Apply every pressure family in a seeded order on one transcript.
-
-    Descriptive only. Turns accumulate, so turn ``n`` sees turns ``1..n-1``.
-    That is the opposite of the matrix, where each cell is isolated. Every
-    snapshot is ``Stage.MULTI_TURN``, which cannot reach
-    ``Stage.PRESSURED_FINAL``, so these turns cannot be read as matrix
-    cells. No policy text and no verifier output are attached here.
-
-    A turn that is not ``AnswerSuccess`` ends the spine; no assistant turn
-    is invented from a failure.
-    """
+    """Apply every supplied pressure family in a seeded order on one transcript."""
     client = _bound(client, session)
-    pressures = development_pressure_templates()
     pressures_by_id = {item.family.value: item for item in pressures}
     pressure_ids = tuple(item.family.value for item in pressures)
 
@@ -568,4 +596,47 @@ def run_multi_turn_episode(
         shared=shared,
         turns=tuple(turns),
         pressure_order=pressure_order,
+    )
+
+
+def run_multi_turn_episode(
+    prompt: PromptView,
+    client: ModelClient,
+    order_seed: int,
+    session: object | None = None,
+) -> MultiTurnRecord:
+    """Development spine. Orion pressure texts stay on this path only.
+
+    Descriptive only. Turns accumulate, so turn ``n`` sees turns ``1..n-1``.
+    That is the opposite of the matrix, where each cell is isolated. Every
+    snapshot is ``Stage.MULTI_TURN``, which cannot reach
+    ``Stage.PRESSURED_FINAL``, so these turns cannot be read as matrix
+    cells. No policy text and no verifier output are attached here.
+
+    A turn that is not ``AnswerSuccess`` ends the spine; no assistant turn
+    is invented from a failure.
+    """
+    return _run_multi_turn(
+        prompt,
+        development_pressure_templates(),
+        client,
+        order_seed,
+        session,
+    )
+
+
+def run_confirmatory_multi_turn(
+    prompt: PromptView,
+    counter_position: str,
+    client: ModelClient,
+    order_seed: int,
+    session: object | None = None,
+) -> MultiTurnRecord:
+    """Descriptive spine using the item's false counter-position wrappers."""
+    return _run_multi_turn(
+        prompt,
+        wrap_false_counter_position(counter_position),
+        client,
+        order_seed,
+        session,
     )

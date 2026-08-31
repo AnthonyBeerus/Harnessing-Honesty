@@ -1,8 +1,10 @@
 import argparse
 
 from harnessing_honesty.development_fixture import development_fixture
+from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.episode import (
     EpisodeRecord,
+    run_confirmatory_matrix,
     run_development_matrix,
     run_episode,
     run_multi_turn_episode,
@@ -21,11 +23,13 @@ from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 from harnessing_honesty.policies import (
     DEVELOPMENT_VERIFIER_OUTPUT,
+    confirmatory_ceiling_output,
     development_policy_templates,
 )
 from harnessing_honesty.pressures import (
     PROPOSITION_MARKERS,
     development_pressure_templates,
+    wrap_false_counter_position,
 )
 from harnessing_honesty.scenarios import (
     DEVELOPMENT_LOGIC_RATIONALE,
@@ -59,12 +63,17 @@ def _print_result(result: ModelResult) -> None:
         print(f"Protocol Failure: {result.detail}")
 
 
-def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
+def _success(
+    answer: str,
+    requested_message_count: int,
+    *,
+    rationale: str = DEVELOPMENT_LOGIC_RATIONALE,
+) -> AnswerSuccess:
     return AnswerSuccess(
         response=AnswerResponse(
             answer=answer,
             confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
+            rationale=rationale,
         ),
         requested_message_count=requested_message_count,
     )
@@ -118,10 +127,14 @@ def run_fake() -> None:
         print()
 
 
-def _matrix_script(answer: str) -> list[ModelResult]:
+def _matrix_script(
+    answer: str,
+    *,
+    rationale: str = DEVELOPMENT_LOGIC_RATIONALE,
+) -> list[ModelResult]:
     """One neutral, three drafts, nine finals: all scripted as correct."""
     counts = (1,) + (3,) * 3 + (5,) * 9
-    return [_success(answer, count) for count in counts]
+    return [_success(answer, count, rationale=rationale) for count in counts]
 
 
 def show_matrix() -> None:
@@ -228,6 +241,61 @@ def show_matrix() -> None:
     print(f"complete() calls: {len(spine_client.requests)}")
 
 
+def show_confirmatory_matrix() -> None:
+    """Render one confirmatory item's 3×3 with per-item pressure wrappers."""
+    item = confirmatory_pool()[0]
+    client = ScriptedModelClient(
+        _matrix_script(
+            item.answer_key.canonical_answer,
+            rationale="The supplied evidence determines the claim.",
+        )
+    )
+    ceiling = confirmatory_ceiling_output(
+        oracle_name=item.oracle_name,
+        oracle_version=item.oracle_version,
+        evidence_ids=item.evidence_ids,
+        supported=item.oracle_status.value == "entailed",
+        witness_id=item.evidence_ids[0],
+    )
+    record = run_confirmatory_matrix(
+        item.prompt,
+        item.false_counter_position,
+        client,
+        0,
+        verifier_output=ceiling,
+    )
+    pressure_texts = {
+        template.family.value: template.text
+        for template in wrap_false_counter_position(item.false_counter_position)
+    }
+
+    print(f"Item: {item.item_id}")
+    print(
+        f"complete() calls: {len(client.requests)}"
+        f" = 1 neutral + {len(record.drafts)} drafts"
+        f" + {len(record.branches)} finals"
+    )
+    print()
+    print("--- nine confirmatory requests ---")
+    for branch in record.branches:
+        turns = len(branch.snapshot.request)
+        print(f"[{branch.condition.identity}] turns={turns}")
+        print(f"    user: {_abbrev(branch.snapshot.request[2].content)}")
+        print()
+
+    pressure_ok = all(
+        branch.snapshot.request[2].content
+        == pressure_texts[branch.condition.pressure.value]
+        for branch in record.branches
+    )
+    orion_blob = " ".join(
+        message.content for request in client.requests for message in request
+    )
+    orion_absent = all(marker not in orion_blob for marker in PROPOSITION_MARKERS)
+    print(f"exactly one item wrapper per cell: {pressure_ok}")
+    print(f"Orion proposition markers absent: {orion_absent}")
+
+
 def run_live() -> None:
     """Development-only live smoke. Still a single call, not the pressured episode."""
     from pathlib import Path
@@ -245,7 +313,7 @@ def run_live() -> None:
 
 
 def main() -> None:
-    """CLI entry: ``run-fake``, ``show-matrix``, or ``run-live``."""
+    """CLI entry: ``run-fake``, ``show-matrix``, ``show-confirmatory-matrix``, or ``run-live``."""
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(required=True)
 
@@ -254,6 +322,9 @@ def main() -> None:
 
     matrix_parser = subcommands.add_parser("show-matrix")
     matrix_parser.set_defaults(command=show_matrix)
+
+    confirmatory_parser = subcommands.add_parser("show-confirmatory-matrix")
+    confirmatory_parser.set_defaults(command=show_confirmatory_matrix)
 
     live_parser = subcommands.add_parser("run-live")
     live_parser.set_defaults(command=run_live)
