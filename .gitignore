@@ -5,6 +5,7 @@ env/
 .env
 
 data/runs/
+data/qualification/
 
 .pytest_cache/
 __pycache__/

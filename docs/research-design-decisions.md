@@ -751,5 +751,31 @@ signed manifest.
 
 **Outcome data inspected.** None from live confirmatory collection.
 Envelope classification uses `tests/fixtures/captured_live_envelope.json`.
+`qualify-live` probes `config/qualification.example.yaml` (DeepInfra pin:
+google-ai-studio no longer lists `google/gemma-3-27b-it`) and writes
+`data/qualification/last_envelope.json` (gitignored). Freeze stays unsigned.
+
+---
+
+## 2026-09-02 — Live envelope is the downstream host
+
+**Decision.** A live pydantic-ai OpenRouter result has no
+`provider_details` on the run object. The host is
+`response.provider_details.downstream_provider` (`DeepInfra`, not
+`deepinfra`). Classification reads that field and compares case-folded
+to the pin. Missing identity on a manifested client is a protocol
+failure, not an accepted parse.
+
+`config/qualification.example.yaml` pins `deepinfra`.
+`config/development.example.yaml` and
+`tests/fixtures/captured_live_envelope.json` stay `google-ai-studio` so
+fake qualification and the captured fixture still agree.
+
+**Why.** A parsed `AnswerResponse` is not a served-system identity.
+google-ai-studio 404s this slug; retargeting the fixture to DeepInfra
+would make `qualify-fake` pass for the wrong reason.
+
+**Outcome data inspected.** Live probe calls only. No confirmatory
+collection. Freeze stays unsigned.
 
 

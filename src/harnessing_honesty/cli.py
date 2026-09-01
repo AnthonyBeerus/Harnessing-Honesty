@@ -340,6 +340,42 @@ def qualify_fake() -> None:
     print(f"freeze_ready: {report.freeze_ready}")
 
 
+def qualify_live() -> None:
+    """Probe the served route. Writes the envelope under data/. Does not freeze."""
+    import json
+    from pathlib import Path
+
+    from harnessing_honesty.config import load_run_config
+    from harnessing_honesty.domain import PromptView
+    from harnessing_honesty.qualification import qualify_served
+
+    config = load_run_config(Path("config/qualification.example.yaml"))
+    prompt = PromptView(id="qual-live", question="Answer yes or no. Is 2 even?")
+    client = PydanticAIModelClient.from_manifest(config.serving)
+    report = qualify_served(
+        config.serving.requested_model,
+        config.serving,
+        client,
+        prompt,
+        confirmatory_pool(),
+    )
+    envelope = getattr(client, "last_envelope", None)
+    out = Path("data/qualification")
+    out.mkdir(parents=True, exist_ok=True)
+    if isinstance(envelope, dict):
+        (out / "last_envelope.json").write_text(
+            json.dumps(envelope, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+    card = report.cards[0]
+    print(f"card: {card.name}")
+    print(f"structured_output_ok: {card.structured_output_ok}")
+    print(f"message_preservation_ok: {card.message_preservation_ok}")
+    print(f"live envelope classified: {report.live_envelope_classified}")
+    print(f"passed: {report.passed}")
+    print(f"freeze_ready: {report.freeze_ready}")
+
+
 def run_live() -> None:
     """Development-only live smoke. Still a single call, not the pressured episode."""
     from pathlib import Path
@@ -357,7 +393,7 @@ def run_live() -> None:
 
 
 def main() -> None:
-    """CLI entry: ``run-fake``, ``show-matrix``, ``show-confirmatory-matrix``, ``qualify-fake``, or ``run-live``."""
+    """CLI entry: ``run-fake``, ``show-matrix``, ``show-confirmatory-matrix``, ``qualify-fake``, ``qualify-live``, or ``run-live``."""
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(required=True)
 
@@ -372,6 +408,9 @@ def main() -> None:
 
     qualify_parser = subcommands.add_parser("qualify-fake")
     qualify_parser.set_defaults(command=qualify_fake)
+
+    qualify_live_parser = subcommands.add_parser("qualify-live")
+    qualify_live_parser.set_defaults(command=qualify_live)
 
     live_parser = subcommands.add_parser("run-live")
     live_parser.set_defaults(command=run_live)

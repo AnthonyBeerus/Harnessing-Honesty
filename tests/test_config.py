@@ -37,6 +37,13 @@ def test_example_yaml_loads() -> None:
     assert config.serving.routing.allow_fallbacks is False
 
 
+def test_qualification_yaml_pins_deepinfra() -> None:
+    config = load_run_config(Path("config/qualification.example.yaml"))
+
+    assert config.serving.requested_model == "google/gemma-3-27b-it"
+    assert config.serving.routing.provider_only == ("deepinfra",)
+
+
 def test_unknown_yaml_key_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "bad.yaml"
     path.write_text("track: dev\nhidden: true\n", encoding="utf-8")

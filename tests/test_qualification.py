@@ -29,6 +29,7 @@ from harnessing_honesty.qualification import (
     probe_structured_output,
     qualify,
     qualify_captured_envelope,
+    qualify_served,
     qualify_sut,
 )
 
@@ -161,3 +162,48 @@ def test_qualification_report_does_not_sign_a_freeze() -> None:
     assert report.freeze_ready is False
     assert report.live_envelope_classified is True
     assert len(report.sensitivity.item_ids) == 16
+
+
+class _EnvelopeClient:
+    def __init__(self, results: list[AnswerSuccess], envelope: dict[str, object]) -> None:
+        self._inner = ScriptedModelClient(results)
+        self.last_envelope: dict[str, object] | None = None
+        self._envelope = envelope
+
+    def complete(self, messages: tuple[Message, ...]) -> AnswerSuccess:
+        result = self._inner.complete(messages)
+        self.last_envelope = self._envelope
+        return result  # type: ignore[return-value]
+
+
+def test_qualify_served_uses_the_client_envelope() -> None:
+    client = _EnvelopeClient(
+        [_success(requested=1, observed=1), _success(requested=1, observed=1)],
+        _envelope(),
+    )
+    report = qualify_served(
+        "gemma-studio",
+        _serving(),
+        client,
+        _prompt(),
+        confirmatory_pool(),
+    )
+    assert report.live_envelope_classified is True
+    assert report.passed is True
+    assert report.freeze_ready is False
+
+
+def test_qualify_served_fails_without_an_envelope() -> None:
+    client = ScriptedModelClient(
+        [_success(requested=1, observed=1), _success(requested=1, observed=1)]
+    )
+    report = qualify_served(
+        "gemma-studio",
+        _serving(),
+        client,
+        _prompt(),
+        confirmatory_pool(),
+    )
+    assert report.live_envelope_classified is False
+    assert report.passed is False
+    assert report.freeze_ready is False

@@ -1,0 +1,18 @@
+track: dev
+serving:
+  requested_model: google/gemma-3-27b-it
+  routing:
+    provider_only:
+      - deepinfra
+    provider_order:
+      - deepinfra
+    allow_fallbacks: false
+    require_parameters: true
+    cache: false
+    compression: false
+  decoding:
+    temperature: 0.0
+    seed: 1
+  output_schema: AnswerResponse
+scheduler_seed: 0
+sampling_seed: 1

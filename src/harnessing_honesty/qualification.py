@@ -150,6 +150,32 @@ def qualify_captured_envelope(
     return classify_envelope(envelope, serving) is None
 
 
+def qualify_served(
+    name: str,
+    serving: ServingManifest,
+    client: ModelClient,
+    prompt: PromptView,
+    items: tuple[InstrumentItem, ...],
+    *,
+    same_host_pin: bool = True,
+) -> QualificationReport:
+    """Probe a live or scripted client. Uses ``last_envelope`` when present."""
+    card = qualify_sut(
+        name, serving, client, prompt, same_host_pin=same_host_pin
+    )
+    raw = getattr(client, "last_envelope", None)
+    envelope = raw if isinstance(raw, Mapping) else None
+    classified = (
+        envelope is not None and qualify_captured_envelope(serving, envelope)
+    )
+    return QualificationReport(
+        cards=(card,),
+        sensitivity=build_sensitivity_plan(items, (card,)),
+        live_envelope_classified=classified,
+        freeze_ready=False,
+    )
+
+
 def qualify(
     cards: tuple[SutCard, ...],
     items: tuple[InstrumentItem, ...],

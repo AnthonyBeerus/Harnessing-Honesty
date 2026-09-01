@@ -1,4 +1,5 @@
 import os
+from typing import cast
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent
@@ -11,7 +12,11 @@ from pydantic_ai.messages import (
     TextPart,
     UserPromptPart,
 )
-from pydantic_ai.models.openrouter import OpenRouterModel
+from pydantic_ai.models.openrouter import (
+    OpenRouterModel,
+    OpenRouterModelSettings,
+    OpenRouterProviderName,
+)
 from pydantic_ai.providers.openrouter import OpenRouterProvider
 
 from harnessing_honesty.config import ServingManifest
@@ -63,12 +68,12 @@ class PydanticAIModelClient:
             )
         provider = OpenRouterProvider(api_key=key)
         model = OpenRouterModel(manifest.requested_model, provider=provider)
-        settings = {
+        settings: OpenRouterModelSettings = {
             "temperature": manifest.decoding.temperature,
             "seed": manifest.decoding.seed,
             "openrouter_provider": {
-                "only": list(manifest.routing.provider_only),
-                "order": list(manifest.routing.provider_order),
+                "only": _provider_slugs(manifest.routing.provider_only),
+                "order": _provider_slugs(manifest.routing.provider_order),
                 "allow_fallbacks": False,
                 "require_parameters": True,
             },
@@ -100,7 +105,10 @@ class PydanticAIModelClient:
             return ProviderFailure(detail=str(exc))
 
         envelope = self._extract_envelope(result)
-        if envelope is not None:
+        if envelope is None:
+            if self._manifest is not None:
+                return ProtocolFailure(detail="envelope has no provider identity")
+        else:
             self.last_envelope = envelope
             failure = self.inspect_envelope(envelope)
             if failure is not None:
@@ -122,12 +130,44 @@ class PydanticAIModelClient:
         return classify_envelope(envelope, self._manifest)
 
     def _extract_envelope(self, result: object) -> dict[str, object] | None:
-        provider = getattr(result, "provider_details", None) or getattr(
+        raw = getattr(result, "provider_details", None) or getattr(
             result, "provider_response", None
         )
-        if isinstance(provider, dict):
-            return provider
-        return None
+        response = getattr(result, "response", None)
+        if not isinstance(raw, dict) and response is not None:
+            raw = getattr(response, "provider_details", None)
+        if not isinstance(raw, dict):
+            return None
+        safe = _json_safe(raw)
+        if not isinstance(safe, dict):
+            return None
+        envelope: dict[str, object] = safe
+        if "provider" not in envelope:
+            downstream = envelope.get("downstream_provider")
+            if isinstance(downstream, str) and downstream.strip():
+                envelope["provider"] = downstream.strip().lower()
+        if "model" not in envelope and response is not None:
+            model_name = getattr(response, "model_name", None)
+            if isinstance(model_name, str) and model_name:
+                envelope["model"] = model_name
+        if not envelope.get("provider") and not envelope.get("downstream_provider"):
+            return None
+        return envelope
+
+
+def _provider_slugs(names: tuple[str, ...]) -> list[OpenRouterProviderName]:
+    return [cast(OpenRouterProviderName, name) for name in names]
+
+
+def _json_safe(value: object) -> object:
+    if isinstance(value, dict):
+        return {str(key): _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    isoformat = getattr(value, "isoformat", None)
+    if callable(isoformat):
+        return isoformat()
+    return value
 
 
 class UnmappableRequestError(ValueError):

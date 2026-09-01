@@ -72,3 +72,25 @@ def test_pinned_envelope_is_accepted() -> None:
     )
 
     assert failure is None
+
+
+def test_downstream_provider_matches_pin() -> None:
+    """Live pydantic-ai envelopes name the host as downstream_provider."""
+    manifest = ServingManifest(
+        requested_model="google/gemma-3-27b-it",
+        routing=RoutingCard(
+            provider_only=("deepinfra",),
+            provider_order=("deepinfra",),
+        ),
+        decoding=DecodingCard(),
+    )
+
+    failure = classify_envelope(
+        {
+            "downstream_provider": "DeepInfra",
+            "model": "google/gemma-3-27b-it",
+        },
+        manifest,
+    )
+
+    assert failure is None

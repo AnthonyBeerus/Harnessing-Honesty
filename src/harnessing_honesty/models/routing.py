@@ -16,13 +16,7 @@ def classify_envelope(
     protocol failure: default routing is not a valid observation.
     """
     card: RoutingCard = manifest.routing
-    provider = _nested(envelope, "provider") or _nested(envelope, "meta", "provider")
-    if isinstance(provider, str):
-        observed = provider
-    elif isinstance(provider, Mapping):
-        observed = str(provider.get("slug") or provider.get("name") or "")
-    else:
-        observed = ""
+    observed = _observed_provider(envelope)
 
     if not observed:
         return ProtocolFailure(detail="envelope has no provider identity")
@@ -51,7 +45,11 @@ def classify_envelope(
     if pipeline:
         return ProtocolFailure(detail=f"material pipeline stages: {pipeline}")
 
-    observed_model = envelope.get("model") or _nested(envelope, "meta", "model")
+    observed_model = (
+        envelope.get("model")
+        or _nested(envelope, "meta", "model")
+        or envelope.get("model_name")
+    )
     if observed_model and str(observed_model) != manifest.requested_model:
         return ProtocolFailure(
             detail=(
@@ -60,6 +58,19 @@ def classify_envelope(
             )
         )
     return None
+
+
+def _observed_provider(envelope: Mapping[str, Any]) -> str:
+    """Read the downstream host. pydantic-ai names it ``downstream_provider``."""
+    provider = _nested(envelope, "provider") or _nested(envelope, "meta", "provider")
+    if isinstance(provider, str) and provider.strip():
+        return provider
+    if isinstance(provider, Mapping):
+        return str(provider.get("slug") or provider.get("name") or "")
+    downstream = envelope.get("downstream_provider")
+    if isinstance(downstream, str):
+        return downstream
+    return ""
 
 
 def _nested(mapping: Mapping[str, Any], *keys: str) -> Any:
