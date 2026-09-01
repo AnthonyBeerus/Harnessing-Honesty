@@ -1,9 +1,21 @@
-"""SUT cards and structured-output probes. Identity is the serving card."""
+"""SUT cards, structured-output probes, and a qualification report.
+
+Passing probes is not a freeze. ``freeze_ready`` stays false until a signed
+manifest exists.
+"""
+
+from collections.abc import Mapping
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
 from harnessing_honesty.config import ServingManifest
+from harnessing_honesty.domain import AnswerSuccess, Message, PromptView
 from harnessing_honesty.domain.enums import TaskFamily
+from harnessing_honesty.domain.instrument import InstrumentItem
+from harnessing_honesty.domain.protocols import ModelClient
+from harnessing_honesty.models.routing import classify_envelope
+from harnessing_honesty.prompt_view import messages_for
 
 
 class SutCard(BaseModel):
@@ -27,9 +39,7 @@ class SutCard(BaseModel):
 
     def exclude_unpinned_oss(self) -> "SutCard":
         if "gpt-oss" in self.name.lower() and not self.same_host_pin:
-            return self.model_copy(
-                update={"include_in_sensitivity": False}
-            )
+            return self.model_copy(update={"include_in_sensitivity": False})
         return self
 
 
@@ -49,3 +59,108 @@ class SensitivityPlan(BaseModel):
         if len(value) != 16:
             raise ValueError("sensitivity plan must name 16 items")
         return value
+
+
+class QualificationReport(BaseModel):
+    """Gate record. ``freeze_ready`` is never implied by probe success."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    cards: tuple[SutCard, ...]
+    sensitivity: SensitivityPlan
+    live_envelope_classified: bool
+    freeze_ready: bool = False
+
+    @property
+    def passed(self) -> bool:
+        eligible = tuple(card for card in self.cards if card.include_in_sensitivity)
+        if not eligible:
+            return False
+        probes_ok = all(
+            card.structured_output_ok and card.message_preservation_ok
+            for card in eligible
+        )
+        return probes_ok and self.live_envelope_classified
+
+
+def probe_structured_output(client: ModelClient, prompt: PromptView) -> bool:
+    """True iff the client returns a parsed ``AnswerResponse``."""
+    result = client.complete(messages_for(prompt))
+    return isinstance(result, AnswerSuccess)
+
+
+def probe_message_preservation(
+    client: ModelClient,
+    messages: tuple[Message, ...],
+) -> bool:
+    """True iff requested and observed counts match the harness request."""
+    result = client.complete(messages)
+    if not isinstance(result, AnswerSuccess):
+        return False
+    if result.requested_message_count != len(messages):
+        return False
+    if result.observed_message_count is None:
+        return False
+    return result.observed_message_count == len(messages)
+
+
+def qualify_sut(
+    name: str,
+    serving: ServingManifest,
+    client: ModelClient,
+    prompt: PromptView,
+    *,
+    same_host_pin: bool = True,
+) -> SutCard:
+    """Run both probes and apply the GPT-OSS pin rule."""
+    structured = probe_structured_output(client, prompt)
+    preserved = probe_message_preservation(client, messages_for(prompt))
+    card = SutCard(
+        name=name,
+        serving=serving,
+        structured_output_ok=structured,
+        message_preservation_ok=preserved,
+        same_host_pin=same_host_pin,
+    )
+    return card.exclude_unpinned_oss()
+
+
+def build_sensitivity_plan(
+    items: tuple[InstrumentItem, ...],
+    cards: tuple[SutCard, ...],
+) -> SensitivityPlan:
+    """Four confirmatory items per family; routes that remain in sensitivity."""
+    chosen: list[str] = []
+    for family in TaskFamily:
+        group = [item.item_id for item in items if item.family is family]
+        chosen.extend(group[:4])
+    routes = tuple(card.name for card in cards if card.include_in_sensitivity)
+    return SensitivityPlan(
+        item_ids=tuple(chosen),
+        families=tuple(TaskFamily),
+        route_names=routes,
+    )
+
+
+def qualify_captured_envelope(
+    serving: ServingManifest,
+    envelope: Mapping[str, Any],
+) -> bool:
+    """True iff a captured live envelope matches the pinned route."""
+    return classify_envelope(envelope, serving) is None
+
+
+def qualify(
+    cards: tuple[SutCard, ...],
+    items: tuple[InstrumentItem, ...],
+    *,
+    serving: ServingManifest,
+    envelope: Mapping[str, Any],
+) -> QualificationReport:
+    """Assemble the gate. Does not sign a freeze."""
+    return QualificationReport(
+        cards=cards,
+        sensitivity=build_sensitivity_plan(items, cards),
+        live_envelope_classified=qualify_captured_envelope(serving, envelope),
+        freeze_ready=False,
+    )

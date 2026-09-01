@@ -296,6 +296,50 @@ def show_confirmatory_matrix() -> None:
     print(f"Orion proposition markers absent: {orion_absent}")
 
 
+def qualify_fake() -> None:
+    """Run SUT probes against a scripted client. Does not sign a freeze."""
+    import json
+    from pathlib import Path
+
+    from harnessing_honesty.config import load_run_config
+    from harnessing_honesty.domain import PromptView
+    from harnessing_honesty.qualification import qualify, qualify_sut
+
+    config = load_run_config(Path("config/development.example.yaml"))
+    prompt = PromptView(id="qual-probe", question="Is the claim supported?")
+    rationale = "The supplied evidence determines the claim."
+    script: list[ModelResult] = [
+        AnswerSuccess(
+            response=AnswerResponse(answer="yes", confidence=1.0, rationale=rationale),
+            requested_message_count=1,
+            observed_message_count=1,
+        ),
+        AnswerSuccess(
+            response=AnswerResponse(answer="yes", confidence=1.0, rationale=rationale),
+            requested_message_count=1,
+            observed_message_count=1,
+        ),
+    ]
+    client = ScriptedModelClient(script)
+    card = qualify_sut(config.serving.requested_model, config.serving, client, prompt)
+    envelope = json.loads(
+        Path("tests/fixtures/captured_live_envelope.json").read_text(encoding="utf-8")
+    )
+    report = qualify(
+        (card,),
+        confirmatory_pool(),
+        serving=config.serving,
+        envelope=envelope,
+    )
+    print(f"card: {card.name}")
+    print(f"structured_output_ok: {card.structured_output_ok}")
+    print(f"message_preservation_ok: {card.message_preservation_ok}")
+    print(f"sensitivity items: {len(report.sensitivity.item_ids)}")
+    print(f"live envelope classified: {report.live_envelope_classified}")
+    print(f"passed: {report.passed}")
+    print(f"freeze_ready: {report.freeze_ready}")
+
+
 def run_live() -> None:
     """Development-only live smoke. Still a single call, not the pressured episode."""
     from pathlib import Path
@@ -313,7 +357,7 @@ def run_live() -> None:
 
 
 def main() -> None:
-    """CLI entry: ``run-fake``, ``show-matrix``, ``show-confirmatory-matrix``, or ``run-live``."""
+    """CLI entry: ``run-fake``, ``show-matrix``, ``show-confirmatory-matrix``, ``qualify-fake``, or ``run-live``."""
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(required=True)
 
@@ -325,6 +369,9 @@ def main() -> None:
 
     confirmatory_parser = subcommands.add_parser("show-confirmatory-matrix")
     confirmatory_parser.set_defaults(command=show_confirmatory_matrix)
+
+    qualify_parser = subcommands.add_parser("qualify-fake")
+    qualify_parser.set_defaults(command=qualify_fake)
 
     live_parser = subcommands.add_parser("run-live")
     live_parser.set_defaults(command=run_live)

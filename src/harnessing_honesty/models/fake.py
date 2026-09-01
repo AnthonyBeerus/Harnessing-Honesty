@@ -1,11 +1,14 @@
 from collections import deque
+from collections.abc import Sequence
 
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.results import ModelResult
 
 
 class ScriptedModelClient:
-    def __init__(self, results: list[ModelResult]) -> None:
+    def __init__(self, results: Sequence[ModelResult]) -> None:
+        self._results = deque(results)
+        self.requests: list[tuple[Message, ...]] = []
         self._results = deque(results)
         self.requests: list[tuple[Message, ...]] = []
 

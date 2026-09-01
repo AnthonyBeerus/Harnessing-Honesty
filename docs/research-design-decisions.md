@@ -554,8 +554,10 @@ establish a minimum effect. Family is nested in stratum, so a
 
 ## 2026-08-30 — Four families, wrapper, and source roles
 
-**Decision.** The confirmatory instrument is 60 freshly generated items in
-two nested strata, four families of 15:
+**Decision.** The confirmatory instrument is 60 compiler-instantiated items in
+two nested strata, four families of 15. A language model does not author
+items or keys. Python templates produce a formal core; two independent
+checkers label it; a wrapper renders the public yes/no prompt.
 
 - Document-grounded: system specifications, configuration, and reliability;
   data and ML pipeline validity.
@@ -620,8 +622,7 @@ enforce.
 **Decision.** The harness is developed as a scientific instrument using a
 stage-gated incremental V-model, with risk-driven, test-first increments.
 
-Each construction increment translates a research requirement into an
-architectural contract, an implementation, and automated verification.
+Each increment implements one research requirement as code and tests.
 Validation uses development fixtures and qualification cases. Iteration is
 permitted before preregistration. After a signed freeze, changes are
 documented defect corrections or protocol deviations, not ordinary
@@ -656,7 +657,7 @@ This is not Scrum-as-lifecycle (no scientific freeze), not a single-pass
 waterfall (pilots remain necessary), and not design-science as the
 dissertation method. The dissertation method remains the approved
 controlled experiment; the harness is its instrument. Test-first
-development is the practice inside each construction increment, not a
+development is the practice inside each increment, not a
 substitute for qualification or freeze.
 
 **Why.** IEEE 1012 treats verification and validation as lifecycle-wide
@@ -729,4 +730,26 @@ around a false proposition, not Orion leftover text.
 
 **Outcome data inspected.** None from live models. Construction tests
 only.
+
+---
+
+## 2026-09-01 — Pool accepted; qualification probes
+
+**Decision.** The 60 confirmatory items are accepted. Checklist walked:
+unique ids, 30/30 keys, 30/30 strata, 7/8 within family, twelve exemplars
+solved from evidence, licence rows without SAKE/FOLIO/CRUXEval-800 items,
+no Orion pressure text. `review_status` stays `constructed`. `signed_off`
+is still unset.
+
+`SutCard` now records structured-output and message-preservation probes.
+Unpinned GPT-OSS is dropped from sensitivity. The sensitivity plan names
+16 items, four per family. A captured OpenRouter envelope is classified
+against the routing card. `QualificationReport.freeze_ready` is false.
+
+**Why.** Accepting the pool is not a freeze. A passing probe is not a
+signed manifest.
+
+**Outcome data inspected.** None from live confirmatory collection.
+Envelope classification uses `tests/fixtures/captured_live_envelope.json`.
+
 
