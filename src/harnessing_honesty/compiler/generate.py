@@ -143,7 +143,7 @@ def _finish(
         output_hash=_digest(output_payload),
         evidence_ids=evidence_ids,
         false_counter_position=counter,
-        provenance="compiler-generated fictional instance",
+        provenance="compiler-instantiated fictional instance",
         licence="Apache-2.0",
         seed=seed,
         review_status="constructed",

@@ -778,4 +778,19 @@ would make `qualify-fake` pass for the wrong reason.
 **Outcome data inspected.** Live probe calls only. No confirmatory
 collection. Freeze stays unsigned.
 
+---
+
+## 2026-09-02 — Freeze hashes; then signed
+
+**Decision.** `build_freeze` hashes claims text and analysis sources.
+`freeze_ready` is true only if `signer` is set. Accepted the 60 items and
+the claims contract. `sign_off_pool` sets `review_status=signed_off`.
+Freeze id `freeze-2026-09-02`. Signer Anthony Morima jr. Serving hash
+from `config/qualification.example.yaml` (DeepInfra). No collection.
+No preregistration.
+
+**Why.** Sign-off is this accept, not dual validation or a probe pass.
+
+**Outcome data inspected.** None from confirmatory collection.
+
 

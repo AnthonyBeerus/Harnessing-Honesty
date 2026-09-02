@@ -1,7 +1,6 @@
 """SUT cards, structured-output probes, and a qualification report.
 
-Passing probes is not a freeze. ``freeze_ready`` stays false until a signed
-manifest exists.
+``freeze_ready`` is true only if freeze.signer is set.
 """
 
 from collections.abc import Mapping
@@ -9,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
+from harnessing_honesty.compiler.freeze import FreezeManifest
 from harnessing_honesty.config import ServingManifest
 from harnessing_honesty.domain import AnswerSuccess, Message, PromptView
 from harnessing_honesty.domain.enums import TaskFamily
@@ -157,6 +157,7 @@ def qualify_served(
     prompt: PromptView,
     items: tuple[InstrumentItem, ...],
     *,
+    freeze: FreezeManifest | None = None,
     same_host_pin: bool = True,
 ) -> QualificationReport:
     """Probe a live or scripted client. Uses ``last_envelope`` when present."""
@@ -172,7 +173,7 @@ def qualify_served(
         cards=(card,),
         sensitivity=build_sensitivity_plan(items, (card,)),
         live_envelope_classified=classified,
-        freeze_ready=False,
+        freeze_ready=freeze is not None and freeze.signer is not None,
     )
 
 
@@ -182,11 +183,12 @@ def qualify(
     *,
     serving: ServingManifest,
     envelope: Mapping[str, Any],
+    freeze: FreezeManifest | None = None,
 ) -> QualificationReport:
-    """Assemble the gate. Does not sign a freeze."""
+    """Set freeze_ready from freeze.signer."""
     return QualificationReport(
         cards=cards,
         sensitivity=build_sensitivity_plan(items, cards),
         live_envelope_classified=qualify_captured_envelope(serving, envelope),
-        freeze_ready=False,
+        freeze_ready=freeze is not None and freeze.signer is not None,
     )

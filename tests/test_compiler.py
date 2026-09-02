@@ -3,16 +3,34 @@
 import json
 
 from harnessing_honesty.compiler.audit import AuditError, audit_pool
-from harnessing_honesty.compiler.freeze import build_freeze, freeze_template_payload
+from harnessing_honesty.compiler.freeze import (
+    ACCEPTED_FREEZE_ID,
+    ACCEPTED_SIGNER,
+    CLAIMS,
+    accepted_freeze,
+    build_freeze,
+    freeze_template_payload,
+    sign_freeze,
+)
 from harnessing_honesty.compiler.manifests import licence_rows, overlap_rows
 from harnessing_honesty.compiler.oracles import (
     has_leakage,
     sat,
     sequential_register,
 )
-from harnessing_honesty.compiler.pool import EXCLUDED_DEVELOPMENT_IDS, confirmatory_pool
+from harnessing_honesty.compiler.pool import (
+    EXCLUDED_DEVELOPMENT_IDS,
+    confirmatory_pool,
+    sign_off_pool,
+)
 from harnessing_honesty.compiler.wrapper import WRAPPER_PREFIX
-from harnessing_honesty.domain.enums import OracleStatus, SourceRole, TaskFamily, TaskStratum
+from harnessing_honesty.domain.enums import (
+    CompilerStage,
+    OracleStatus,
+    SourceRole,
+    TaskFamily,
+    TaskStratum,
+)
 from harnessing_honesty.pressures import confirmatory_wrapper_stems
 
 
@@ -48,6 +66,13 @@ def test_every_item_is_dual_validated_and_wrapped() -> None:
         assert item.dependencies
         assert item.source_role
         assert item.licence
+
+
+def test_sign_off_pool_marks_every_item() -> None:
+    signed = sign_off_pool(confirmatory_pool())
+    assert all(item.review_status == "signed_off" for item in signed)
+    assert all(CompilerStage.SIGN_OFF in item.stages_completed for item in signed)
+    assert all(item.dual_validated for item in signed)
 
 
 def test_unknown_oracle_status_has_key_no() -> None:
@@ -106,6 +131,57 @@ def test_freeze_records_hashes_and_exclusions() -> None:
     assert freeze.pool_hash
     assert freeze.wrapper_hash
     assert freeze.template_hash
+    assert freeze.claims_hash
+    assert freeze.analysis_code_hash
+    assert freeze.signer is None
+
+
+def test_committed_freeze_matches_accepted_freeze() -> None:
+    from pathlib import Path
+
+    path = Path("config/freeze.json")
+    on_disk = json.loads(path.read_text(encoding="utf-8"))
+    rebuilt = json.loads(accepted_freeze().model_dump_json())
+    assert on_disk == rebuilt
+
+
+def test_claims_markdown_matches_the_locked_sentences() -> None:
+    from pathlib import Path
+
+    doc = Path("docs/claims-contract.md").read_text(encoding="utf-8")
+    plain = " ".join(doc.replace("**", "").replace("`", "").split())
+    for claim in CLAIMS:
+        assert claim in plain
+
+
+def test_sign_freeze_requires_a_serving_hash() -> None:
+    freeze = build_freeze(freeze_id="freeze-test")
+    try:
+        sign_freeze(freeze, "reviewer")
+    except ValueError as exc:
+        assert "serving_config_hash" in str(exc)
+    else:
+        raise AssertionError("unsigned serving hash must refuse a signature")
+
+
+def test_sign_freeze_records_the_signer() -> None:
+    freeze = build_freeze(
+        freeze_id="freeze-test",
+        serving_config_hash="abc",
+    )
+    signed = sign_freeze(freeze, "reviewer")
+    assert signed.signer == "reviewer"
+    assert signed.claims_hash == freeze.claims_hash
+
+
+def test_accepted_freeze_has_signer() -> None:
+    freeze = accepted_freeze()
+    assert freeze.freeze_id == ACCEPTED_FREEZE_ID
+    assert freeze.signer == ACCEPTED_SIGNER
+    assert freeze.serving_config_hash
+    assert freeze.analysis_code_hash
+    assert freeze.claims_hash
+    assert len(freeze.item_ids) == 60
 
 
 def test_freeze_templates_hash_stems_not_orion_pressures() -> None:

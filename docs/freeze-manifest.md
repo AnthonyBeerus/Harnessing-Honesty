@@ -9,8 +9,11 @@
 - confirmatory `item_ids`
 - `excluded_development_ids` (eight identities, including Orion)
 - licence names and overlap rows
+- `claims_hash`
 - optional serving-config and analysis-code hashes
+- optional `signer`
 
-Build it with `build_freeze()`. A `RunRecord` on the main track requires a
-`freeze_id`. Confirmatory items load from this manifest; they are not
-constructed as `ScenarioRecord(track=main)`.
+`config/freeze.json` is `freeze-2026-09-02`, signer Anthony Morima jr.
+A `RunRecord` on the main track requires a `freeze_id`. Confirmatory
+items load from this manifest; they are not constructed as
+`ScenarioRecord(track=main)`.

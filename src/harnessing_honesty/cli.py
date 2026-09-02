@@ -346,6 +346,7 @@ def qualify_live() -> None:
     from pathlib import Path
 
     from harnessing_honesty.config import load_run_config
+    from harnessing_honesty.compiler.freeze import accepted_freeze
     from harnessing_honesty.domain import PromptView
     from harnessing_honesty.qualification import qualify_served
 
@@ -358,6 +359,7 @@ def qualify_live() -> None:
         client,
         prompt,
         confirmatory_pool(),
+        freeze=accepted_freeze(),
     )
     envelope = getattr(client, "last_envelope", None)
     out = Path("data/qualification")
@@ -374,6 +376,15 @@ def qualify_live() -> None:
     print(f"live envelope classified: {report.live_envelope_classified}")
     print(f"passed: {report.passed}")
     print(f"freeze_ready: {report.freeze_ready}")
+
+
+def show_freeze() -> None:
+    """Print the accepted freeze."""
+    from harnessing_honesty.compiler.freeze import accepted_freeze
+
+    freeze = accepted_freeze()
+    print(freeze.model_dump_json(indent=2))
+    print(f"signer: {freeze.signer}")
 
 
 def run_live() -> None:
@@ -393,7 +404,7 @@ def run_live() -> None:
 
 
 def main() -> None:
-    """CLI entry: ``run-fake``, ``show-matrix``, ``show-confirmatory-matrix``, ``qualify-fake``, ``qualify-live``, or ``run-live``."""
+    """CLI entry: ``run-fake``, ``show-matrix``, ``show-confirmatory-matrix``, ``qualify-fake``, ``qualify-live``, ``show-freeze``, or ``run-live``."""
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(required=True)
 
@@ -411,6 +422,9 @@ def main() -> None:
 
     qualify_live_parser = subcommands.add_parser("qualify-live")
     qualify_live_parser.set_defaults(command=qualify_live)
+
+    freeze_parser = subcommands.add_parser("show-freeze")
+    freeze_parser.set_defaults(command=show_freeze)
 
     live_parser = subcommands.add_parser("run-live")
     live_parser.set_defaults(command=run_live)

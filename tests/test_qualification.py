@@ -1,6 +1,6 @@
 """SUT probes, 16-item sensitivity plan, and a qualification report.
 
-Freeze remains unsigned. Passing probes is not a freeze.
+``freeze_ready`` is independent of probe success.
 """
 
 from pathlib import Path
@@ -20,6 +20,7 @@ from harnessing_honesty.domain import (
 )
 from harnessing_honesty.domain.enums import TaskFamily
 from harnessing_honesty.models.fake import ScriptedModelClient
+from harnessing_honesty.compiler.freeze import build_freeze, sign_freeze
 from harnessing_honesty.qualification import (
     QualificationReport,
     SensitivityPlan,
@@ -207,3 +208,30 @@ def test_qualify_served_fails_without_an_envelope() -> None:
     assert report.live_envelope_classified is False
     assert report.passed is False
     assert report.freeze_ready is False
+
+
+def test_qualify_freeze_ready_only_when_signed() -> None:
+    client = ScriptedModelClient(
+        [_success(requested=1), _success(requested=1, observed=1)]
+    )
+    card = qualify_sut("gemma-studio", _serving(), client, _prompt())
+    unsigned = build_freeze(serving_config_hash=_serving().digest())
+    signed = sign_freeze(unsigned, "reviewer")
+    draft = qualify(
+        (card,),
+        confirmatory_pool(),
+        serving=_serving(),
+        envelope=_envelope(),
+        freeze=unsigned,
+    )
+    ready = qualify(
+        (card,),
+        confirmatory_pool(),
+        serving=_serving(),
+        envelope=_envelope(),
+        freeze=signed,
+    )
+    assert draft.passed is True
+    assert draft.freeze_ready is False
+    assert ready.freeze_ready is True
+    assert ready.passed is True

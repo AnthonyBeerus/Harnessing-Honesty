@@ -2,7 +2,7 @@
 
 from harnessing_honesty.compiler.audit import audit_pool
 from harnessing_honesty.compiler.generate import generate_family
-from harnessing_honesty.domain.enums import TaskFamily
+from harnessing_honesty.domain.enums import CompilerStage, TaskFamily
 from harnessing_honesty.domain.instrument import InstrumentItem
 
 EXCLUDED_DEVELOPMENT_IDS: frozenset[str] = frozenset(
@@ -30,3 +30,21 @@ def confirmatory_pool(seed: int = 20260830) -> tuple[InstrumentItem, ...]:
         raise RuntimeError("development identities leaked into the confirmatory pool")
     audit_pool(items)
     return items
+
+
+def sign_off_pool(items: tuple[InstrumentItem, ...]) -> tuple[InstrumentItem, ...]:
+    """Set review_status to signed_off and add the sign_off stage."""
+    signed: list[InstrumentItem] = []
+    for item in items:
+        stages = item.stages_completed
+        if CompilerStage.SIGN_OFF not in stages:
+            stages = (*stages, CompilerStage.SIGN_OFF)
+        signed.append(
+            item.model_copy(
+                update={
+                    "review_status": "signed_off",
+                    "stages_completed": stages,
+                }
+            )
+        )
+    return tuple(signed)
