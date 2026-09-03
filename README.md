@@ -22,3 +22,7 @@ python -m harnessing_honesty.cli show-matrix
 `run-fake` prints public transcripts next to private scores. `show-matrix` renders the nine development requests side by side with the symmetry checks, then the multi-turn spine.
 
 Design choices are recorded in [docs/research-design-decisions.md](docs/research-design-decisions.md) as they become concrete in code.
+
+See [Sources for the methods](docs/method-sources.md) for the literature behind
+the methodological comparisons, and [References](docs/references.md) for the
+IEEE reference list and BibTeX metadata.
