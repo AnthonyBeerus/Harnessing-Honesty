@@ -44,6 +44,13 @@ def test_qualification_yaml_pins_deepinfra() -> None:
     assert config.serving.routing.provider_only == ("deepinfra",)
 
 
+def test_seed_may_be_omitted() -> None:
+    config = load_run_config(Path("config/qualification.nemotron.digitalocean.yaml"))
+
+    assert config.serving.decoding.seed is None
+    assert config.serving.requested_model == "nvidia/nemotron-3-super-120b-a12b"
+
+
 def test_unknown_yaml_key_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "bad.yaml"
     path.write_text("track: dev\nhidden: true\n", encoding="utf-8")

@@ -1,0 +1,19 @@
+track: dev
+serving:
+  requested_model: openai/gpt-4o-2024-11-20
+  routing:
+    provider_only:
+      - openai
+    provider_order:
+      - openai
+    allow_fallbacks: false
+    require_parameters: true
+    cache: false
+    compression: false
+  decoding:
+    temperature: 0.0
+    seed: 1
+    max_tokens: 1024
+  output_schema: AnswerResponse
+scheduler_seed: 0
+sampling_seed: 1

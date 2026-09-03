@@ -340,7 +340,7 @@ def qualify_fake() -> None:
     print(f"freeze_ready: {report.freeze_ready}")
 
 
-def qualify_live() -> None:
+def qualify_live(config_path: str = "config/qualification.example.yaml") -> None:
     """Probe the served route. Writes the envelope under data/. Does not freeze."""
     import json
     from pathlib import Path
@@ -350,7 +350,8 @@ def qualify_live() -> None:
     from harnessing_honesty.domain import PromptView
     from harnessing_honesty.qualification import qualify_served
 
-    config = load_run_config(Path("config/qualification.example.yaml"))
+    path = Path(config_path)
+    config = load_run_config(path)
     prompt = PromptView(id="qual-live", question="Answer yes or no. Is 2 even?")
     client = PydanticAIModelClient.from_manifest(config.serving)
     report = qualify_served(
@@ -364,12 +365,13 @@ def qualify_live() -> None:
     envelope = getattr(client, "last_envelope", None)
     out = Path("data/qualification")
     out.mkdir(parents=True, exist_ok=True)
+    payload = ""
     if isinstance(envelope, dict):
-        (out / "last_envelope.json").write_text(
-            json.dumps(envelope, indent=2, sort_keys=True),
-            encoding="utf-8",
-        )
+        payload = json.dumps(envelope, indent=2, sort_keys=True)
+        (out / "last_envelope.json").write_text(payload, encoding="utf-8")
+        (out / f"{path.stem}.json").write_text(payload, encoding="utf-8")
     card = report.cards[0]
+    print(f"config: {path}")
     print(f"card: {card.name}")
     print(f"structured_output_ok: {card.structured_output_ok}")
     print(f"message_preservation_ok: {card.message_preservation_ok}")
@@ -421,6 +423,10 @@ def main() -> None:
     qualify_parser.set_defaults(command=qualify_fake)
 
     qualify_live_parser = subcommands.add_parser("qualify-live")
+    qualify_live_parser.add_argument(
+        "--config",
+        default="config/qualification.example.yaml",
+    )
     qualify_live_parser.set_defaults(command=qualify_live)
 
     freeze_parser = subcommands.add_parser("show-freeze")
@@ -430,7 +436,11 @@ def main() -> None:
     live_parser.set_defaults(command=run_live)
 
     arguments = parser.parse_args()
-    arguments.command()
+    command = arguments.command
+    if command is qualify_live:
+        command(arguments.config)
+    else:
+        command()
 
 
 if __name__ == "__main__":

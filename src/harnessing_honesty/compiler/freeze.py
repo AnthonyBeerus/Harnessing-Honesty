@@ -81,10 +81,31 @@ def _item_ceiling(item: InstrumentItem) -> str:
     )
 
 
+PRIMARY_SERVING_CARDS: tuple[str, ...] = (
+    "config/qualification.sonnet.anthropic.yaml",
+    "config/qualification.gpt4o.openai.yaml",
+    "config/qualification.gemma4.deepinfra.yaml",
+)
+
+
 def analysis_package_source() -> str:
     """Concat analysis/*.py as text. Do not import that package."""
     root = Path(__file__).resolve().parents[1] / "analysis"
     return "".join(path.read_text(encoding="utf-8") for path in sorted(root.glob("*.py")))
+
+
+def primary_serving_digest() -> str:
+    """Hash the three primary SUT cards, ordered by slug.
+
+    ``qualification.example.yaml`` stays the fake/fixture pin. It is not
+    the confirmatory serving identity.
+    """
+    materials = []
+    for path in PRIMARY_SERVING_CARDS:
+        serving = load_run_config(Path(path)).serving
+        materials.append(serving.material())
+    materials.sort(key=lambda row: str(row["requested_model"]))
+    return config_hash({"primary_serving": materials})
 
 
 def build_freeze(
@@ -140,13 +161,12 @@ def sign_freeze(freeze: FreezeManifest, signer: str) -> FreezeManifest:
 
 def accepted_freeze() -> FreezeManifest:
     """Return freeze-2026-09-02."""
-    config = load_run_config(Path("config/qualification.example.yaml"))
     unsigned = build_freeze(
         sign_off_pool(confirmatory_pool()),
         freeze_id=ACCEPTED_FREEZE_ID,
-        scheduler_seed=config.scheduler_seed,
-        sampling_seed=config.sampling_seed,
-        serving_config_hash=config.serving.digest(),
+        scheduler_seed=0,
+        sampling_seed=1,
+        serving_config_hash=primary_serving_digest(),
     )
     return sign_freeze(unsigned, ACCEPTED_SIGNER)
 

@@ -14,6 +14,9 @@
 - optional `signer`
 
 `config/freeze.json` is `freeze-2026-09-02`, signer Anthony Morima jr.
+The serving hash is the three primary cards (Sonnet 4.6, GPT-4o dated,
+Gemma 4), not `qualification.example.yaml`. Preregistration:
+https://osf.io/ae8wu (Open-Ended, 2026-09-03).
 A `RunRecord` on the main track requires a `freeze_id`. Confirmatory
 items load from this manifest; they are not constructed as
 `ScenarioRecord(track=main)`.

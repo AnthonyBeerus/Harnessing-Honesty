@@ -65,7 +65,7 @@ _BASE = (
         name="harness-compiler",
         role=SourceRole.GENERATOR,
         licence="Apache-2.0",
-        note="fresh fictional services; no public benchmark items",
+        note="fictional services; no public benchmark items",
     ),
 )
 _LOCK_RULES = (

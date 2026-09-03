@@ -70,7 +70,6 @@ class PydanticAIModelClient:
         model = OpenRouterModel(manifest.requested_model, provider=provider)
         settings: OpenRouterModelSettings = {
             "temperature": manifest.decoding.temperature,
-            "seed": manifest.decoding.seed,
             "openrouter_provider": {
                 "only": _provider_slugs(manifest.routing.provider_only),
                 "order": _provider_slugs(manifest.routing.provider_order),
@@ -79,8 +78,13 @@ class PydanticAIModelClient:
             },
             "openrouter_usage": {"include": True},
         }
+        if manifest.decoding.seed is not None:
+            settings["seed"] = manifest.decoding.seed
         if manifest.decoding.max_tokens is not None:
-            settings["max_tokens"] = manifest.decoding.max_tokens
+            # OpenAI SDK emits max_completion_tokens; OpenRouter's
+            # require_parameters check uses the pin's list, which names
+            # max_tokens (Anthropic, GPT-4o). extra_body keeps the cap.
+            settings["extra_body"] = {"max_tokens": manifest.decoding.max_tokens}
         agent = Agent(model, output_type=AnswerResponse, model_settings=settings)
         return cls(agent, manifest=manifest)
 

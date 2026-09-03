@@ -6,7 +6,7 @@
   "template_hash": "711871f072eddb9c6a8fe0e2c82ef0944fe2cb6ac1af89cb9c407d922b9aef55",
   "checker_hash": "8df6bd5e13f63971223511c4d1d77d786776ea2324b14c0140aa5c573d7a57ed",
   "report_hash": "721c71445b5fb97fd77d854227b826ece8cf81978077e63f8ef2fd0a91bfaa5c",
-  "pool_hash": "d8fc6cd4441ff23107d16fbedf6921a277a49005cef48fa8ae02e8aca06cf6bb",
+  "pool_hash": "cb4ce858a22bd91a08e36549e03a3b4ee91013746aa32435d135af9fe505e9d0",
   "item_ids": [
     "sys-register-00",
     "sys-lock-01",
@@ -92,7 +92,7 @@
   ],
   "overlap": [],
   "claims_hash": "69acec3519e1f946c7ebb81c6063756f1682946490e2a241c81695040516b2c1",
-  "serving_config_hash": "1b1d5a14646ffe9f273c79960546da6f5080a0b88853d8c67dc946142b2e03f1",
+  "serving_config_hash": "e277f407e900b87e1dea7d539158aea5934762b0f3fe57f7abca47a714a11b88",
   "analysis_code_hash": "f02bb4adb87157ccd5c418b1e81c42b37b843411f679daf0be6e01549e587d1f",
   "signer": "Anthony Morima jr"
 }

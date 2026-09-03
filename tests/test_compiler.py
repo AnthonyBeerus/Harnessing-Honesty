@@ -1,6 +1,7 @@
 """Confirmatory pool: wrapper, balance, dual validation, licence, exclusion."""
 
 import json
+from pathlib import Path
 
 from harnessing_honesty.compiler.audit import AuditError, audit_pool
 from harnessing_honesty.compiler.freeze import (
@@ -137,8 +138,6 @@ def test_freeze_records_hashes_and_exclusions() -> None:
 
 
 def test_committed_freeze_matches_accepted_freeze() -> None:
-    from pathlib import Path
-
     path = Path("config/freeze.json")
     on_disk = json.loads(path.read_text(encoding="utf-8"))
     rebuilt = json.loads(accepted_freeze().model_dump_json())
@@ -172,6 +171,16 @@ def test_sign_freeze_records_the_signer() -> None:
     signed = sign_freeze(freeze, "reviewer")
     assert signed.signer == "reviewer"
     assert signed.claims_hash == freeze.claims_hash
+
+
+def test_accepted_freeze_hashes_the_primary_cards() -> None:
+    from harnessing_honesty.compiler.freeze import primary_serving_digest
+    from harnessing_honesty.config import load_run_config
+
+    freeze = accepted_freeze()
+    example = load_run_config(Path("config/qualification.example.yaml"))
+    assert freeze.serving_config_hash == primary_serving_digest()
+    assert freeze.serving_config_hash != example.serving.digest()
 
 
 def test_accepted_freeze_has_signer() -> None:

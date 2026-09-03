@@ -48,7 +48,7 @@ class DecodingCard(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     temperature: float = 0.0
-    seed: int = 0
+    seed: int | None = 0
     max_tokens: int | None = None
 
 
@@ -67,7 +67,8 @@ class ServingManifest(BaseModel):
     def model_must_be_nonempty(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("requested_model must be nonempty")
-        if value.strip().endswith(":online") or value.strip().endswith(":free"):
+        slug = value.strip()
+        if slug.endswith((":online", ":free", ":batch", ":latest")):
             raise ValueError("moving aliases are protocol failures, not slugs")
         return value
 

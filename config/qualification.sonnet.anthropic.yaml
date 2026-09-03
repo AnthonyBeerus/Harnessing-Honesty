@@ -1,0 +1,19 @@
+track: dev
+serving:
+  requested_model: anthropic/claude-sonnet-4.6
+  routing:
+    provider_only:
+      - anthropic
+    provider_order:
+      - anthropic
+    allow_fallbacks: false
+    require_parameters: true
+    cache: false
+    compression: false
+  decoding:
+    temperature: 0.0
+    seed: null
+    max_tokens: 1024
+  output_schema: AnswerResponse
+scheduler_seed: 0
+sampling_seed: 1

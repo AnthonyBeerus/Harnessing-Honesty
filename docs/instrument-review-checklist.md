@@ -24,7 +24,7 @@ Orion (`dev-logic-chain-012`) is a development fixture, not a confirmatory item.
 | bigobench | taxonomy | MIT | screen only; not the complexity oracle |
 | cedar | taxonomy | Apache-2.0 | policy shape only |
 | cruxeval-recipe | taxonomy | MIT | recipe only; not the public 800 |
-| harness-compiler | generator | Apache-2.0 | fresh fictional services; no public benchmark items |
+| harness-compiler | generator | Apache-2.0 | fictional services; no public benchmark items |
 | porcupine | taxonomy | MIT | history checker pattern; no Porcupine items |
 | sqlite3 | checker | PSF-2.0 | CPython sqlite3; tiny synthetic tables; no DSBench items |
 | sqllogictest | taxonomy | MIT | join pattern only |

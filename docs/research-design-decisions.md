@@ -555,9 +555,9 @@ establish a minimum effect. Family is nested in stratum, so a
 ## 2026-08-30 — Four families, wrapper, and source roles
 
 **Decision.** The confirmatory instrument is 60 compiler-instantiated items in
-two nested strata, four families of 15. A language model does not author
-items or keys. Python templates produce a formal core; two independent
-checkers label it; a wrapper renders the public yes/no prompt.
+two nested strata, four families of 15. Python templates produce a formal
+core; two independent checkers label it; a wrapper renders the public
+yes/no prompt.
 
 - Document-grounded: system specifications, configuration, and reliability;
   data and ML pipeline validity.
@@ -792,5 +792,112 @@ No preregistration.
 **Why.** Sign-off is this accept, not dual validation or a probe pass.
 
 **Outcome data inspected.** None from confirmatory collection.
+
+---
+
+## 2026-09-02 — Preregistration sample
+
+**Decision.** The confirmatory sample follows the OpenRouter review, not
+one Gemma pin. Primary is `13 × 60 × M × 1`. M is Gemma 4 and Nemotron
+at minimum. Sensitivity is 16 items × same-upstream pair × two routes ×
+two full matrix reps. GPT-OSS joins only with a same-host pin.
+
+Live on 2026-09-02, DeepInfra: `google/gemma-4-26b-a4b-it` and
+`openai/gpt-oss-20b` passed structured-output and envelope checks.
+`nvidia/nemotron-3-super-120b-a12b` did not: NVIDIA absent, DeepInfra
+rejects tool_choice, DigitalOcean 502. OSF and collection wait on a
+Nemotron card.
+
+**Why.** TMLR and a sycophancy methods paper need rival-family breadth
+and a same-upstream route check. A single qualified pin is not that.
+
+**Outcome data inspected.** Qualification probes only. No confirmatory
+collection.
+
+---
+
+## 2026-09-02 — Mixed production sample
+
+**Decision.** Primary confirmatory SUTs are Claude Sonnet 4.6
+(`anthropic/claude-sonnet-4.6`, pin `anthropic`), dated GPT-4o
+(`openai/gpt-4o-2024-11-20`, pin `openai`), and Gemma 4
+(`google/gemma-4-26b-a4b-it`, pin `deepinfra`). M=3, unpooled.
+Nemotron is out. GPT-OSS is a pre-OSF substitute if a production slug
+fails qualification, not a third open primary. Route sensitivity is
+Gemma 4 only. Thinking off. Production cards use `max_tokens: 1024`.
+`:latest` / `:batch` refused. OSF and collection wait on live cards for
+every registered primary SUT.
+
+**Why.** Instruction-tuned production assistants are the sycophancy
+object; Gemma 4 is the live identifiable open size contrast. A second
+Google production model, Grok, GPT-5.x, and Nemotron do not add a new
+type. GPT-OSS is the same size class as Gemma 4. Sensitivity on
+frontier APIs doubles cost without an equivalence test.
+
+**Outcome data inspected.** OpenRouter catalogue and prior DeepInfra
+qualification probes. No confirmatory collection. Sonnet and GPT-4o
+are not yet live cards.
+
+---
+
+## 2026-09-02 — Production cards live
+
+**Decision.** `qualify-live --config` probes a named YAML card and writes
+`data/qualification/{stem}.json`. First Sonnet probe 404ed: the OpenAI
+SDK emitted `max_completion_tokens`, which the Anthropic pin does not
+list under `require_parameters`. The client now sends the cap as
+`extra_body.max_tokens`. Retried: Sonnet (`anthropic`) and GPT-4o
+(`openai`) both passed structured output, message preservation, and
+envelope classification. GPT-OSS substitute unused. OSF may proceed.
+No confirmatory collection.
+
+**Why.** A 404 on parameters is not a sycophancy result. The served pair
+is still first-party Anthropic / OpenAI with a 1024-token cap named as
+`max_tokens`.
+
+**Outcome data inspected.** Qualification probes only. No confirmatory
+collection.
+
+---
+
+## 2026-09-02 — Freeze serving hash is the primary panel
+
+**Decision.** `accepted_freeze` hashes Sonnet 4.6, GPT-4o dated, and
+Gemma 4 (slug-ordered serving material). `qualification.example.yaml`
+stays the fake/fixture pin. Signer unchanged. Freeze id stays
+`freeze-2026-09-02`. No collection.
+
+**Why.** The signed freeze named a Gemma 3 example card after the
+confirmatory SUTs had already moved. A serving hash is the identity of
+the evaluated pairs, not a leftover probe file.
+
+**Outcome data inspected.** None from confirmatory collection.
+
+---
+
+## 2026-09-02 — Sonnet stays
+
+**Decision.** Keep `anthropic/claude-sonnet-4.6`. Do not replace it with
+Gemini or Grok to raise the expected base rate. GPT-4o is the production
+card with a published regressive record. Sonnet is the other production
+instruct assistant. Gemma 4 is the open size/host contrast. AEDI’s low
+deference for Sonnet 4.6 is a pre-registered floor-effect risk, reported
+on that card only.
+
+**Outcome data inspected.** None from confirmatory collection.
+
+---
+
+## 2026-09-03 — OSF registration
+
+**Decision.** Open-Ended registration https://osf.io/ae8wu is public.
+`preregistration-template.md` and `freeze.json` match the local SHA-256
+digests. No confirmatory collection until a MAIN collector exists.
+
+**Why.** The timestamp is the third-party lock. The repo copy may now
+point at that URL; the registered files stay as archived.
+
+**Outcome data inspected.** None from confirmatory collection.
+
 
 
