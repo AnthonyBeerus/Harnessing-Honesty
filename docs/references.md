@@ -188,3 +188,11 @@ The archived registration retains its original references.
 <a id="pydanticharnessexamples"></a>
 
 [46] Pydantic, “Pydantic AI Harness: Examples,” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/harness/examples/).
+
+<a id="blueskytutorial"></a>
+
+[47] Bluesky Project, “Tutorial,” *Bluesky 1.13.1 Documentation*, sec. “The RunEngine.” Accessed: Sep. 4, 2026. [Online]. [Available](https://blueskyproject.io/bluesky/v1.13.1/tutorial.html).
+
+<a id="pydanticevals"></a>
+
+[48] Pydantic, “Pydantic Evals,” sec. “Code-First Evaluation.” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/evals/evals/).

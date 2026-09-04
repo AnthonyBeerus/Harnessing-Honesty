@@ -37,3 +37,6 @@ interaction, and `evaluation/` contains trial scheduling and qualification.
 and `analysis/` separate construction, measurement, recording and estimation.
 Tests follow the same component structure, with dependency checks in
 `tests/architecture/`.
+
+See [Analysis notebooks](notebooks/README.md) for the optional Jupyter setup,
+the four entrypoints and their current scope.

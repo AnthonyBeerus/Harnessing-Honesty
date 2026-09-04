@@ -72,7 +72,7 @@ version; current documentation may describe a different interface.
 | Scoring | Classify validity and correctness | Recorded responses and private keys; no authority to modify the conversation or request another answer. |
 | Observability | Persist execution evidence | Events, transmitted requests, responses and integrity metadata; no authority to choose conditions. |
 | Analysis | Reconstruct and estimate offline | Completed records and scoring inputs; no dependency from collection on estimates. |
-| Notebooks | Present reproducible offline analyses | Calls analysis functions rather than maintaining a second estimator. |
+| Notebooks | Operate collection and present offline analyses | Planned controls call the collection interface; analysis notebooks call analysis functions. Neither defines a separate experimental procedure. |
 | CLI | Assemble and invoke operations | Constructs dependencies for the selected command and delegates execution. |
 
 The evaluation layer owns which branches are compared and their trial order.
@@ -92,6 +92,42 @@ model response.
 The labelled external report is an intentional information channel into the
 runtime. Its permitted fields are defined by the protocol. The private
 answer key and final outcome scorer remain outside that channel.
+
+## Notebook operation
+
+The planned notebook and CLI share a collection interface owned by `evaluation`.
+Bluesky separates interactive use from its RunEngine's execution and recording
+responsibilities [[47, Sec. "The RunEngine"]](references.md#blueskytutorial).
+Pydantic Evals supplies a Python interface returning evaluation reports
+[[48, Sec. "Code-First Evaluation"]](references.md#pydanticevals).
+The choice of a separate worker process is specific to this study: it prevents
+notebook kernel state from owning the collection lifecycle.
+
+| Interface operation | Input and result |
+|---|---|
+| Validate | A typed run specification produces readiness findings and a configuration identity; no calls are dispatched. |
+| Preview | The specification produces request examples, condition order and workload estimates without modifying run state. |
+| Launch | An explicitly approved specification produces a durable run identity and starts one worker. A duplicate request returns existing state; conflicting configuration is rejected. |
+| Status | A run identity returns saved progress, attempt states, worker status and artifact locations. |
+| Stop | A run identity requests a recorded stop; in-flight or indeterminate attempts retain their status. |
+| Resume | A run identity permits continuation from durable state after readiness and ownership checks; uncertain dispatches are not silently repeated. |
+
+Notebook variables hold selections and displayed results. Durable records own
+the accepted specification, schedule, run identity and attempt history.
+Changing a cell cannot change an accepted run. Reopening the notebook reconnects
+by run identity; a lost notebook kernel does not establish that its worker stopped.
+The collection service enforces ownership, duplicate protection and protocol
+checks independently of both interfaces. Credentials remain outside saved cells
+and outputs.
+
+Runtime code retains branch isolation and finalization; model adapters retain
+request handling; scoring retains outcome classification. Notebook/CLI equivalence
+requires matching requests, schedule, retries and reconstructed outcomes on the
+same deterministic fixture, with identifiers and timestamps accounted for.
+The current synchronous client also requires execution outside Jupyter's active
+event loop (`Agent.run_sync`, versioned source [[43]](references.md#pydanticai11071)).
+The worker and interface contract remain unimplemented. Release execution of
+the operational notebook will use offline fixtures and cannot launch paid runs.
 
 ## Organization and alternatives
 
@@ -131,8 +167,9 @@ tests/
 The repository-level `config/` directory contains experiment configuration;
 `docs/` contains the protocol and methodological documentation. The original
 OSF submission remains in `docs/baseline/`. The package name and CLI entrypoint
-are unchanged. Notebook entrypoints are not yet implemented; their intended
-role is offline analysis outside the runtime package.
+are unchanged. The [notebook entrypoints](../notebooks/README.md) reside outside
+the runtime package. They currently expose the inventory and analysis
+interfaces; substantive audits and statistical estimation remain incomplete.
 
 This organization follows harness responsibilities rather than copying the
 SDK's directory tree. Reimplementing Pydantic's agent loop or provider layer

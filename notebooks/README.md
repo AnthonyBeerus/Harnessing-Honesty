@@ -1,0 +1,92 @@
+# Experiment and analysis notebooks
+
+| Source | Current scope |
+|---|---|
+| `01_instrument_audit.py` | Working freeze inventory |
+| `02_run_audit.py` | Existing event reconstruction for a selected local run |
+| `03_power.py` | Design reference; no power simulation |
+| `04_results.py` | Analysis-row contract; no empirical estimates |
+
+These are initial entrypoints. The remaining scientific checks and estimators
+are not implemented by these notebooks. Calculations belong in the package;
+notebooks supply inputs and present outputs.
+
+## Planned experiment-control notebook
+
+A fifth notebook will provide an interface for operating the experiment.
+The collector and this notebook are not yet implemented. The intended workflow is:
+
+| Operation | Information presented |
+|---|---|
+| Select configuration | Registered conditions, scenario inventory, serving configuration and output location |
+| Check readiness | Passed and failed collection checks, planned call count and estimated cost with assumptions |
+| Preview | Representative requests and the planned condition schedule |
+| Launch | Explicit start of an approved run using the validated configuration |
+| Monitor | Recorded progress, usage, serving failures and worker status |
+| Stop or resume | Persisted run identity, interrupted attempts and the permitted continuation |
+| Inspect artifacts | Saved records for the run-audit notebook |
+
+Both notebook and CLI will use the same collection interface described in
+[Harness architecture](../docs/architecture-boundaries.md#notebook-operation).
+Bluesky's RunEngine provides a precedent for separating interactive operation
+from experiment execution [47, Sec. "The RunEngine"]. Pydantic Evals exposes
+evaluation through Python calls and report objects [48, Sec. "Code-First Evaluation"].
+These precedents support the interface design; they do not establish the
+validity of this study's procedure.
+
+Opening, synchronizing or rendering the notebook will not start collection.
+Automated checks will use offline fixtures. Live launch will require a separate,
+explicit operation after approval of the concrete call and cost plan.
+Monitoring will expose operational progress without using interim outcomes
+to determine which trials execute or when collection stops.
+
+## Setup
+
+From the repository root, with the project virtual environment active:
+
+```bash
+python -m pip install -e ".[notebooks]"
+python -m ipykernel install --prefix .venv --name harnessing-honesty --display-name "Harnessing Honesty"
+python -m jupytext --sync notebooks/01_instrument_audit.py
+python -m jupyterlab
+```
+
+Open the generated `.ipynb` file and select the **Harnessing Honesty** kernel.
+Use the same sync command for the other source files. After editing a generated
+notebook, sync it again to retain its changes in the Python source [38].
+
+Jupytext percent-format files hold the authored cells and Markdown in Git.
+The paired `.ipynb` files contain local outputs and are ignored. This separates
+editable sources from executed artifacts [38].
+
+## Execute all four
+
+```bash
+python scripts/run_notebooks.py --output data/notebooks/check-001
+```
+
+Choose a new output directory for each execution. Each notebook runs in a fresh
+kernel from the repository root; an error stops execution [39]. The directory
+contains executed notebooks and `execution.json`, recording source hashes,
+the Git revision and working-tree status, package versions, and completion
+status. This is execution provenance, not a complete research-data archive.
+The default run audit has no selected data and reports that no audit occurred.
+
+Notebook dependencies are optional and separate from collection dependencies.
+No live model calls are made by these entrypoints.
+
+## References
+
+IEEE numbers follow the [project bibliography](../docs/references.md).
+
+[38] Jupytext contributors, “Jupytext.” Accessed: Sep. 4, 2026. [Online].
+Available: https://github.com/jupytext/jupytext.
+
+[39] Jupyter contributors, “Executing notebooks.” Accessed: Sep. 4, 2026.
+[Online]. Available: https://nbclient.readthedocs.io/en/latest/client.html.
+
+[47] Bluesky Project, “Tutorial,” *Bluesky 1.13.1 Documentation*, sec. “The RunEngine.”
+Accessed: Sep. 4, 2026. [Online]. Available: https://blueskyproject.io/bluesky/v1.13.1/tutorial.html.
+
+[48] Pydantic, “Pydantic Evals,” sec. “Code-First Evaluation.” Accessed: Sep. 4, 2026.
+[Online]. Available: https://pydantic.dev/docs/ai/evals/evals/.

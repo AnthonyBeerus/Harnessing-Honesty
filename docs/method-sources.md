@@ -142,5 +142,14 @@ Notebook guidance addresses readable, reproducible computational analyses
 [[26]](references.md#rule2019notebooks). Jupytext provides text representations
 for review, and nbclient executes notebooks
 [[38]](references.md#jupytext), [[39]](references.md#nbclient).
-These are sources for the proposed Python analysis notebooks, not a claim that
-notebooks or their execution checks are already present.
+The [notebook workflow](../notebooks/README.md) uses percent-format Python
+sources and fresh-kernel execution. Its initial entrypoints do not implement
+the remaining instrument audits, power simulations or statistical estimators.
+
+For the planned experiment-control notebook, Bluesky's "The RunEngine" section
+supports separating interactive operation from execution, and Pydantic Evals'
+"Code-First Evaluation" section supplies a Python interface precedent
+[[47]](references.md#blueskytutorial), [[48]](references.md#pydanticevals).
+The [collection interface](architecture-boundaries.md#notebook-operation), worker
+isolation and duplicate protection are this study's design decisions. Neither
+framework is adopted as a replacement for the registered procedure.
