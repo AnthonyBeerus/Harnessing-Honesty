@@ -26,3 +26,14 @@ Design choices are recorded in [docs/research-design-decisions.md](docs/research
 See [Sources for the methods](docs/method-sources.md) for the literature behind
 the methodological comparisons, and [References](docs/references.md) for the
 IEEE reference list and BibTeX metadata.
+
+## Repository structure
+
+The [harness architecture](docs/architecture-boundaries.md) explains the
+component boundaries and their methodological basis. In `src/harnessing_honesty/`,
+`runtime/` contains context and finalization logic, `models/` contains provider
+interaction, and `evaluation/` contains trial scheduling and qualification.
+`domain/` defines shared contracts; `compiler/`, `scoring/`, `observability/`
+and `analysis/` separate construction, measurement, recording and estimation.
+Tests follow the same component structure, with dependency checks in
+`tests/architecture/`.

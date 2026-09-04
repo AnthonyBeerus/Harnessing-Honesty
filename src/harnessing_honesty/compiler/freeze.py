@@ -9,12 +9,12 @@ from pydantic import BaseModel, ConfigDict
 from harnessing_honesty.compiler.manifests import licence_rows, overlap_rows
 from harnessing_honesty.compiler.pool import EXCLUDED_DEVELOPMENT_IDS, confirmatory_pool, sign_off_pool
 from harnessing_honesty.compiler.wrapper import WRAPPER_PREFIX
-from harnessing_honesty.config import load_run_config
+from harnessing_honesty.models.config import load_run_config
 from harnessing_honesty.domain.enums import OracleStatus
 from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.observability.hashing import config_hash
-from harnessing_honesty.policies import INTRINSIC_TEXT, NONE_TEXT, TOOL_TEXT, confirmatory_ceiling_output
-from harnessing_honesty.pressures import confirmatory_wrapper_stems
+from harnessing_honesty.runtime.policies import INTRINSIC_TEXT, NONE_TEXT, TOOL_TEXT, confirmatory_ceiling_output
+from harnessing_honesty.runtime.pressures import confirmatory_wrapper_stems
 
 CLAIMS: tuple[str, ...] = (
     "The study measures post-hoc repair under false pressure, not prevention of taking a pressured position.",

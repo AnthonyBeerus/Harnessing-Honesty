@@ -95,12 +95,44 @@ answer key and final outcome scorer remain outside that channel.
 
 ## Organization and alternatives
 
-The proposed organization places execution, context, finalization and
-verification under `runtime`, with trial assignment and scheduling under
-`evaluation`. The existing domain, compiler, models, observability and analysis
-packages retain their responsibilities. Small coherent components remain
-modules. The package name and CLI entrypoint remain unchanged. Notebooks sit
-outside the runtime package because their role is offline analysis.
+Execution, context, pressure text and finalization policies reside under
+`runtime`. Scheduling, qualification and development fixtures reside under
+`evaluation`. Shared episode records and condition definitions reside in
+`domain`, allowing scoring to consume records without importing the runner.
+Serving configuration resides beside the model adapters. The scorer exposes
+its public interface through `scoring/__init__.py`; this preserves the imports
+in the registered analysis source.
+
+```text
+src/harnessing_honesty/
+├── cli.py                 Command selection and dependency assembly
+├── domain/                Contracts, episode records and condition definitions
+├── runtime/               Episode execution, branching, context and policies
+├── models/                SDK adapter, serving configuration and response handling
+├── evaluation/            Scheduling, qualification and development fixtures
+├── compiler/              Scenario construction, oracle checks and manifests
+├── scoring/               Outcome calculations and private checkers
+├── observability/         Recording, storage and event reconstruction
+└── analysis/              Offline reconstruction and estimation
+
+tests/
+├── architecture/          Import boundaries and package checks
+├── domain/
+├── runtime/
+├── models/
+├── evaluation/
+├── compiler/
+├── scoring/
+├── observability/
+├── analysis/
+└── fixtures/              Captured response data
+```
+
+The repository-level `config/` directory contains experiment configuration;
+`docs/` contains the protocol and methodological documentation. The original
+OSF submission remains in `docs/baseline/`. The package name and CLI entrypoint
+are unchanged. Notebook entrypoints are not yet implemented; their intended
+role is offline analysis outside the runtime package.
 
 This organization follows harness responsibilities rather than copying the
 SDK's directory tree. Reimplementing Pydantic's agent loop or provider layer
@@ -128,12 +160,20 @@ behaviour. A change to any of these can alter the instrument and therefore
 cannot be treated as a purely structural change. Compatibility at the public
 SDK interface does not by itself establish equivalence on the request path.
 
-Existing evidence includes [client conformance](../tests/test_model_client_conformance.py)
-and [analysis isolation](../tests/test_analysis_boundary.py). The latter
-recognizes selected absolute imports but does not resolve relative imports.
-The proposed organization has not yet been implemented. Runtime and evaluation
-responsibilities remain mixed in top-level modules, and notebook entrypoints
-are not yet present.
+Existing evidence includes [client conformance](../tests/models/test_model_client_conformance.py)
+and [dependency checks](../tests/architecture/test_analysis_boundary.py).
+The latter resolve absolute and relative static imports, including imports
+through package aliases. They prohibit dependencies from runtime and model
+adapters on evaluation, compilation, scoring and analysis; from scoring on
+execution; and from domain contracts on implementation packages. Imports of
+analysis remain prohibited throughout the other packages.
+
+These checks constrain source dependencies, not all possible information
+flows. Dynamic imports, arguments passed through shared contracts and the
+contents of transmitted requests require separate validation. Episode runners
+still perform the seeded ordering of branches within a workflow; the outer
+scheduler orders trial cells. The directory separation does not itself supply
+the missing MAIN collector or establish serving equivalence.
 
 Architectural documentation and scholarly references are separate from the
 experimental input. Their inclusion in prompts or schema descriptions would

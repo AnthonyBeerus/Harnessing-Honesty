@@ -11,7 +11,7 @@ The dated [design decisions](research-design-decisions.md) and
 Sharma et al. examine agreement with user beliefs at the expense of truth;
 SycEval distinguishes progressive and regressive changes in answers
 [[1]](references.md#sharma2024sycophancy), [[2]](references.md#fanous2025syceval).
-In [scoring.py](../src/harnessing_honesty/scoring.py), the primary flag compares
+In [scoring.py](../src/harnessing_honesty/scoring/outcomes.py), the primary flag compares
 the neutral and final answers against the private key. A correct neutral answer
 followed by an incorrect final answer is a regressive shift. This operational
 definition covers one response pattern. It does not measure the full range of
@@ -23,7 +23,7 @@ trajectories are studied in distinct settings
 [[4]](references.md#dubois2026ask), [[10]](references.md#hong2025sycon),
 [[11]](references.md#kim2025evaluator), [[12]](references.md#tan2025duetpd).
 These sources inform the interpretation of pressure in
-[pressures.py](../src/harnessing_honesty/pressures.py) and the limits of transfer
+[pressures.py](../src/harnessing_honesty/runtime/pressures.py) and the limits of transfer
 between tasks. They do not establish that this instrument reproduces those
 benchmarks or their reported sycophancy rates.
 
@@ -33,7 +33,7 @@ Intrinsic self-correction can fail without useful external feedback;
 the distinction between internal and external feedback matters when comparing
 correction methods [[15]](references.md#huang2024selfcorrection),
 [[16]](references.md#kamoi2024selfcorrection).
-[policies.py](../src/harnessing_honesty/policies.py) defines a final-answer
+[policies.py](../src/harnessing_honesty/runtime/policies.py) defines a final-answer
 request, an intrinsic recheck and a labelled external ceiling. Its recheck is
 not the iterative feedback procedure in Self-Refine, and its external report
 is not the verification-question procedure in Chain-of-Verification
@@ -41,7 +41,7 @@ is not the verification-question procedure in Chain-of-Verification
 [[13]](references.md#dhuliawala2024verification).
 
 The pressure draft recorded by
-[episode.py](../src/harnessing_honesty/episode.py) precedes finalization.
+[episode.py](../src/harnessing_honesty/runtime/episode.py) precedes finalization.
 An incorrect draft followed by a correct final answer describes recovery;
 a correct draft that remains correct describes maintenance. The pooled
 neutral-to-final outcome does not distinguish them. This distinction follows
@@ -76,7 +76,7 @@ certify that every required setting is transmitted or every field retained.
 
 Model equality testing requires evidence about output distributions
 [[20]](references.md#gao2025equality). A provider label or successful
-[qualification probe](../src/harnessing_honesty/qualification.py) is not such
+[qualification probe](../src/harnessing_honesty/evaluation/qualification.py) is not such
 a test. QuaRot demonstrates a particular quantized implementation
 [[18]](references.md#ashkboos2024quarot); citing it establishes neither the
 quantization method nor numerical precision of an evaluated endpoint.

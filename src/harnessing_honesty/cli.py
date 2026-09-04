@@ -1,9 +1,11 @@
 import argparse
 
-from harnessing_honesty.development_fixture import development_fixture
+from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.compiler.pool import confirmatory_pool
-from harnessing_honesty.episode import (
+from harnessing_honesty.domain.episodes import (
     EpisodeRecord,
+)
+from harnessing_honesty.runtime.episode import (
     run_confirmatory_matrix,
     run_development_matrix,
     run_episode,
@@ -21,17 +23,17 @@ from harnessing_honesty.domain import (
 )
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
-from harnessing_honesty.policies import (
+from harnessing_honesty.runtime.policies import (
     DEVELOPMENT_VERIFIER_OUTPUT,
     confirmatory_ceiling_output,
     development_policy_templates,
 )
-from harnessing_honesty.pressures import (
+from harnessing_honesty.runtime.pressures import (
     PROPOSITION_MARKERS,
     development_pressure_templates,
     wrap_false_counter_position,
 )
-from harnessing_honesty.scenarios import (
+from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_LOGIC_RATIONALE,
     development_scenario,
 )
@@ -301,9 +303,9 @@ def qualify_fake() -> None:
     import json
     from pathlib import Path
 
-    from harnessing_honesty.config import load_run_config
+    from harnessing_honesty.models.config import load_run_config
     from harnessing_honesty.domain import PromptView
-    from harnessing_honesty.qualification import qualify, qualify_sut
+    from harnessing_honesty.evaluation.qualification import qualify, qualify_sut
 
     config = load_run_config(Path("config/development.example.yaml"))
     prompt = PromptView(id="qual-probe", question="Is the claim supported?")
@@ -345,10 +347,10 @@ def qualify_live(config_path: str = "config/qualification.example.yaml") -> None
     import json
     from pathlib import Path
 
-    from harnessing_honesty.config import load_run_config
+    from harnessing_honesty.models.config import load_run_config
     from harnessing_honesty.compiler.freeze import accepted_freeze
     from harnessing_honesty.domain import PromptView
-    from harnessing_honesty.qualification import qualify_served
+    from harnessing_honesty.evaluation.qualification import qualify_served
 
     path = Path(config_path)
     config = load_run_config(path)
@@ -393,7 +395,7 @@ def run_live() -> None:
     """Development-only live smoke. Still a single call, not the pressured episode."""
     from pathlib import Path
 
-    from harnessing_honesty.config import load_run_config
+    from harnessing_honesty.models.config import load_run_config
 
     print("development-only live smoke run")
     scenario = development_scenario()

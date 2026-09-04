@@ -2,7 +2,7 @@
 
 from typing import Any, Mapping
 
-from harnessing_honesty.config import RoutingCard, ServingManifest
+from harnessing_honesty.models.config import RoutingCard, ServingManifest
 from harnessing_honesty.domain.results import ProtocolFailure
 
 

@@ -1,0 +1,94 @@
+from datetime import datetime, timezone
+import json
+
+import pytest
+from pydantic_ai import Agent
+from pydantic_ai.models.test import TestModel
+
+from harnessing_honesty.models.config import DecodingCard, RoutingCard, ServingManifest
+from harnessing_honesty.domain import (
+    AnswerResponse,
+    AnswerSuccess,
+    Message,
+    ProtocolFailure,
+)
+from harnessing_honesty.models.pydantic_ai_client import (
+    DevelopmentModelConfigurationError,
+    PydanticAIModelClient,
+)
+from harnessing_honesty.evaluation.fixtures.scenarios import DEVELOPMENT_LOGIC_QUESTION
+
+
+def test_live_adapter_uses_structured_answer_response() -> None:
+    agent = Agent[None, AnswerResponse](TestModel(), output_type=AnswerResponse)
+    client = PydanticAIModelClient(agent)
+
+    result = client.complete(
+        (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
+    )
+
+    assert isinstance(result, AnswerSuccess)
+    assert isinstance(result.response, AnswerResponse)
+    assert 0.0 <= result.response.confidence <= 1.0
+
+
+def test_environment_factory_fails_before_a_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "harnessing_honesty.models.pydantic_ai_client.load_dotenv",
+        lambda: None,
+    )
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.delenv("HARNESS_DEV_MODEL", raising=False)
+
+    with pytest.raises(
+        DevelopmentModelConfigurationError,
+        match="from_environment is closed",
+    ):
+        PydanticAIModelClient.from_environment()
+
+
+def _pinned_manifest() -> ServingManifest:
+    return ServingManifest(
+        requested_model="google/gemma-3-27b-it",
+        routing=RoutingCard(
+            provider_only=("deepinfra",),
+            provider_order=("deepinfra",),
+        ),
+        decoding=DecodingCard(),
+    )
+
+
+def test_extracts_downstream_provider_from_response() -> None:
+    class _Response:
+        provider_details = {
+            "downstream_provider": "DeepInfra",
+            "finish_reason": "tool_calls",
+            "timestamp": datetime(2026, 9, 1, 23, 16, 12, tzinfo=timezone.utc),
+        }
+        model_name = "google/gemma-3-27b-it"
+
+    class _Result:
+        provider_details = None
+        response = _Response()
+
+    client = PydanticAIModelClient(Agent(TestModel(), output_type=AnswerResponse))
+    envelope = client._extract_envelope(_Result())
+
+    assert envelope is not None
+    assert envelope["provider"] == "deepinfra"
+    assert envelope["model"] == "google/gemma-3-27b-it"
+    json.dumps(envelope)
+
+
+def test_missing_envelope_with_manifest_is_protocol_failure() -> None:
+    client = PydanticAIModelClient(
+        Agent(TestModel(), output_type=AnswerResponse),
+        manifest=_pinned_manifest(),
+    )
+
+    result = client.complete((Message(role="user", content="Is 2 even?"),))
+
+    assert isinstance(result, ProtocolFailure)
+    assert "no provider identity" in result.detail

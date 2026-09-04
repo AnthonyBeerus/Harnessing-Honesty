@@ -19,7 +19,7 @@ from pydantic_ai.models.openrouter import (
 )
 from pydantic_ai.providers.openrouter import OpenRouterProvider
 
-from harnessing_honesty.config import ServingManifest
+from harnessing_honesty.models.config import ServingManifest
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.responses import AnswerResponse
 from harnessing_honesty.domain.results import (
