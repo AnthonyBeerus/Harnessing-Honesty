@@ -1,108 +1,141 @@
-# Architecture boundaries
+# Harness architecture
 
-These are the boundaries the code currently enforces. Design choices that
-produced them are in [research-design-decisions.md](research-design-decisions.md).
-If a line below is hard to make precise, the corresponding seam is still a
-protocol rather than a path.
+## Decision — 4 September 2026
 
-## Layers
+Pydantic AI provides the implementation reference for model interaction,
+typed output, dependencies and message handling. The architecture separates
+the workflow whose behaviour is evaluated from the infrastructure that
+assigns trials and measures their outcomes.
 
-Dependency runs one way.
+Anthropic distinguishes these responsibilities in “The structure of an
+evaluation” [[41]](references.md#anthropic2026evals). Harness-Bench, Section 3,
+likewise places the evaluator outside the model–harness system
+[[5]](references.md#yao2026harnessbench). This distinction determines the
+access rules below. Pydantic supplies the implementation conventions; the
+registered experiment determines which behaviours those conventions may express.
 
-**Domain** (`harnessing_honesty.domain`) is vocabulary and invalid states.
-It does not import runners, clients, scoring, or the CLI. Enums, messages,
-results, scenario types, `Condition`, events, `RunRecord`, and the six
-protocols live here. A type that would be illegal in a stored run fails at
-construction.
+The workflow reproduces context assembly, controlled verification, finalization
+and provider interaction. Its transitions are fixed by the experimental
+protocol. It does not represent the full range of autonomous agent behaviour.
+The three policies are no verification, intrinsic recheck and labelled
+external ceiling. Their content and scoring rules are specified by the
+registered protocol.
 
-**Runtime** sits on domain. Episode runners, stage transitions, pressure and
-policy templates, `messages_for`, model clients, and scoring all import
-domain types. None of them is imported by domain.
+## Pydantic implementation baseline
 
-**CLI** (`python -m harnessing_honesty.cli`) is a thin operator surface:
-`run-fake`, `show-matrix`, `run-live`. It constructs a client, calls a
-runner, and prints public transcripts next to private scores. It is not a
-scheduler and does not own records.
+The implementation baseline is Pydantic AI 1.107.1 with Pydantic 2.13.4,
+the versions installed on 4 September 2026. The broader dependency ranges in
+[pyproject.toml](../pyproject.toml) do not fix these exact versions, leaving
+SDK behaviour dependent on the resolved environment.
 
-Model clients live under `harnessing_honesty.models` and satisfy
-`ModelClient` by shape. They do not re-export domain types. Importing
-`Message` from that package would give the type a second name.
+The versioned Pydantic AI source is the reference for concrete APIs
+[[43]](references.md#pydanticai11071). In that source, `agent/__init__.py`
+defines `Agent`, `deps_type` and `output_type`; `agent/abstract.py` exposes
+run methods; `messages.py` defines request and response parts; `run.py`
+provides recorded messages; and `usage.py` defines execution limits.
+Dependence on public interfaces limits coupling to SDK internals whose
+changes could alter execution independently of the experimental protocol.
 
-## Analysis is walled off
+| Concern | Pydantic convention | Experimental constraint and implementation status |
+|---|---|---|
+| Model access | `Agent`, `OpenRouterModel`, `OpenRouterProvider` | The live client uses these interfaces. Provider translation is confined to the adapter; the actual served configuration remains a separate validity condition. |
+| Structured output | `output_type=AnswerResponse` | The client uses the public answer/confidence/rationale contract. Schema descriptions form part of the model-visible input and can affect responses. |
+| Context | `message_history`, `ModelRequest`, `ModelResponse` | The client uses these message interfaces. Comparability depends on identical shared prefixes and isolated branch histories. Internal transcripts and translated requests provide different evidence of that correspondence. |
+| Dependencies | `deps_type`, per-run `deps`, `RunContext` | Typed dependencies provide runtime services explicitly. The current agent uses `None` dependencies. Private keys, scores and aggregate results fall outside the runtime's permitted inputs. |
+| Execution limits | `UsageLimits` and explicit retry configuration | The current client does not pass explicit run limits or retries. A single `run_sync()` invocation can involve more than one provider request, affecting the opportunities available to a condition. |
+| Verification | Typed tool interfaces and explicit result handling | The current ceiling is supplied as fixed report content. Converting it to a model-selected tool call would change the treatment and requires separate protocol consideration. |
+| Records | `all_messages()`, `new_messages()` and run usage | SDK records describe model interactions; raw provider evidence establishes transport and routing properties absent from normalized messages. |
+| Offline checks | `FunctionModel`, `TestModel` and overrides | These interfaces permit controlled requests and failures without live inference. Existing client conformance checks use `FunctionModel`. |
 
-`harnessing_honesty.analysis` holds `AnalysisRow`, a post-run projection:
-run and scenario identity, a `Condition`, the two primary booleans, and
-`draft_correct` as a stratifier. It has no answer fields.
+Pydantic's dependency documentation explains passing application services
+through typed dependencies [[45]](references.md#pydanticdependencies).
+Typing is not an access-control mechanism: a dependency carrying an answer
+key would still expose it to the receiving code.
 
-Runtime modules must not import that package. An AST walk of every module
-under `harnessing_honesty` except `analysis` fails the suite if any of them
-do. Scoring produces per-episode flags. An analysis row is a post-run
-view of stored public answers plus the private key. The wall keeps
-estimation out of the episode path.
+Pydantic AI Harness and its examples demonstrate composing execution
+capabilities [[44]](references.md#pydanticharness),
+[[46]](references.md#pydanticharnessexamples). This design adopts explicit
+composition of capabilities relevant to the experiment. A capability's
+effects on instructions, context, model settings and additional calls are
+part of the experimental procedure. Compatibility depends on the installed
+version; current documentation may describe a different interface.
 
-## The answer key and the two verifications
+## Components and information flow
 
-A `ScenarioRecord` is a `PromptView` plus an `AnswerKey`. `PromptView` does
-not import the key. `messages_for` accepts `PromptView` only and copies
-`question` into the first user turn. Episode runners take `PromptView`.
-Tests read the source of those modules and fail if they name the private
-type.
+| Component | Responsibility | Permitted information |
+|---|---|---|
+| Domain | Typed contracts | Defines public and private types separately; no provider or estimation implementations. |
+| Runtime | Execute the assigned workflow | Public prompt, isolated conversation, selected finalization policy and permitted verification report. |
+| Models | Translate requests and classify responses | Public messages and serving configuration; no private answer keys or scoring results. |
+| Evaluation | Assign trials, order conditions and manage collection | Scenario identity, registered conditions, execution status and records. It invokes the runtime and scorer separately. |
+| Compiler | Construct and validate scenarios | Task definitions, oracle evidence, private keys and the public projection supplied to execution. |
+| Scoring | Classify validity and correctness | Recorded responses and private keys; no authority to modify the conversation or request another answer. |
+| Observability | Persist execution evidence | Events, transmitted requests, responses and integrity metadata; no authority to choose conditions. |
+| Analysis | Reconstruct and estimate offline | Completed records and scoring inputs; no dependency from collection on estimates. |
+| Notebooks | Present reproducible offline analyses | Calls analysis functions rather than maintaining a second estimator. |
+| CLI | Assemble and invoke operations | Constructs dependencies for the selected command and delegates execution. |
 
-Scoring is the other direction. `answer_is_correct` reads
-`key.canonical_answer`. The `Checker` protocol is explicit that this oracle
-*should* see the key. `ExactChecker` implements it; `domain.checkers`
-names the registered categories. An unregistered category is refused when
-the scenario is built.
+The evaluation layer owns which branches are compared and their trial order.
+The runtime owns the sequence within an assigned finalization procedure.
+Context code owns the mechanics of copying a prefix without sharing later
+mutable history. These are distinct decisions even where current functions
+combine them.
 
-The model-visible artifact is a different type,
-`VerificationReport` (checker@version, evidence IDs, result, witness ID).
-`VerificationTool.run(prompt: PromptView)` returns its serialized form.
-Taking the view rather than the record is the isolation: a tool that
-accepted `ScenarioRecord` could read the canonical answer. Tests refuse a
-copied `canonical_answer` and refuse mixing an evidence-only payload with
-the ceiling.
+A durable session is also distinct from the context sent to a model.
+Anthropic's Managed Agents account makes this distinction explicit in
+“The session is not Claude's context window”
+[[42]](references.md#anthropic2026managed).
+Recoverable transformations between recorded history and transmitted context
+allow differences in model input to be distinguished from differences in
+model response.
 
-## The message path
+The labelled external report is an intentional information channel into the
+runtime. Its permitted fields are defined by the protocol. The private
+answer key and final outcome scorer remain outside that channel.
 
-Everything the model is shown is a tuple of `Message`. Each message has a
-`Role` and `content`. The type is frozen and forbids extra fields, so
-`condition=`, `expected=`, or `stage=` cannot ride along.
+## Organization and alternatives
 
-What may write a `Message`:
+The proposed organization places execution, context, finalization and
+verification under `runtime`, with trial assignment and scheduling under
+`evaluation`. The existing domain, compiler, models, observability and analysis
+packages retain their responsibilities. Small coherent components remain
+modules. The package name and CLI entrypoint remain unchanged. Notebooks sit
+outside the runtime package because their role is offline analysis.
 
-- `messages_for`, which emits one user turn from `prompt.question`
-- the episode runners, which append pressure text, policy text, and, in the
-  three tool cells, verifier output
-- `Transcript.append`, which returns a new transcript
+This organization follows harness responsibilities rather than copying the
+SDK's directory tree. Reimplementing Pydantic's agent loop or provider layer
+would create a second set of semantics to maintain. Adopting a complete coding
+or research harness would introduce unrelated planning, memory and delegation.
+The chosen approach uses the SDK's public interfaces while keeping the
+experimental procedure explicit.
 
-What must not: scoring, analysis, `AnswerKey`, `Stage` labels, `Condition`
-identity, track, or family names. Leak tests search serialized requests for
-those strings. `id` on `PromptView` is harness identity for logs; it is not
-copied into `content`.
+Parnas's information hiding and Wilson et al.'s scientific-software practices
+support keeping these responsibilities separate
+[[22]](references.md#parnas1972modules), [[23]](references.md#wilson2014practices).
+The harness literature supplies the primary methodological justification.
+These are reasons for the present decision, not retrospective claims about
+what influenced earlier implementations.
 
-On the wire, the live client projects `tool` onto a user-role turn. The
-harness keeps the internal role so leak and symmetry checks can see
-verifier output as verifier output. Synthesising a provider tool call to
-avoid that projection would add an assistant turn to the tool cells only.
+## Methodological consequences and limitations
 
-`complete` is total: it returns `AnswerSuccess`, `ParseFailure`,
-`ProviderFailure`, or `ProtocolFailure`, and does not raise for a bad
-payload or a 429. Two counts travel with a success.
-`requested_message_count` is what the harness handed over;
-`observed_message_count` is what a capturing client can show reached the
-provider. The scripted client does not measure the wire. The
-FunctionModel-backed client in the conformance suite does, which is why
-that suite can fail a transport assertion the fake cannot.
+The separation makes experimental choices traceable through their inputs,
+execution and outputs. Its value depends on checks that expose unintended
+changes to conditions, information flow, scoring and opportunities to retry.
 
-## Durability and serving identity
+Behavioural equivalence during restructuring is defined by unchanged
+serialized requests, schema content, branch order, fixture scores and CLI
+behaviour. A change to any of these can alter the instrument and therefore
+cannot be treated as a purely structural change. Compatibility at the public
+SDK interface does not by itself establish equivalence on the request path.
 
-`observability` implements `Clock`, `EventSink`, and `RecordStore`.
-Events are append-only JSONL under `data/runs/{track}/{run_id}/`; the
-summary is replaced atomically. `PROTOCOL` covers route mismatch, cache
-HIT, material pipeline, and silent substitution, and is not scored as
-regressive shift. The live client is built from a serving manifest, not
-from a key plus a slug.
+Existing evidence includes [client conformance](../tests/test_model_client_conformance.py)
+and [analysis isolation](../tests/test_analysis_boundary.py). The latter
+recognizes selected absolute imports but does not resolve relative imports.
+The proposed organization has not yet been implemented. Runtime and evaluation
+responsibilities remain mixed in top-level modules, and notebook entrypoints
+are not yet present.
 
-`CellBinding` refuses a development scenario in a main condition.
-`Track.MAIN` on `ScenarioRecord` is refused; on `RunRecord` it requires a
-freeze ID.
+Architectural documentation and scholarly references are separate from the
+experimental input. Their inclusion in prompts or schema descriptions would
+change the information presented to the model and could affect the measured
+policy contrast.

@@ -164,3 +164,27 @@ The archived registration retains its original references.
 <a id="openrouterpromptcaching"></a>
 
 [40] OpenRouter, “Prompt caching,” Accessed: Sep. 4, 2026. [Online]. [Available](https://openrouter.ai/docs/guides/best-practices/prompt-caching).
+
+<a id="anthropic2026evals"></a>
+
+[41] Anthropic, “Demystifying evals for AI agents,” Jan. 9, 2026. Accessed: Sep. 4, 2026. [Online]. [Available](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents).
+
+<a id="anthropic2026managed"></a>
+
+[42] Anthropic, “Scaling Managed Agents: Decoupling the brain from the hands,” Apr. 8, 2026. Accessed: Sep. 4, 2026. [Online]. [Available](https://www.anthropic.com/engineering/managed-agents).
+
+<a id="pydanticai11071"></a>
+
+[43] Pydantic AI contributors, “Pydantic AI source code, version 1.107.1,” Source code. Accessed: Sep. 4, 2026. [Online]. [Available](https://github.com/pydantic/pydantic-ai/tree/v1.107.1/pydantic_ai_slim/pydantic_ai).
+
+<a id="pydanticharness"></a>
+
+[44] Pydantic, “Pydantic AI Harness,” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/harness/).
+
+<a id="pydanticdependencies"></a>
+
+[45] Pydantic, “Dependencies,” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/core-concepts/dependencies/).
+
+<a id="pydanticharnessexamples"></a>
+
+[46] Pydantic, “Pydantic AI Harness: Examples,” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/harness/examples/).
