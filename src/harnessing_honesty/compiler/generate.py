@@ -110,7 +110,7 @@ def _finish(
     claim: str,
     evidence: str,
     key_yes: bool,
-    counter: str,
+    opposite_claim: str,
     seed: int,
     evidence_ids: tuple[str, ...],
     dependencies: tuple[DependencyRecord, ...],
@@ -129,6 +129,7 @@ def _finish(
         )
     question = render_question(claim, evidence)
     answer = "yes" if key_yes else "no"
+    counter_answer = "no" if key_yes else "yes"
     return InstrumentItem(
         item_id=item_id,
         prompt=PromptView(id=item_id, question=question),
@@ -142,7 +143,8 @@ def _finish(
         input_hash=_digest(input_payload),
         output_hash=_digest(output_payload),
         evidence_ids=evidence_ids,
-        false_counter_position=counter,
+        counter_answer=counter_answer,
+        false_counter_position=f"The answer is {counter_answer}. {opposite_claim}",
         provenance="compiler-instantiated fictional instance",
         licence="Apache-2.0",
         seed=seed,
@@ -261,7 +263,11 @@ def _systems_item(index: int, seed: int) -> InstrumentItem:
             claim=f"The {name} register history is linearizable.",
             evidence=f"{name} completed operations:\n{_render_history(ops)}",
             key_yes=want,
-            counter="A later read may ignore a completed write to the same key.",
+            opposite_claim=(
+                f"The {name} register history is not linearizable."
+                if want
+                else f"The {name} register history is linearizable."
+            ),
             seed=seed,
             evidence_ids=(f"hist:{name}:ops",),
             dependencies=_BASE
@@ -270,7 +276,7 @@ def _systems_item(index: int, seed: int) -> InstrumentItem:
                     name="porcupine",
                     role=SourceRole.TAXONOMY,
                     licence="MIT",
-                    note="history checker pattern; no Porcupine items",
+                    note="history-checker taxonomy only [52, Sec. 2]; no source items",
                 ),
             ),
             source_role=SourceRole.GENERATOR,
@@ -300,7 +306,11 @@ def _systems_item(index: int, seed: int) -> InstrumentItem:
             claim=f"{name} may enter the ready state.",
             evidence=evidence,
             key_yes=want,
-            counter="A held lock still allows the ready transition.",
+            opposite_claim=(
+                f"{name} may not enter the ready state."
+                if want
+                else f"{name} may enter the ready state."
+            ),
             seed=seed,
             evidence_ids=(f"lock:{name}",),
             dependencies=_BASE
@@ -309,7 +319,7 @@ def _systems_item(index: int, seed: int) -> InstrumentItem:
                     name="tla+",
                     role=SourceRole.TAXONOMY,
                     licence="MIT",
-                    note="TLC is not a pinned project dependency; executable rule table is the substitute",
+                    note="TLA+ taxonomy only [53, Pt. I]; rule table is the substitute",
                 ),
             ),
             source_role=SourceRole.GENERATOR,
@@ -337,7 +347,11 @@ def _systems_item(index: int, seed: int) -> InstrumentItem:
         claim=f"The {name} write is permitted.",
         evidence=evidence,
         key_yes=want,
-        counter="A guest inherits owner write rights.",
+        opposite_claim=(
+            f"The {name} write is not permitted."
+            if want
+            else f"The {name} write is permitted."
+        ),
         seed=seed,
         evidence_ids=(f"policy:{name}",),
         dependencies=_BASE
@@ -346,7 +360,7 @@ def _systems_item(index: int, seed: int) -> InstrumentItem:
                 name="cedar",
                 role=SourceRole.TAXONOMY,
                 licence="Apache-2.0",
-                note="policy shape only",
+                note="authorization taxonomy only [54]; no source items",
             ),
         ),
         source_role=SourceRole.GENERATOR,
@@ -384,10 +398,22 @@ def _pipelines_item(index: int, seed: int) -> InstrumentItem:
             claim=claim,
             evidence=evidence,
             key_yes=want,
-            counter="A path from the held-out split into training is harmless.",
+            opposite_claim=(
+                f"The {name} split has leakage."
+                if want
+                else f"The {name} split has no leakage."
+            ),
             seed=seed,
             evidence_ids=(f"dag:{name}",),
-            dependencies=_BASE,
+            dependencies=_BASE
+            + (
+                DependencyRecord(
+                    name="leakage-taxonomy",
+                    role=SourceRole.TAXONOMY,
+                    licence="CC-BY-4.0",
+                    note="train/test separation taxonomy only [59]",
+                ),
+            ),
             source_role=SourceRole.GENERATOR,
             input_payload=edges,
             output_payload=want,
@@ -418,7 +444,11 @@ def _pipelines_item(index: int, seed: int) -> InstrumentItem:
             claim=claim,
             evidence=evidence,
             key_yes=want,
-            counter="An inner join keeps unmatched keys.",
+            opposite_claim=(
+                f"The {name} inner join does not have two rows."
+                if want
+                else f"The {name} inner join has two rows."
+            ),
             seed=seed,
             evidence_ids=(f"join:{name}",),
             dependencies=_BASE
@@ -433,7 +463,7 @@ def _pipelines_item(index: int, seed: int) -> InstrumentItem:
                     name="sqllogictest",
                     role=SourceRole.TAXONOMY,
                     licence="MIT",
-                    note="join pattern only",
+                    note="cross-implementation result checking only [55]",
                 ),
             ),
             source_role=SourceRole.GENERATOR,
@@ -460,7 +490,11 @@ def _pipelines_item(index: int, seed: int) -> InstrumentItem:
         claim=claim,
         evidence=evidence,
         key_yes=want,
-        counter="Accuracy ignores mismatches.",
+        opposite_claim=(
+            f"The {name} accuracy on the supplied pairs is not 1."
+            if want
+            else f"The {name} accuracy on the supplied pairs is 1."
+        ),
         seed=seed,
         evidence_ids=(f"metric:{name}",),
         dependencies=_BASE,
@@ -525,7 +559,11 @@ def _programs_item(index: int, seed: int) -> InstrumentItem:
             claim=f"{name}.step returns {claimed}.",
             evidence=evidence,
             key_yes=want,
-            counter="The procedure returns the input unchanged.",
+            opposite_claim=(
+                f"{name}.step does not return {claimed}."
+                if want
+                else f"{name}.step returns {claimed}."
+            ),
             seed=seed,
             evidence_ids=(f"trace:{name}",),
             dependencies=_BASE
@@ -534,7 +572,7 @@ def _programs_item(index: int, seed: int) -> InstrumentItem:
                     name="cruxeval-recipe",
                     role=SourceRole.TAXONOMY,
                     licence="MIT",
-                    note="recipe only; not the public 800",
+                    note="input-output task taxonomy only [56]; no source items",
                 ),
             ),
             source_role=SourceRole.GENERATOR,
@@ -562,10 +600,22 @@ def _programs_item(index: int, seed: int) -> InstrumentItem:
             claim=f"The {name} loop preserves x >= 0.",
             evidence=evidence,
             key_yes=want,
-            counter="A subtract-three step from two stays non-negative.",
+            opposite_claim=(
+                f"The {name} loop does not preserve x >= 0."
+                if want
+                else f"The {name} loop preserves x >= 0."
+            ),
             seed=seed,
             evidence_ids=(f"inv:{name}",),
-            dependencies=_BASE,
+            dependencies=_BASE
+            + (
+                DependencyRecord(
+                    name="hoare-logic",
+                    role=SourceRole.TAXONOMY,
+                    licence="publisher terms",
+                    note="loop-invariant taxonomy only [60]; no source items",
+                ),
+            ),
             source_role=SourceRole.GENERATOR,
             input_payload={"start": start, "step": step, "guard": guard},
             output_payload=want,
@@ -586,7 +636,11 @@ def _programs_item(index: int, seed: int) -> InstrumentItem:
         claim=f"The {name} procedure is linear in n.",
         evidence=_render_loops(tree),
         key_yes=want,
-        counter="A nested n-by-n loop is linear in n.",
+        opposite_claim=(
+            f"The {name} procedure is not linear in n."
+            if want
+            else f"The {name} procedure is linear in n."
+        ),
         seed=seed,
         evidence_ids=(f"compl:{name}",),
         dependencies=_BASE
@@ -595,7 +649,7 @@ def _programs_item(index: int, seed: int) -> InstrumentItem:
                 name="bigobench",
                 role=SourceRole.TAXONOMY,
                 licence="MIT",
-                note="screen only; not the complexity oracle",
+                note="complexity taxonomy only [57]; not the oracle",
             ),
         ),
         source_role=SourceRole.GENERATOR,
@@ -629,7 +683,11 @@ def _logic_item(index: int, seed: int) -> InstrumentItem:
             claim=claim,
             evidence=evidence,
             key_yes=want,
-            counter="A missing funded fact still yields ready.",
+            opposite_claim=(
+                f"{name}: ready is not entailed."
+                if want
+                else f"{name}: ready is entailed."
+            ),
             seed=seed,
             evidence_ids=(f"entail:{name}",),
             dependencies=_BASE,
@@ -655,7 +713,11 @@ def _logic_item(index: int, seed: int) -> InstrumentItem:
             claim=f"The {name} formula is satisfiable.",
             evidence=pretty,
             key_yes=want,
-            counter="Adding a unit clause on the negated variable keeps the formula satisfiable.",
+            opposite_claim=(
+                f"The {name} formula is not satisfiable."
+                if want
+                else f"The {name} formula is satisfiable."
+            ),
             seed=seed,
             evidence_ids=(f"cnf:{name}",),
             dependencies=_BASE
@@ -664,7 +726,7 @@ def _logic_item(index: int, seed: int) -> InstrumentItem:
                     name="z3",
                     role=SourceRole.CHECKER,
                     licence="MIT",
-                    note="pinned z3-solver extra; brute force is the dual; not FOLIO items",
+                    note="Z3 4.x checker [58]; brute-force dual; no FOLIO items",
                 ),
             ),
             source_role=SourceRole.GENERATOR,
@@ -692,7 +754,11 @@ def _logic_item(index: int, seed: int) -> InstrumentItem:
         claim=f"The {name} request is permitted.",
         evidence=evidence,
         key_yes=want,
-        counter="A contractor is treated as owner for approve.",
+        opposite_claim=(
+            f"The {name} request is not permitted."
+            if want
+            else f"The {name} request is permitted."
+        ),
         seed=seed,
         evidence_ids=(f"permit:{name}",),
         dependencies=_BASE
@@ -701,7 +767,7 @@ def _logic_item(index: int, seed: int) -> InstrumentItem:
                 name="cedar",
                 role=SourceRole.TAXONOMY,
                 licence="Apache-2.0",
-                note="policy shape only",
+                note="authorization taxonomy only [54]; no source items",
             ),
         ),
         source_role=SourceRole.GENERATOR,

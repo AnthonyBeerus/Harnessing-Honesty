@@ -2,7 +2,7 @@
 
 from collections import deque
 from itertools import permutations
-from typing import TypeAlias
+from typing import TypeAlias, cast
 
 from harnessing_honesty.compiler.dual import DualOracleError
 
@@ -46,7 +46,7 @@ def _happens_before(first: HistoryOp, second: HistoryOp) -> bool:
 
 
 def linearizable_by_search(ops: tuple[HistoryOp, ...]) -> bool:
-    """Porcupine-style DFS: spec-guided search over happens-before."""
+    """Spec-guided DFS over a history's happens-before order [52, Sec. 2]."""
     if any(op[3] > op[4] for op in ops):
         return False
     n = len(ops)
@@ -218,13 +218,13 @@ def accuracy_from_confusion(preds: tuple[int, ...], labels: tuple[int, ...]) -> 
 def _eval_expr(expr: Expr, env: dict[str, int]) -> int:
     tag = expr[0]
     if tag == "const":
-        return int(expr[1])
+        return int(cast(int, expr[1]))
     if tag == "var":
         return env[str(expr[1])]
     if tag == "add":
-        return _eval_expr(expr[1], env) + _eval_expr(expr[2], env)
+        return _eval_expr(cast(Expr, expr[1]), env) + _eval_expr(cast(Expr, expr[2]), env)
     if tag == "sub":
-        return _eval_expr(expr[1], env) - _eval_expr(expr[2], env)
+        return _eval_expr(cast(Expr, expr[1]), env) - _eval_expr(cast(Expr, expr[2]), env)
     raise DualOracleError(f"unknown expression {tag!r}")
 
 
@@ -236,17 +236,17 @@ def run_ast(stmts: tuple[Stmt, ...], env0: dict[str, int]) -> int:
         for stmt in block:
             tag = stmt[0]
             if tag == "assign":
-                env[str(stmt[1])] = _eval_expr(stmt[2], env)
+                env[str(stmt[1])] = _eval_expr(cast(Expr, stmt[2]), env)
                 continue
             if tag == "return":
-                return _eval_expr(stmt[1], env)
+                return _eval_expr(cast(Expr, stmt[1]), env)
             if tag == "while_gt":
                 guard_steps = 0
-                while env[str(stmt[1])] > int(stmt[2]):
+                while env[str(stmt[1])] > int(cast(int, stmt[2])):
                     guard_steps += 1
                     if guard_steps > 1000:
                         raise DualOracleError("trace exceeded step bound")
-                    inner = run_block(stmt[3])
+                    inner = run_block(cast(tuple[Stmt, ...], stmt[3]))
                     if inner is not None:
                         return inner
                 continue
@@ -275,7 +275,7 @@ def run_stepper(stmts: tuple[Stmt, ...], env0: dict[str, int]) -> int:
             if tag == "while_gt":
                 head = len(ops)
                 ops.append(("loop_head", stmt[1], stmt[2], 0))
-                flatten(stmt[3])
+                flatten(cast(tuple[Stmt, ...], stmt[3]))
                 ops.append(("jmp", head))
                 ops[head] = ("loop_head", stmt[1], stmt[2], len(ops))
                 continue
@@ -292,19 +292,19 @@ def run_stepper(stmts: tuple[Stmt, ...], env0: dict[str, int]) -> int:
         op = ops[ip]
         tag = op[0]
         if tag == "assign":
-            env[str(op[1])] = _eval_expr(op[2], env)
+            env[str(op[1])] = _eval_expr(cast(Expr, op[2]), env)
             ip += 1
             continue
         if tag == "return":
-            return _eval_expr(op[1], env)
+            return _eval_expr(cast(Expr, op[1]), env)
         if tag == "loop_head":
-            if env[str(op[1])] > int(op[2]):
+            if env[str(op[1])] > int(cast(int, op[2])):
                 ip += 1
             else:
-                ip = int(op[3])
+                ip = int(cast(int, op[3]))
             continue
         if tag == "jmp":
-            ip = int(op[1])
+            ip = int(cast(int, op[1]))
             continue
         raise DualOracleError(f"unknown op {tag!r}")
     raise DualOracleError("program did not return")
@@ -325,7 +325,7 @@ def loop_states(start: int, step: int, guard_gt: int) -> tuple[int, ...]:
 
 
 def loop_nonneg_trace(start: int, step: int, guard_gt: int) -> bool:
-    """Invariant holds iff every executed value is >= 0."""
+    """Check the loop-invariant condition on every executed state [60]."""
     return all(value >= 0 for value in loop_states(start, step, guard_gt))
 
 
@@ -394,7 +394,7 @@ def sat(clauses: tuple[tuple[int, ...], ...]) -> bool:
 
 
 def sat_z3(clauses: tuple[tuple[int, ...], ...]) -> bool:
-    """Pinned Z3 on the same small CNF. Brute force is the dual."""
+    """Run Z3 on the small CNF; brute force supplies the dual [58]."""
     try:
         from z3 import Bool, Not, Or, Solver, sat as z3_sat
     except ImportError as exc:

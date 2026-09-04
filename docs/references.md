@@ -200,3 +200,19 @@ The archived registration retains its original references.
 <a id="ieeereferenceguide"></a>
 
 [49] IEEE, “IEEE reference guide for authors.” Accessed: Sep. 4, 2026. [Online]. [Available](https://journals.ieeeauthorcenter.ieee.org/wp-content/uploads/sites/7/IEEE_Reference_Guide.pdf).
+<a id="pydanticvalidators"></a> [50] Pydantic, “Validators,” *Pydantic Validation Documentation*. Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/validation/latest/concepts/validators/).
+<a id="osfregistrations"></a> [51] Center for Open Science, “Welcome to registrations & preregistrations,” *OSF Support*. Accessed: Sep. 4, 2026. [Online]. [Available](https://help.osf.io/article/330-welcome-to-registrations).
+<a id="horn2015linearizability"></a> [52] A. Horn and D. Kroening, “Faster linearizability checking via P-compositionality,” arXiv:1504.00204, 2015. doi: [10.48550/arXiv.1504.00204](https://doi.org/10.48550/arXiv.1504.00204). [Source](https://arxiv.org/abs/1504.00204).
+<a id="lamport2002specifying"></a> [53] L. Lamport, *Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers*. Boston, MA, USA: Addison-Wesley, 2002. [Source](https://www.microsoft.com/en-us/research/publication/specifying-systems-the-tla-language-and-tools-for-hardware-and-software-engineers/).
+<a id="cutler2024cedar"></a> [54] J. W. Cutler *et al.*, “Cedar: A new language for expressive, fast, safe, and analyzable authorization,” arXiv:2403.04651, 2024. doi: [10.48550/arXiv.2403.04651](https://doi.org/10.48550/arXiv.2403.04651). [Source](https://arxiv.org/abs/2403.04651).
+<a id="sqlite-sqllogictest"></a> [55] SQLite, “About sqllogictest,” *sqllogictest Documentation*. Accessed: Sep. 4, 2026. [Online]. [Available](https://www.sqlite.org/sqllogictest/doc/trunk/about.wiki).
+<a id="gu2024cruxeval"></a>
+[56] A. Gu, B. Rozière, H. Leather, A. Solar-Lezama, G. Synnaeve, and S. I. Wang, “CRUXEval: A benchmark for code reasoning, understanding and execution,” arXiv:2401.03065, 2024. doi: [10.48550/arXiv.2401.03065](https://doi.org/10.48550/arXiv.2401.03065). [Source](https://arxiv.org/abs/2401.03065).
+<a id="chambon2025bigobench"></a>
+[57] P. Chambon, B. Rozière, B. Sagot, and G. Synnaeve, “BigO(Bench)—Can LLMs generate code with controlled time and space complexity?” arXiv:2503.15242, 2025. doi: [10.48550/arXiv.2503.15242](https://doi.org/10.48550/arXiv.2503.15242). [Source](https://arxiv.org/abs/2503.15242).
+<a id="demoura2008z3"></a>
+[58] L. de Moura and N. Bjørner, “Z3: An efficient SMT solver,” in *Proc. TACAS*, 2008, pp. 337–340. doi: [10.1007/978-3-540-78800-3_24](https://doi.org/10.1007/978-3-540-78800-3_24).
+<a id="kapoor2023leakage"></a>
+[59] S. Kapoor and A. Narayanan, “Leakage and the reproducibility crisis in machine-learning-based science,” *Patterns*, vol. 4, no. 9, 2023, Art. no. 100804. doi: [10.1016/j.patter.2023.100804](https://doi.org/10.1016/j.patter.2023.100804).
+<a id="hoare1969axiomatic"></a>
+[60] C. A. R. Hoare, “An axiomatic basis for computer programming,” *Commun. ACM*, vol. 12, no. 10, pp. 576–580, 583, 1969. doi: [10.1145/363235.363259](https://doi.org/10.1145/363235.363259).

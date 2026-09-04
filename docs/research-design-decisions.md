@@ -684,24 +684,32 @@ separate recorded step and is not implied by dual validation.
 
 Systems register items use a happens-before linearizability search plus an
 independent sequential witness over happens-before extensions (Porcupine
-pattern, not their items). Lock and policy items use an executable rule
+pattern, not their items) [[52]](references.md#horn2015linearizability). Lock and policy items use an executable rule
 table with a scan evaluator and a compiled-map evaluator. TLA+/TLC is
 taxonomy only: TLC is not a pinned project dependency, so the rule table
-is the substitute.
+is the substitute [[53]](references.md#lamport2002specifying). Cedar supplies
+authorization taxonomy, not source items or an oracle
+[[54]](references.md#cutler2024cedar).
 
-Pipeline leakage items run forward DAG reachability and reverse
-reachability on every item. Joins are checked by stdlib sqlite3 and an
+Pipeline leakage items run forward DAG reachability and reverse reachability
+on every item; the split-separation premise follows the leakage taxonomy
+[[59]](references.md#kapoor2023leakage). Joins are checked by stdlib sqlite3 and an
 independent nested-loop join on tiny synthetic tables. Metrics are checked
-by a hit-rate and by the confusion-matrix diagonal.
+by a hit-rate and by the confusion-matrix diagonal. The cross-implementation
+comparison follows sqllogictest's testing rationale, not its corpus
+[[55]](references.md#sqlite-sqllogictest).
 
 Program traces use a tiny AST interpreter and an independent instruction
-stepper (CRUXEval recipe, not the public 800). Invariants execute the
-loop and an independent closed-form assertion. Complexity is two static
-nest counts; BigO(Bench) remains a screen, not the oracle. The model
+stepper (CRUXEval task taxonomy, not the public 800)
+[[56]](references.md#gu2024cruxeval). Invariants execute the loop and an
+independent closed-form assertion; Hoare supplies the proof taxonomy, not
+either checker [[60]](references.md#hoare1969axiomatic). Complexity is two static
+nest counts; BigO(Bench) remains a screen, not the oracle
+[[57]](references.md#chambon2025bigobench). The model
 reviews code; it does not generate it.
 
-Logic SAT uses pinned `z3-solver` with brute-force SAT as the dual on
-small CNF. Entailment calls forward and backward chaining. About one third
+Logic SAT uses pinned `z3-solver` with brute-force SAT as the dual on small
+CNF [[58]](references.md#demoura2008z3). Entailment calls forward and backward chaining. About one third
 of the family is policy-shaped (owner/permit) and uses the same two rule
 evaluators.
 
@@ -927,4 +935,32 @@ length band; a scripted matrix checks the delivered contradiction message.
 Separate tests check rejection of a changed template and preservation of the
 stored approval when construction matches. Only offline tests were run.
 
+---
 
+## 2026-09-04 — Counter-positions assert the opposite answer
+
+**Decision.** Each confirmatory item records `counter_answer` as the complement
+of its `yes` or `no` key. Its false counter-position begins `The answer is
+{counter_answer}.` and then states the opposing form of that item's claim.
+Contradiction, authority and citation continue to wrap that same proposition.
+
+**Why.** The previous counter-position text was fixed by archetype. On positive
+items it could describe an irrelevant failure condition, and on some negative
+items it did not uniquely imply the answer opposite to the question. The new
+construction makes answer-level opposition explicit while retaining the
+registered rhetorical families. This implements the
+[false-pressure procedure](preregistration-template.md#claims-limits).
+Sharma et al. and SycEval motivate truth-displacing agreement and regressive
+answer changes [[1]](references.md#sharma2024sycophancy),
+[[2]](references.md#fanous2025syceval); they do not determine this wording.
+
+**Registration consequence.** Model-visible pressure changes for all 60 items,
+so the pool hash and licence names no longer match the manifest. The OSF files and
+`config/freeze.json` remain unchanged. MAIN collection requires a reviewed
+amendment and a new accepted manifest.
+
+**Verification.** The compiler rejects a counter answer that matches its key
+or a proposition that fails to assert that answer. The generated instrument
+checklist lists the key, counter answer and full counter-position for every
+item. Wrapper tests confirm that all three families retain the same proposition.
+Only offline checks were used.

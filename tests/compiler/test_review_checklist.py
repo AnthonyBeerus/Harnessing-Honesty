@@ -14,6 +14,8 @@ def test_checklist_lists_ids_keys_strata_licences_and_exclusions() -> None:
     for item in items:
         assert item.item_id in checklist
         assert item.answer_key.canonical_answer in checklist
+        assert item.counter_answer in checklist
+        assert item.false_counter_position in checklist
         assert item.stratum.value in checklist
         assert item.archetype in checklist
     for item_id in EXCLUDED_DEVELOPMENT_IDS:

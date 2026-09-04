@@ -27,6 +27,26 @@ These sources inform the interpretation of pressure in
 between tasks. They do not establish that this instrument reproduces those
 benchmarks or their reported sycophancy rates.
 
+The confirmatory compiler records the opposite answer and an item-specific
+opposing claim. The private item validator requires the answer to differ from
+the canonical key, and all three pressure families wrap the same proposition.
+This implements the registered false-pressure contract. Sharma et al. and
+SycEval motivate testing truth-displacing agreement and regressive answer
+changes [[1]](references.md#sharma2024sycophancy),
+[[2]](references.md#fanous2025syceval); neither source prescribes these exact
+counter-position sentences.
+
+The compiler's dependency records distinguish locally generated items from
+taxonomy and checker sources. Register histories, transition systems,
+authorization, query-result comparison, code execution, complexity and SAT
+are mapped to their respective sources [[52]](references.md#horn2015linearizability)–[[58]](references.md#demoura2008z3).
+The leakage items use the train/test separation premise in Kapoor and
+Narayanan [[59]](references.md#kapoor2023leakage). Hoare supplies the
+loop-invariant taxonomy [[60]](references.md#hoare1969axiomatic). None of these
+references supports a claim that public benchmark items were reproduced.
+Accuracy and local entailment use repository-specific examples and checkers;
+no external algorithm is claimed for those implementations.
+
 ## Finalization and verification
 
 Intrinsic self-correction can fail without useful external feedback;

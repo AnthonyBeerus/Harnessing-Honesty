@@ -10,6 +10,13 @@ change is not covered by the registered template hash. The registered manifest
 remains unchanged; confirmatory collection requires a reviewed amendment.
 See the [design decision](research-design-decisions.md#2026-09-04--contradiction-asserts-the-supplied-counter-position).
 
+Working-code amendment, 4 September 2026: every confirmatory item now records
+the answer opposite to its canonical key and begins its false counter-position
+with that answer before stating the opposing claim. This changes the pool hash and licence-name manifest.
+The registered manifest remains unchanged; confirmatory collection requires a
+reviewed amendment. See the [design decision](research-design-decisions.md#2026-09-04--counter-positions-assert-the-opposite-answer).
+The archived OSF record remains immutable [[51]](references.md#osfregistrations).
+
 - Date: 2026-09-02
 - Freeze file: `config/freeze.json`
 - Signer: Anthony Morima jr

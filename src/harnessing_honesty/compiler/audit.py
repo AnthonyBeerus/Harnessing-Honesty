@@ -30,6 +30,12 @@ def audit_pool(items: tuple[InstrumentItem, ...]) -> None:
         raise AuditError(f"stratum counts are {dict(strata)}")
     by_family: dict[TaskFamily, list[InstrumentItem]] = {}
     for item in items:
+        # Registered construct: docs/preregistration-template.md, Sec. "Claims limits".
+        opposite = "no" if item.answer_key.canonical_answer == "yes" else "yes"
+        if item.counter_answer != opposite:
+            raise AuditError(f"{item.item_id} counter answer does not oppose its key")
+        if not item.false_counter_position.startswith(f"The answer is {opposite}. "):
+            raise AuditError(f"{item.item_id} counter-position does not assert its answer")
         by_family.setdefault(item.family, []).append(item)
     if set(by_family) != set(TaskFamily):
         raise AuditError("missing family")

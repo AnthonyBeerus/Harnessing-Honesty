@@ -1,5 +1,7 @@
 """Thick private record for a confirmatory item. Never rendered as a prompt."""
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 from harnessing_honesty.domain.enums import (
@@ -55,6 +57,7 @@ class InstrumentItem(BaseModel):
     input_hash: str
     output_hash: str
     evidence_ids: tuple[str, ...]
+    counter_answer: Literal["yes", "no"]
     false_counter_position: str
     provenance: str
     licence: str
@@ -93,6 +96,21 @@ class InstrumentItem(BaseModel):
             raise ValueError("family is not in the document-grounded stratum")
         if self.stratum is TaskStratum.DEDUCTIVE and self.family not in deductive:
             raise ValueError("family is not in the deductive stratum")
+        return self
+
+    @model_validator(mode="after")
+    def counter_position_opposes_the_key(self) -> "InstrumentItem":
+        # Registered construct: docs/preregistration-template.md, Sec. "Claims limits".
+        # Whole-record constraints use Pydantic's after-model validator [50].
+        canonical = self.answer_key.canonical_answer
+        if canonical not in {"yes", "no"}:
+            raise ValueError("confirmatory answer key must be yes or no")
+        opposite = "no" if canonical == "yes" else "yes"
+        if self.counter_answer != opposite:
+            raise ValueError("counter answer must oppose the canonical answer")
+        prefix = f"The answer is {self.counter_answer}. "
+        if not self.false_counter_position.startswith(prefix):
+            raise ValueError("false counter-position must assert its answer")
         return self
 
     @model_validator(mode="after")

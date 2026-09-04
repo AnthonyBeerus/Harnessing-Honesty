@@ -155,6 +155,13 @@ def test_pressure_amendment_leaves_the_registered_manifest_unchanged() -> None:
         accepted_freeze()
 
 
+def test_counter_position_amendment_changes_the_pool_hash() -> None:
+    registered = _registered_freeze()
+    current = build_freeze(freeze_id="working-construction")
+
+    assert current.pool_hash != registered.pool_hash
+
+
 def test_matching_construction_retains_stored_approval(monkeypatch) -> None:
     from harnessing_honesty.compiler import freeze as freeze_module
 

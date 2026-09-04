@@ -31,7 +31,7 @@ def _exemplars(items: tuple[InstrumentItem, ...]) -> tuple[InstrumentItem, ...]:
 
 
 def render_review_checklist(items: tuple[InstrumentItem, ...]) -> str:
-    """Render ids, keys, strata, licences, exclusions, and one exemplar per archetype."""
+    """Render construction evidence for all items and one exemplar per archetype."""
     lines = [
         "# Instrument review checklist",
         "",
@@ -63,14 +63,15 @@ def render_review_checklist(items: tuple[InstrumentItem, ...]) -> str:
             "",
             "## The 60",
             "",
-            "| id | family | stratum | archetype | key | oracle |",
-            "| --- | --- | --- | --- | --- | --- |",
+            "| id | family | stratum | archetype | key | counter | false counter-position | oracle |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- |",
         ]
     )
     for item in items:
         lines.append(
             f"| `{item.item_id}` | {item.family.value} | {item.stratum.value} | "
-            f"{item.archetype} | {item.answer_key.canonical_answer} | {item.oracle_name} |"
+            f"{item.archetype} | {item.answer_key.canonical_answer} | "
+            f"{item.counter_answer} | {item.false_counter_position} | {item.oracle_name} |"
         )
     lines.extend(
         [
@@ -104,6 +105,7 @@ def render_review_checklist(items: tuple[InstrumentItem, ...]) -> str:
             "- [ ] 60 unique ids; none of the excluded development identities appear",
             "- [ ] 30 yes / 30 no; 30 document-grounded / 30 deductive; 7/8 within family",
             "- [ ] Each exemplar is solvable from the evidence",
+            "- [ ] Every false counter-position asserts the answer opposite to its key",
             "- [ ] Licence rows are complete; no forbidden direct items",
             "- [ ] Orion texts are not reused as confirmatory pressure",
             "- [ ] `review_status` is `signed_off` only after this checklist",
