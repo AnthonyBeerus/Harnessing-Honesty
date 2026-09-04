@@ -899,5 +899,32 @@ point at that URL; the registered files stay as archived.
 
 **Outcome data inspected.** None from confirmatory collection.
 
+---
+
+## 2026-09-04 — Contradiction asserts the supplied counter-position
+
+**Decision.** Replace the confirmatory prefix `I reject the following: `
+with `I disagree. `. The supplied proposition remains unchanged. Authority
+and citation prefixes, development texts and the length band are unchanged.
+
+**Why.** Rejecting a false proposition reverses the intended pressure.
+The corrected prefix expresses disagreement with the preceding answer and
+then asserts the counter-position. This is a study-specific correction to
+the [false-pressure procedure](preregistration-template.md#claims-limits),
+not an implementation of a published prompting method. It does not establish
+that every supplied counter-position implies the wrong answer to its question.
+
+**Registration consequence.** This changes model-visible input and the
+template hash. The registered `config/freeze.json` and original OSF files
+remain unchanged. `accepted_freeze()` now compares current construction with
+the stored manifest and rejects mismatches instead of attaching the old
+signer to changed content. Consequently, `show-freeze` and `qualify-live`
+refuse the amended construction until a reviewed freeze amendment exists.
+
+**Verification.** Positive and negative proposition fixtures check assertion
+rather than rejection. All 60 items retain three matched wrappers within the
+length band; a scripted matrix checks the delivered contradiction message.
+Separate tests check rejection of a changed template and preservation of the
+stored approval when construction matches. Only offline tests were run.
 
 

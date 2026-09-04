@@ -160,7 +160,11 @@ def sign_freeze(freeze: FreezeManifest, signer: str) -> FreezeManifest:
 
 
 def accepted_freeze() -> FreezeManifest:
-    """Return freeze-2026-09-02."""
+    """Return stored approval only when current construction matches it [28]."""
+    # A post-registration change remains distinguishable from the prospective
+    # specification only when the deviation is made explicit [28].
+    path = Path(__file__).resolve().parents[3] / "config" / "freeze.json"
+    registered = FreezeManifest.model_validate_json(path.read_text(encoding="utf-8"))
     unsigned = build_freeze(
         sign_off_pool(confirmatory_pool()),
         freeze_id=ACCEPTED_FREEZE_ID,
@@ -168,7 +172,16 @@ def accepted_freeze() -> FreezeManifest:
         sampling_seed=1,
         serving_config_hash=primary_serving_digest(),
     )
-    return sign_freeze(unsigned, ACCEPTED_SIGNER)
+    current = unsigned.model_dump(exclude={"signer"})
+    recorded = registered.model_dump(exclude={"signer"})
+    changed = sorted(key for key in current if current[key] != recorded[key])
+    if changed:
+        raise ValueError(
+            "Current instrument differs from the registered freeze: "
+            + ", ".join(changed)
+            + ". A reviewed amendment is required before collection."
+        )
+    return registered
 
 
 def analysis_source_hash(source: str) -> str:

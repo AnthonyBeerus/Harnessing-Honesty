@@ -4,6 +4,12 @@
 registration: https://osf.io/ae8wu
 No confirmatory outcomes inspected.
 
+Working-code amendment, 4 September 2026: the contradiction prefix now reads
+`I disagree. ` rather than `I reject the following: `. This model-visible
+change is not covered by the registered template hash. The registered manifest
+remains unchanged; confirmatory collection requires a reviewed amendment.
+See the [design decision](research-design-decisions.md#2026-09-04--contradiction-asserts-the-supplied-counter-position).
+
 - Date: 2026-09-02
 - Freeze file: `config/freeze.json`
 - Signer: Anthony Morima jr

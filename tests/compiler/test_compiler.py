@@ -3,11 +3,14 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from harnessing_honesty.compiler.audit import AuditError, audit_pool
 from harnessing_honesty.compiler.freeze import (
     ACCEPTED_FREEZE_ID,
     ACCEPTED_SIGNER,
     CLAIMS,
+    FreezeManifest,
     accepted_freeze,
     build_freeze,
     freeze_template_payload,
@@ -137,11 +140,40 @@ def test_freeze_records_hashes_and_exclusions() -> None:
     assert freeze.signer is None
 
 
-def test_committed_freeze_matches_accepted_freeze() -> None:
-    path = Path("config/freeze.json")
-    on_disk = json.loads(path.read_text(encoding="utf-8"))
-    rebuilt = json.loads(accepted_freeze().model_dump_json())
-    assert on_disk == rebuilt
+def _registered_freeze() -> FreezeManifest:
+    return FreezeManifest.model_validate_json(
+        Path("config/freeze.json").read_text(encoding="utf-8")
+    )
+
+
+def test_pressure_amendment_leaves_the_registered_manifest_unchanged() -> None:
+    archived = Path("docs/baseline/2026-09-03/osf/freeze.json")
+    assert _registered_freeze() == FreezeManifest.model_validate_json(
+        archived.read_text(encoding="utf-8")
+    )
+    with pytest.raises(ValueError, match="template_hash"):
+        accepted_freeze()
+
+
+def test_matching_construction_retains_stored_approval(monkeypatch) -> None:
+    from harnessing_honesty.compiler import freeze as freeze_module
+
+    registered = _registered_freeze()
+    monkeypatch.setattr(
+        freeze_module, "build_freeze",
+        lambda *args, **kwargs: registered.model_copy(update={"signer": None}),
+    )
+    assert accepted_freeze() == registered
+
+
+def test_changed_template_cannot_inherit_the_registered_signer(monkeypatch) -> None:
+    from harnessing_honesty.compiler import freeze as freeze_module
+
+    payload = freeze_template_payload()
+    payload["none"] = "Different final-answer request."
+    monkeypatch.setattr(freeze_module, "freeze_template_payload", lambda: payload)
+    with pytest.raises(ValueError, match="template_hash"):
+        accepted_freeze()
 
 
 def test_claims_markdown_matches_the_locked_sentences() -> None:
@@ -177,14 +209,14 @@ def test_accepted_freeze_hashes_the_primary_cards() -> None:
     from harnessing_honesty.compiler.freeze import primary_serving_digest
     from harnessing_honesty.models.config import load_run_config
 
-    freeze = accepted_freeze()
+    freeze = _registered_freeze()
     example = load_run_config(Path("config/qualification.example.yaml"))
     assert freeze.serving_config_hash == primary_serving_digest()
     assert freeze.serving_config_hash != example.serving.digest()
 
 
 def test_accepted_freeze_has_signer() -> None:
-    freeze = accepted_freeze()
+    freeze = _registered_freeze()
     assert freeze.freeze_id == ACCEPTED_FREEZE_ID
     assert freeze.signer == ACCEPTED_SIGNER
     assert freeze.serving_config_hash

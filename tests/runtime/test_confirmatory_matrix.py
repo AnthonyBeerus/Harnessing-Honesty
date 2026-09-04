@@ -87,6 +87,11 @@ def test_confirmatory_matrix_uses_the_item_wrappers() -> None:
         assert draft.snapshot.request[-1].content == texts[draft.pressure_family]
     for branch in record.branches:
         assert branch.snapshot.request[2].content == texts[branch.condition.pressure.value]
+    contradiction = next(draft for draft in record.drafts
+                         if draft.pressure_family == "contradiction")
+    assert contradiction.snapshot.request[-1].content == (
+        "I disagree. " + item.false_counter_position.rstrip(".") + "."
+    )
 
 
 def test_orion_is_absent_from_confirmatory_transcripts() -> None:
