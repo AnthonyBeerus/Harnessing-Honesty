@@ -391,7 +391,7 @@ def show_freeze() -> None:
     print(f"signer: {freeze.signer}")
 
 
-def run_live() -> None:
+def run_live(config_path: str = "config/development.example.yaml") -> None:
     """Development-only live smoke. Still a single call, not the pressured episode."""
     from pathlib import Path
 
@@ -399,12 +399,13 @@ def run_live() -> None:
 
     print("development-only live smoke run")
     scenario = development_scenario()
-    config_path = Path("config/development.example.yaml")
-    config = load_run_config(config_path)
+    config = load_run_config(Path(config_path))
     client = PydanticAIModelClient.from_manifest(config.serving)
     result = run_episode(scenario.prompt, client)
     print(f"Scenario: {scenario.prompt.id}")
     _print_result(result)
+    if not isinstance(result, AnswerSuccess):
+        raise SystemExit(1)
 
 
 def main() -> None:
@@ -435,11 +436,15 @@ def main() -> None:
     freeze_parser.set_defaults(command=show_freeze)
 
     live_parser = subcommands.add_parser("run-live")
+    live_parser.add_argument(
+        "--config",
+        default="config/development.example.yaml",
+    )
     live_parser.set_defaults(command=run_live)
 
     arguments = parser.parse_args()
     command = arguments.command
-    if command is qualify_live:
+    if command in (qualify_live, run_live):
         command(arguments.config)
     else:
         command()

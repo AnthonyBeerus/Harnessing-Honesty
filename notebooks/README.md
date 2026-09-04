@@ -75,6 +75,28 @@ The default run audit has no selected data and reports that no audit occurred.
 Notebook dependencies are optional and separate from collection dependencies.
 No live model calls are made by these entrypoints.
 
+## Development live smoke
+
+`development/live_api_smoke.py` is an interactive check of the existing live
+adapter. It uses the excluded Orion fixture and the routed development settings
+in `config/qualification.example.yaml`. It sends one neutral request; it does
+not run a pressure condition or produce study data. Its tracked switch is off,
+and the release notebook batch does not include the development directory.
+
+Generate and open the local notebook with:
+
+```bash
+python -m jupytext --sync notebooks/development/live_api_smoke.py
+python -m jupyterlab notebooks/development/live_api_smoke.ipynb
+```
+
+Review the request preview, change `RUN_LIVE_API` to `True`, and run the launch
+cell. Each execution with the switch enabled sends a new paid API request. The
+notebook invokes `python -m harnessing_honesty.cli run-live` in a child process,
+so it uses the same adapter as the CLI and avoids an active event-loop conflict.
+The smoke result demonstrates request-path operation only; it does not validate
+pressure semantics, serving identity, scoring, reconstruction or the collector.
+
 ## References
 
 IEEE numbers follow the [project bibliography](../docs/references.md).

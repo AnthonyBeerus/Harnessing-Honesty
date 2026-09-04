@@ -73,6 +73,12 @@ processing and has separate usage and routing implications
 [[40]](references.md#openrouterpromptcaching).
 These citations specify the service behaviour to account for; they do not
 certify that every required setting is transmitted or every field retained.
+Point citations in the [live adapter](../src/harnessing_honesty/models/pydantic_ai_client.py)
+identify the OpenRouter routing fields, generation metadata and installed
+Pydantic AI boundary [[32]](references.md#openrouterrouting),
+[[34]](references.md#openroutermetadata), [[43]](references.md#pydanticai11071).
+The [development live smoke](../notebooks/development/live_api_smoke.py) calls
+that adapter through the CLI. It is a request-path diagnostic, not an evaluation.
 
 Model equality testing requires evidence about output distributions
 [[20]](references.md#gao2025equality). A provider label or successful
@@ -137,6 +143,17 @@ a later justification as retrospective support. Routine plumbing needs no
 paper citation. Keep scholarly commentary out of model-visible prompts and
 schema descriptions, including
 [AnswerResponse](../src/harnessing_honesty/domain/responses.py).
+
+Source comments use the bracket number from this repository's IEEE list,
+placed beside the equation, algorithm, provider assumption or design boundary
+it supports. A protocol-defined behavior cites the protocol and section rather
+than attaching an unrelated paper. Full entries remain in `references.md` and
+`references.bib`; they are not repeated in each module. Numpydoc permits local
+numbered reference sections, but its numbering begins within each docstring
+[[36, Sec. 14]](references.md#numpydocformat). Repository-wide numbers in short
+comments avoid ambiguous duplicates. This is a project convention: IEEE's
+reference guide defines bibliography formats, not Python comment syntax
+[[49]](references.md#ieeereferenceguide).
 
 Notebook guidance addresses readable, reproducible computational analyses
 [[26]](references.md#rule2019notebooks). Jupytext provides text representations

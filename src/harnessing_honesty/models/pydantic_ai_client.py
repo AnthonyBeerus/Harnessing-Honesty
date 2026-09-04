@@ -68,6 +68,8 @@ class PydanticAIModelClient:
             )
         provider = OpenRouterProvider(api_key=key)
         model = OpenRouterModel(manifest.requested_model, provider=provider)
+        # Provider selection and fallback controls follow OpenRouter's documented
+        # request fields [32]. The installed SDK boundary is Pydantic AI 1.107.1 [43].
         settings: OpenRouterModelSettings = {
             "temperature": manifest.decoding.temperature,
             "openrouter_provider": {
@@ -108,6 +110,7 @@ class PydanticAIModelClient:
         except Exception as exc:  # provider / transport / unexpected
             return ProviderFailure(detail=str(exc))
 
+        # OpenRouter generation metadata supplies observed provider evidence [34].
         envelope = self._extract_envelope(result)
         if envelope is None:
             if self._manifest is not None:

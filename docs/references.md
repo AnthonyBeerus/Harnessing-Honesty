@@ -196,3 +196,7 @@ The archived registration retains its original references.
 <a id="pydanticevals"></a>
 
 [48] Pydantic, “Pydantic Evals,” sec. “Code-First Evaluation.” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/evals/evals/).
+
+<a id="ieeereferenceguide"></a>
+
+[49] IEEE, “IEEE reference guide for authors.” Accessed: Sep. 4, 2026. [Online]. [Available](https://journals.ieeeauthorcenter.ieee.org/wp-content/uploads/sites/7/IEEE_Reference_Guide.pdf).
