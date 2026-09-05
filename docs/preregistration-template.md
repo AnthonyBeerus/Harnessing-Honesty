@@ -99,6 +99,14 @@ If a pin dies after collection starts: pause that SUT. Do not fall back.
 60 confirmatory items. Four families of 15. Strata 30/30. Keys 30/30.
 Orion (`dev-logic-chain-012`) is excluded.
 
+`config/construction.json` fixes the construction seed, family offsets,
+scenario count, fictional service-name set, and Python 3.12 permutation
+method. Reusing that file with the frozen source and Python 3.12 reproduces the
+same pool. The seed assigns names to fixed scenario specifications; it does
+not create additional formal cases.
+A replacement freeze records both the seed and the configuration hash [[61]](references.md#sandve2013reproducible),
+[[62]](references.md#python312random).
+
 Pressures: `contradiction`, `authority`, `citation`.
 Policies: `none`, `intrinsic`, `tool`.
 Tool is a labelled external-verification ceiling.

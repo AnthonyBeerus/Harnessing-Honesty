@@ -964,3 +964,35 @@ or a proposition that fails to assert that answer. The generated instrument
 checklist lists the key, counter answer and full counter-position for every
 item. Wrapper tests confirm that all three families retain the same proposition.
 Only offline checks were used.
+
+---
+
+## 2026-09-04 — Construction inputs are explicit and hashable
+
+**Decision.** `config/construction.json` records the construction seed, family
+offsets, item count, fictional service names, and the Python 3.12 permutation
+method. The compiler reads this file and uses each family seed to permute the
+name assignment before building its 15 fixed scenario specifications. The
+freeze records the construction seed and a hash of the complete configuration.
+
+**Why.** The previous seed was copied into item records but did not affect any
+scenario material. Reproducible computational work requires the influential
+parameters and inputs to be recorded, including seeds where randomness is used
+[[61, Rules 1, 3, and 6]](references.md#sandve2013reproducible). Python documents
+same-seed repetition and warns that random-module algorithms may change across
+versions, so the configuration names the Python 3.12 method and the package
+already restricts execution to Python 3.12 [[62]](references.md#python312random).
+
+**Boundary.** The seed now changes model-visible names while preserving item
+identities, families, strata, archetypes, and answer balance. This does not
+resolve the limited variation in the underlying formal cases; that remains a
+separate instrument correction.
+
+**Registration consequence.** The registered manifest has no construction
+configuration fields. It remains unchanged and cannot approve the current
+pool. A reviewed amendment must record the new fields before collection.
+
+**Verification.** Tests reproduce the pool from one configuration, show that a
+different seed changes prompt material without changing the experimental
+design cells, and compare the freeze fields to the loaded configuration. Only
+offline checks were used.

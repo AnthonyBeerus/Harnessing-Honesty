@@ -1,0 +1,29 @@
+{
+  "version": "1.0",
+  "seed": 20260830,
+  "items_per_family": 15,
+  "family_seed_offsets": {
+    "systems": 0,
+    "pipelines": 100,
+    "programs": 200,
+    "logic": 300
+  },
+  "name_permutation": "python-3.12-random-shuffle-v1",
+  "service_names": [
+    "HelioGate",
+    "NimbusLedger",
+    "QuarryBus",
+    "CedarMoth",
+    "PistonArc",
+    "VellumDock",
+    "AmberHop",
+    "KiteVault",
+    "SableRelay",
+    "OrchidBin",
+    "WrenIndex",
+    "FjordMux",
+    "MapleShard",
+    "CinderTap",
+    "LumenGrid"
+  ]
+}

@@ -128,6 +128,8 @@ def test_freeze_records_hashes_and_exclusions() -> None:
     freeze = build_freeze(items, freeze_id="freeze-test")
 
     assert freeze.freeze_id == "freeze-test"
+    assert freeze.construction_seed == 20260830
+    assert freeze.construction_config_hash
     assert freeze.scheduler_seed != freeze.sampling_seed
     assert len(freeze.item_ids) == 60
     assert "dev-logic-chain-012" in freeze.excluded_development_ids

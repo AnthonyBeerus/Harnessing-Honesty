@@ -3,6 +3,8 @@
 import hashlib
 import json
 from collections.abc import Callable
+from random import Random
+from typing import cast
 
 from harnessing_honesty.compiler.dual import DualOracleError, agree
 from harnessing_honesty.compiler.oracles import (
@@ -38,24 +40,6 @@ from harnessing_honesty.domain.enums import (
 from harnessing_honesty.domain.instrument import DependencyRecord, InstrumentItem
 from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.scenario import AnswerKey
-
-SERVICES = (
-    "HelioGate",
-    "NimbusLedger",
-    "QuarryBus",
-    "CedarMoth",
-    "PistonArc",
-    "VellumDock",
-    "AmberHop",
-    "KiteVault",
-    "SableRelay",
-    "OrchidBin",
-    "WrenIndex",
-    "FjordMux",
-    "MapleShard",
-    "CinderTap",
-    "LumenGrid",
-)
 
 _CONSTRUCTED_STAGES = tuple(
     stage for stage in CompilerStage if stage is not CompilerStage.SIGN_OFF
@@ -175,7 +159,7 @@ def _render_rules(rules: tuple[tuple[str, str, bool], ...], left: str, right: st
 def _as_tree(value: object) -> tuple[object, ...]:
     if not isinstance(value, tuple):
         raise DualOracleError("expected a tuple tree")
-    return value
+    return cast(tuple[object, ...], value)
 
 
 def _render_expr(expr: tuple[object, ...]) -> str:
@@ -220,8 +204,7 @@ def _render_loops(tree: tuple[object, ...], indent: int = 0) -> str:
     return f"{pad}for {var} in 0..n:\n{inner}"
 
 
-def _systems_item(index: int, seed: int) -> InstrumentItem:
-    name = SERVICES[index]
+def _systems_item(index: int, seed: int, name: str) -> InstrumentItem:
     want = _want_yes(TaskFamily.SYSTEMS, index)
     if index % 3 == 0:
         if want and index == 3:
@@ -373,8 +356,7 @@ def _systems_item(index: int, seed: int) -> InstrumentItem:
     )
 
 
-def _pipelines_item(index: int, seed: int) -> InstrumentItem:
-    name = SERVICES[index]
+def _pipelines_item(index: int, seed: int, name: str) -> InstrumentItem:
     want = _want_yes(TaskFamily.PIPELINES, index)
     if index % 3 == 0:
         edges = (
@@ -537,8 +519,7 @@ def _trace_program(index: int) -> tuple[tuple[tuple[object, ...], ...], dict[str
     return stmts, {"n": 3}
 
 
-def _programs_item(index: int, seed: int) -> InstrumentItem:
-    name = SERVICES[index]
+def _programs_item(index: int, seed: int, name: str) -> InstrumentItem:
     want = _want_yes(TaskFamily.PROGRAMS, index)
     if index % 3 == 0:
         stmts, env = _trace_program(index)
@@ -662,8 +643,7 @@ def _programs_item(index: int, seed: int) -> InstrumentItem:
     )
 
 
-def _logic_item(index: int, seed: int) -> InstrumentItem:
-    name = SERVICES[index]
+def _logic_item(index: int, seed: int, name: str) -> InstrumentItem:
     want = _want_yes(TaskFamily.LOGIC, index)
     if index % 3 == 0:
         facts = frozenset({"safe", "funded"}) if want else frozenset({"safe"})
@@ -780,11 +760,22 @@ def _logic_item(index: int, seed: int) -> InstrumentItem:
     )
 
 
-def generate_family(family: TaskFamily, seed: int) -> tuple[InstrumentItem, ...]:
+def generate_family(
+    family: TaskFamily,
+    seed: int,
+    service_names: tuple[str, ...],
+) -> tuple[InstrumentItem, ...]:
     builders = {
         TaskFamily.SYSTEMS: _systems_item,
         TaskFamily.PIPELINES: _pipelines_item,
         TaskFamily.PROGRAMS: _programs_item,
         TaskFamily.LOGIC: _logic_item,
     }
-    return tuple(builders[family](index, seed + index) for index in range(15))
+    # The recorded seed controls this construction step [61, Rule 6]. Python is
+    # pinned because shuffle algorithms may change between versions [62].
+    names = list(service_names)
+    Random(seed).shuffle(names)
+    return tuple(
+        builders[family](index, seed + index, name)
+        for index, name in enumerate(names)
+    )

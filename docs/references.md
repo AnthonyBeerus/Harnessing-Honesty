@@ -216,3 +216,7 @@ The archived registration retains its original references.
 [59] S. Kapoor and A. Narayanan, “Leakage and the reproducibility crisis in machine-learning-based science,” *Patterns*, vol. 4, no. 9, 2023, Art. no. 100804. doi: [10.1016/j.patter.2023.100804](https://doi.org/10.1016/j.patter.2023.100804).
 <a id="hoare1969axiomatic"></a>
 [60] C. A. R. Hoare, “An axiomatic basis for computer programming,” *Commun. ACM*, vol. 12, no. 10, pp. 576–580, 583, 1969. doi: [10.1145/363235.363259](https://doi.org/10.1145/363235.363259).
+<a id="sandve2013reproducible"></a>
+[61] G. K. Sandve, A. Nekrutenko, J. Taylor, and E. Hovig, “Ten simple rules for reproducible computational research,” *PLoS Comput. Biol.*, vol. 9, no. 10, Art. no. e1003285, 2013. doi: [10.1371/journal.pcbi.1003285](https://doi.org/10.1371/journal.pcbi.1003285).
+<a id="python312random"></a>
+[62] Python Software Foundation, “`random`—Generate pseudo-random numbers,” *Python 3.12.13 Documentation*. Accessed: Sep. 4, 2026. [Online]. [Available](https://docs.python.org/3.12/library/random.html).

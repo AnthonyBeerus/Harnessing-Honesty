@@ -3,9 +3,14 @@
 import hashlib
 import json
 from pathlib import Path
+from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
+from harnessing_honesty.compiler.construction import (
+    ConstructionConfig,
+    load_construction_config,
+)
 from harnessing_honesty.compiler.manifests import licence_rows, overlap_rows
 from harnessing_honesty.compiler.pool import EXCLUDED_DEVELOPMENT_IDS, confirmatory_pool, sign_off_pool
 from harnessing_honesty.compiler.wrapper import WRAPPER_PREFIX
@@ -37,9 +42,11 @@ ACCEPTED_SIGNER = "Anthony Morima jr"
 class FreezeManifest(BaseModel):
     """Closed construction record for a confirmatory instrument."""
 
-    model_config = ConfigDict(extra="forbid", frozen=True)
+    model_config: ClassVar[ConfigDict] = ConfigDict(extra="forbid", frozen=True)
 
     freeze_id: str
+    construction_seed: int | None = None
+    construction_config_hash: str | None = None
     scheduler_seed: int
     sampling_seed: int
     wrapper_hash: str
@@ -100,7 +107,7 @@ def primary_serving_digest() -> str:
     ``qualification.example.yaml`` stays the fake/fixture pin. It is not
     the confirmatory serving identity.
     """
-    materials = []
+    materials: list[dict[str, object]] = []
     for path in PRIMARY_SERVING_CARDS:
         serving = load_run_config(Path(path)).serving
         materials.append(serving.material())
@@ -116,8 +123,10 @@ def build_freeze(
     sampling_seed: int = 1,
     serving_config_hash: str | None = None,
     analysis_code_hash: str | None = None,
+    construction_config: ConstructionConfig | None = None,
 ) -> FreezeManifest:
-    pool = items if items is not None else confirmatory_pool()
+    construction = construction_config or load_construction_config()
+    pool = items if items is not None else confirmatory_pool(construction)
     template_blob = json.dumps(freeze_template_payload(), sort_keys=True)
     report_blob = json.dumps([_item_ceiling(item) for item in pool], sort_keys=True)
     pool_blob = json.dumps(
@@ -128,6 +137,8 @@ def build_freeze(
     licences = licence_rows(pool)
     return FreezeManifest(
         freeze_id=freeze_id,
+        construction_seed=construction.seed,
+        construction_config_hash=construction.digest(),
         scheduler_seed=scheduler_seed,
         sampling_seed=sampling_seed,
         wrapper_hash=_sha(WRAPPER_PREFIX),
@@ -156,6 +167,8 @@ def sign_freeze(freeze: FreezeManifest, signer: str) -> FreezeManifest:
         raise ValueError("signed freeze requires analysis_code_hash")
     if not freeze.claims_hash:
         raise ValueError("signed freeze requires claims_hash")
+    if freeze.construction_seed is None or not freeze.construction_config_hash:
+        raise ValueError("signed freeze requires construction configuration")
     return freeze.model_copy(update={"signer": name})
 
 
