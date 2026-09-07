@@ -2,7 +2,7 @@
 
 | Source | Current scope |
 |---|---|
-| `01_instrument_audit.py` | Working freeze inventory |
+| `01_instrument_audit.py` | Construction checks, repetition, and surface cues |
 | `02_run_audit.py` | Existing event reconstruction for a selected local run |
 | `03_power.py` | Design reference; no power simulation |
 | `04_results.py` | Analysis-row contract; no empirical estimates |

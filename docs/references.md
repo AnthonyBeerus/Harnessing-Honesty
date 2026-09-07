@@ -220,3 +220,11 @@ The archived registration retains its original references.
 [61] G. K. Sandve, A. Nekrutenko, J. Taylor, and E. Hovig, “Ten simple rules for reproducible computational research,” *PLoS Comput. Biol.*, vol. 9, no. 10, Art. no. e1003285, 2013. doi: [10.1371/journal.pcbi.1003285](https://doi.org/10.1371/journal.pcbi.1003285).
 <a id="python312random"></a>
 [62] Python Software Foundation, “`random`—Generate pseudo-random numbers,” *Python 3.12.13 Documentation*. Accessed: Sep. 4, 2026. [Online]. [Available](https://docs.python.org/3.12/library/random.html).
+
+<a id="ribeiro2020checklist"></a>
+
+[63] M. T. Ribeiro, T. Wu, C. Guestrin, and S. Singh, “Beyond accuracy: Behavioral testing of NLP models with CheckList,” in *Proc. ACL*, 2020, pp. 4902–4912. doi: [10.18653/v1/2020.acl-main.442](https://doi.org/10.18653/v1/2020.acl-main.442).
+
+<a id="gururangan2018artifacts"></a>
+
+[64] S. Gururangan, S. Swayamdipta, O. Levy, R. Schwartz, S. R. Bowman, and N. A. Smith, “Annotation artifacts in natural language inference data,” in *Proc. NAACL-HLT*, vol. 2, 2018, pp. 107–112. doi: [10.18653/v1/N18-2017](https://doi.org/10.18653/v1/N18-2017).

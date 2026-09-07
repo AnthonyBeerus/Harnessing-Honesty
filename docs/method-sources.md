@@ -184,6 +184,19 @@ repetition and also limits its cross-version guarantee
 record; they do not establish that the fixed formal cases are sufficiently
 varied.
 
+The [instrument audit notebook](../notebooks/01_instrument_audit.py) uses the
+local normalization and grouping functions in
+[variation.py](../src/harnessing_honesty/compiler/variation.py). CheckList's
+template discussion supports examining coverage beyond nominal item count
+[[63, Sec. 2.3]](references.md#ribeiro2020checklist). Gururangan et al. support
+checking label-associated surface features, including length
+[[64, Sec. 3]](references.md#gururangan2018artifacts); their hypothesis-only
+classifier is not implemented. Sclar et al. support attention to presentation
+[[14]](references.md#sclar2024formatting); the notebook does not estimate
+prompt-format robustness. Numeric masking is a coarse local screen, not a
+published equivalence method. It cannot establish semantic diversity, graph
+isomorphism, contamination, or effective sample size.
+
 Notebook guidance addresses readable, reproducible computational analyses
 [[26]](references.md#rule2019notebooks). Jupytext provides text representations
 for review, and nbclient executes notebooks
