@@ -178,8 +178,11 @@ reference guide defines bibliography formats, not Python comment syntax
 Scenario construction follows the recorded-input and recorded-seed guidance
 in Sandve et al. [[61, Rules 1, 3, and 6]](references.md#sandve2013reproducible).
 The [construction configuration](../config/construction.json) names the Python
-3.12 shuffle used to assign fictional names. Python documents same-seed
-repetition and also limits its cross-version guarantee
+3.12 shuffle used for a complementary name assignment: systems and pipelines
+receive opposite name/key allocations, as do programs and logic. Each name
+therefore occurs with two `yes` and two `no` keys; family seeds determine order
+within those allocations. Python documents same-seed repetition and limits its
+cross-version guarantee
 [[62]](references.md#python312random). These sources support the reproducibility
 record; they do not establish that the fixed formal cases are sufficiently
 varied.

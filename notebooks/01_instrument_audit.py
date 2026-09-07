@@ -38,6 +38,7 @@ from harnessing_honesty.compiler.audit import audit_pool
 from harnessing_honesty.compiler.construction import load_construction_config
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.compiler.variation import (
+    normalize_question,
     question_groups,
     service_name_key_counts,
 )
@@ -161,8 +162,9 @@ show_table(
 # %% [markdown]
 # ## Question length by answer key
 #
-# Length differences can be legitimate consequences of the evidence. They are
-# shown because label-associated length can also be an artefact
+# Raw length includes the fictional service name; name-masked length removes
+# that spelling difference. Remaining differences can be legitimate consequences
+# of the evidence, but label-associated length can also be an artefact
 # [[64, Sec. 3]](../docs/references.md#gururangan2018artifacts). This is a
 # descriptive comparison, not the hypothesis-only classifier used in that work.
 
@@ -172,6 +174,7 @@ def length_range(values: list[int]) -> str:
 
 
 length_rows = []
+separated_length_archetypes = []
 for archetype, group in sorted(by_archetype.items()):
     yes_lengths = [
         len(item.prompt.question)
@@ -183,12 +186,36 @@ for archetype, group in sorted(by_archetype.items()):
         for item in group
         if item.answer_key.canonical_answer == "no"
     ]
+    yes_masked = [
+        len(normalize_question(item.prompt.question, construction.service_names))
+        for item in group
+        if item.answer_key.canonical_answer == "yes"
+    ]
+    no_masked = [
+        len(normalize_question(item.prompt.question, construction.service_names))
+        for item in group
+        if item.answer_key.canonical_answer == "no"
+    ]
+    if max(yes_masked) < min(no_masked) or max(no_masked) < min(yes_masked):
+        separated_length_archetypes.append(archetype)
     length_rows.append(
-        (archetype, length_range(yes_lengths), length_range(no_lengths))
+        (
+            archetype,
+            length_range(yes_lengths),
+            length_range(no_lengths),
+            length_range(yes_masked),
+            length_range(no_masked),
+        )
     )
 
 show_table(
-    ("Archetype", "Yes: min / median / max", "No: min / median / max"),
+    (
+        "Archetype",
+        "Yes raw",
+        "No raw",
+        "Yes name-masked",
+        "No name-masked",
+    ),
     length_rows,
 )
 
@@ -210,7 +237,11 @@ display(
         "measure contamination, semantic diversity, graph isomorphism, or effective "
         "sample size. Different text can encode the same formal case, and number "
         "masking can group cases with different answers. Presentation sensitivity "
-        "requires a separate outcome study [14]. No item is selected or rejected by "
-        "this notebook."
+        "requires a separate outcome study [14]. Name-masked yes/no length ranges "
+        f"do not overlap in **{len(separated_length_archetypes)}** archetypes: "
+        f"{', '.join(separated_length_archetypes)}. Those differences arise from "
+        "the current case wording and evidence, but this screen cannot determine "
+        "whether they are necessary evidence or usable shortcuts. No item is "
+        "selected or rejected by this notebook."
     )
 )

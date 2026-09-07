@@ -31,7 +31,7 @@ def confirmatory_pool(
         generate_family(
             family,
             resolved.family_seed(family),
-            resolved.service_names,
+            resolved.service_names_for(family),
         )
         for family in TaskFamily
     )

@@ -996,3 +996,31 @@ pool. A reviewed amendment must record the new fields before collection.
 different seed changes prompt material without changing the experimental
 design cells, and compare the freeze fields to the loaded configuration. Only
 offline checks were used.
+
+---
+
+## 2026-09-07 — Fictional names are balanced across answer keys
+
+**Decision.** Each fictional service name occurs in four items: twice with a
+`yes` key and twice with a `no` key. Systems and pipelines use complementary
+name/key allocations; programs and logic use a second complementary allocation.
+The recorded family seeds order names within their allocated key groups. The
+compiler uses this rule once and does not search for a favourable seed.
+
+**Why.** Independent family shuffles left eight names with a 3:1 association
+to one key. A name should not be a reusable answer cue. Gururangan et al. support
+checking label-associated surface features [[64, Sec. 3]](references.md#gururangan2018artifacts);
+the balance rule is specific to this instrument. Recorded inputs and the pinned
+shuffle retain the reproducibility basis in Sandve et al. and Python's versioned
+documentation [[61, Rules 1, 3, and 6]](references.md#sandve2013reproducible),
+[[62]](references.md#python312random).
+
+**Registration consequence.** Names appear in model-visible questions and
+counter-positions, so the pool and construction-configuration hashes change.
+The registered manifest and OSF files remain unchanged. MAIN collection still
+requires the reviewed amendment.
+
+**Verification.** Construction tests require every name to have two `yes` and
+two `no` uses. The instrument notebook reports raw and name-masked length by key
+within archetype so name spelling is distinguishable from case wording. No model
+responses were used.

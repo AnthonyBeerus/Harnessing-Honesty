@@ -8,7 +8,7 @@
     "programs": 200,
     "logic": 300
   },
-  "name_permutation": "python-3.12-random-shuffle-v1",
+  "name_permutation": "python-3.12-balanced-complements-v1",
   "service_names": [
     "HelioGate",
     "NimbusLedger",

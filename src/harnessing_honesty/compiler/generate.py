@@ -3,7 +3,6 @@
 import hashlib
 import json
 from collections.abc import Callable
-from random import Random
 from typing import cast
 
 from harnessing_honesty.compiler.dual import DualOracleError, agree
@@ -763,7 +762,7 @@ def _logic_item(index: int, seed: int, name: str) -> InstrumentItem:
 def generate_family(
     family: TaskFamily,
     seed: int,
-    service_names: tuple[str, ...],
+    assigned_names: tuple[str, ...],
 ) -> tuple[InstrumentItem, ...]:
     builders = {
         TaskFamily.SYSTEMS: _systems_item,
@@ -771,11 +770,7 @@ def generate_family(
         TaskFamily.PROGRAMS: _programs_item,
         TaskFamily.LOGIC: _logic_item,
     }
-    # The recorded seed controls this construction step [61, Rule 6]. Python is
-    # pinned because shuffle algorithms may change between versions [62].
-    names = list(service_names)
-    Random(seed).shuffle(names)
     return tuple(
         builders[family](index, seed + index, name)
-        for index, name in enumerate(names)
+        for index, name in enumerate(assigned_names)
     )

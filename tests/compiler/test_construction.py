@@ -49,6 +49,25 @@ def test_construction_seed_changes_material_but_not_the_design() -> None:
     ) == _design_cells()
 
 
+def test_each_service_name_has_two_yes_and_two_no_keys() -> None:
+    config = load_construction_config()
+    counts = {
+        name: [0, 0]
+        for name in config.service_names
+    }
+    for item in confirmatory_pool(config):
+        matches = [
+            name
+            for name in config.service_names
+            if name in item.prompt.question
+        ]
+        assert len(matches) == 1
+        answer_index = 0 if item.answer_key.canonical_answer == "yes" else 1
+        counts[matches[0]][answer_index] += 1
+
+    assert set(map(tuple, counts.values())) == {(2, 2)}
+
+
 def test_freeze_records_the_construction_inputs() -> None:
     config = load_construction_config()
     freeze = build_freeze(construction_config=config)
