@@ -228,3 +228,7 @@ The archived registration retains its original references.
 <a id="gururangan2018artifacts"></a>
 
 [64] S. Gururangan, S. Swayamdipta, O. Levy, R. Schwartz, S. R. Bowman, and N. A. Smith, “Annotation artifacts in natural language inference data,” in *Proc. NAACL-HLT*, vol. 2, 2018, pp. 107–112. doi: [10.18653/v1/N18-2017](https://doi.org/10.18653/v1/N18-2017).
+
+<a id="srivastava2022bigbench"></a>
+
+[65] A. Srivastava *et al.*, “Beyond the imitation game: Quantifying and extrapolating the capabilities of language models,” arXiv:2206.04615, 2022, sec. 2.2. doi: [10.48550/arXiv.2206.04615](https://doi.org/10.48550/arXiv.2206.04615).

@@ -187,6 +187,17 @@ cross-version guarantee
 record; they do not establish that the fixed formal cases are sufficiently
 varied.
 
+The systems inputs in
+[case_specs.py](../src/harnessing_honesty/compiler/case_specs.py) are kept apart
+from item assembly in
+[generate.py](../src/harnessing_honesty/compiler/generate.py). CheckList supports
+small, focused tests and controlled template expansion
+[[63, Secs. 2.2--2.3]](references.md#ribeiro2020checklist). BIG-bench provides a
+precedent for keeping declarative task data separate from Python interaction and
+custom metrics [[65, Sec. 2.2]](references.md#srivastava2022bigbench). These
+sources support inspectable construction; they do not establish that the present
+systems cases are sufficiently varied. That question remains in substep 2.4.3.3.
+
 The [instrument audit notebook](../notebooks/01_instrument_audit.py) uses the
 local normalization and grouping functions in
 [variation.py](../src/harnessing_honesty/compiler/variation.py). CheckList's
