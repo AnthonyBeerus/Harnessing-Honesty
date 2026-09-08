@@ -232,3 +232,11 @@ The archived registration retains its original references.
 <a id="srivastava2022bigbench"></a>
 
 [65] A. Srivastava *et al.*, “Beyond the imitation game: Quantifying and extrapolating the capabilities of language models,” arXiv:2206.04615, 2022, sec. 2.2. doi: [10.48550/arXiv.2206.04615](https://doi.org/10.48550/arXiv.2206.04615).
+
+<a id="sinha2026sycobench"></a>
+
+[66] D. Sinha, “SycoBench-600: Measuring sycophancy and correction selectivity in LLM assistants,” in *Findings Assoc. Comput. Linguistics: ACL 2026*, 2026, pp. 35278–35284. doi: [10.18653/v1/2026.findings-acl.1759](https://doi.org/10.18653/v1/2026.findings-acl.1759).
+
+<a id="sinha2026sycobenchcode"></a>
+
+[67] D. Sinha, “sycobench-600,” software, rev. 5219abda88de91300adcfefa37c3a824f0f103de, 2026. Accessed: Sep. 7, 2026. [Online]. [Available](https://github.com/debu-sinha/sycobench-600/tree/5219abda88de91300adcfefa37c3a824f0f103de).
