@@ -187,7 +187,7 @@ cross-version guarantee
 record; they do not establish that the fixed formal cases are sufficiently
 varied.
 
-The systems, pipeline and program inputs in
+The systems, pipeline, program and logic inputs in
 [case_specs.py](../src/harnessing_honesty/compiler/case_specs.py) are kept apart
 from item assembly in
 [generate.py](../src/harnessing_honesty/compiler/generate.py). CheckList supports
@@ -202,7 +202,7 @@ metric, validation and provider modules
 case-specification/compiler boundary; no SycoBench items or code were reused.
 These sources support inspectable construction; they do not establish that the
 present cases are sufficiently varied. Those questions remain in substeps
-2.4.3.3--2.4.3.5.
+2.4.3.3--2.4.3.6.
 
 The [instrument audit notebook](../notebooks/01_instrument_audit.py) uses the
 local normalization and grouping functions in
