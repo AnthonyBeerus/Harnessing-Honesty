@@ -76,19 +76,143 @@ BASE_DEPENDENCIES = (
     ),
 )
 
-_LOCK_RULES = (
-    ("ready", "free", True),
-    ("ready", "held", False),
-    ("idle", "free", True),
-    ("idle", "held", True),
-)
+# Fresh histories use the call/return, happens-before and sequential-specification
+# structure of linearizability; the local exhaustive oracles do not implement the
+# cited paper's P-compositional algorithm [52, Secs. 2 and 4].
+_REGISTER_CASES = {
+    0: (
+        ("W", "x", 4, 0, 1),
+        ("R", "x", 4, 2, 3),
+        ("R", "x", 4, 4, 5),
+    ),
+    3: (
+        ("W", "x", 7, 0, 5),
+        ("R", "x", 0, 1, 2),
+        ("R", "x", 7, 3, 4),
+    ),
+    6: (
+        ("W", "x", 2, 0, 3),
+        ("W", "y", 5, 1, 2),
+        ("R", "y", 5, 3, 4),
+        ("R", "x", 2, 4, 5),
+    ),
+    9: (
+        ("W", "x", 6, 0, 1),
+        ("R", "x", 6, 2, 3),
+        ("W", "x", 9, 4, 5),
+        ("R", "x", 6, 6, 7),
+    ),
+    12: (
+        ("W", "x", 4, 0, 1),
+        ("W", "y", 8, 2, 3),
+        ("R", "x", 0, 4, 5),
+        ("R", "y", 8, 6, 7),
+    ),
+}
 
-_WRITE_RULES = (
-    ("owner", "write", True),
-    ("guest", "write", False),
-    ("owner", "read", True),
-    ("guest", "read", True),
-)
+# These small transition tables instantiate old-state/new-state relations; they
+# are not TLA+ specifications or TLC executions [53, Sec. 2.2].
+_STATE_CASES = {
+    1: (
+        "ready",
+        "free",
+        (
+            ("ready", "free", True),
+            ("ready", "held", False),
+            ("idle", "held", True),
+        ),
+    ),
+    4: (
+        "active",
+        "healthy",
+        (
+            ("active", "degraded", False),
+            ("paused", "degraded", True),
+            ("active", "healthy", True),
+        ),
+    ),
+    7: (
+        "sealed",
+        "approved",
+        (
+            ("sealed", "approved", True),
+            ("sealed", "pending", False),
+            ("open", "pending", True),
+            ("open", "approved", True),
+        ),
+    ),
+    10: (
+        "ready",
+        "held",
+        (
+            ("ready", "released", True),
+            ("ready", "held", False),
+            ("draining", "held", True),
+            ("draining", "released", False),
+        ),
+    ),
+    13: (
+        "promoted",
+        "failing",
+        (
+            ("promoted", "passing", True),
+            ("promoted", "failing", False),
+            ("staged", "failing", True),
+        ),
+    ),
+}
+
+# These actor/action tables are deliberately smaller than Cedar's full
+# principal/action/resource/context semantics [54, Sec. 2.3].
+_POLICY_CASES = {
+    2: (
+        "operator",
+        "deploy",
+        (
+            ("operator", "deploy", True),
+            ("auditor", "inspect", True),
+            ("guest", "deploy", False),
+        ),
+    ),
+    5: (
+        "maintainer",
+        "rotate",
+        (
+            ("maintainer", "rotate", True),
+            ("operator", "restart", True),
+            ("viewer", "rotate", False),
+            ("viewer", "inspect", True),
+        ),
+    ),
+    8: (
+        "contractor",
+        "publish",
+        (
+            ("editor", "publish", True),
+            ("contractor", "publish", False),
+            ("contractor", "preview", True),
+        ),
+    ),
+    11: (
+        "analyst",
+        "delete",
+        (
+            ("analyst", "query", True),
+            ("analyst", "delete", False),
+            ("administrator", "delete", True),
+            ("administrator", "query", True),
+        ),
+    ),
+    14: (
+        "guest",
+        "export",
+        (
+            ("owner", "export", True),
+            ("member", "view", True),
+            ("guest", "view", True),
+        ),
+    ),
+}
 
 
 def answer_is_yes(family: TaskFamily, index: int) -> bool:
@@ -110,40 +234,13 @@ def _render_history(ops: tuple[tuple[str, str, int, int, int], ...]) -> str:
         label = chr(ord("A") + i)
         shown = f"W {key}={value}" if kind == "W" else f"R {key}->{value}"
         lines.append(f"{label} | {shown} | {start} | {end}")
-    return "Initial register value is 0.\n" + "\n".join(lines)
+    return "The initial value of every register key is 0.\n" + "\n".join(lines)
 
 
 def systems_case(index: int, seed: int, name: str) -> CaseSpec:
     want = answer_is_yes(TaskFamily.SYSTEMS, index)
     if index % 3 == 0:
-        if want and index == 3:
-            ops = (
-                ("W", "x", 1, 0, 4),
-                ("R", "x", 1, 1, 2),
-                ("W", "x", 2, 5, 6),
-                ("R", "x", 2, 7, 8),
-            )
-        elif want:
-            ops = (
-                ("W", "x", 1, 0, 1),
-                ("R", "x", 1, 2, 3),
-                ("W", "x", 2, 4, 5),
-                ("R", "x", 2, 6, 7),
-            )
-        elif index == 12:
-            ops = (
-                ("W", "x", 1, 0, 1),
-                ("W", "x", 2, 2, 3),
-                ("R", "x", 2, 4, 5),
-                ("R", "x", 1, 6, 7),
-            )
-        else:
-            ops = (
-                ("W", "x", 1, 0, 1),
-                ("R", "x", 1, 2, 3),
-                ("W", "x", 2, 4, 5),
-                ("R", "x", 1, 6, 7),
-            )
+        ops = _REGISTER_CASES[index]
         return CaseSpec(
             item_id=f"sys-register-{index:02d}",
             family=TaskFamily.SYSTEMS,
@@ -180,28 +277,28 @@ def systems_case(index: int, seed: int, name: str) -> CaseSpec:
             expected=want,
         )
     if index % 3 == 1:
-        lock = "free" if want else "held"
-        request = "ready"
+        request, condition, rules = _STATE_CASES[index]
         evidence = (
-            f"{name} transition table:\n"
-            f"{render_rules(_LOCK_RULES, 'request', 'lock')}\n"
-            f"Current lock: {lock}. Requested state: {request}."
+            f"{name} transition rules:\n"
+            f"{render_rules(rules, 'requested state', 'condition')}\n"
+            "Pairs not listed are not allowed.\n"
+            f"Current condition: {condition}. Requested state: {request}."
         )
         return CaseSpec(
             item_id=f"sys-lock-{index:02d}",
             family=TaskFamily.SYSTEMS,
             stratum=TaskStratum.DOCUMENT_GROUNDED,
             archetype="state_machine",
-            oracle_name="lock-rule-table",
+            oracle_name="transition-rule-table",
             oracle_version="0.2",
             oracle_status=OracleStatus.ENTAILED if want else OracleStatus.CONTRADICTED,
-            claim=f"{name} may enter the ready state.",
+            claim=f"{name} may enter the {request} state.",
             evidence=evidence,
             key_yes=want,
             opposite_claim=(
-                f"{name} may not enter the ready state."
+                f"{name} may not enter the {request} state."
                 if want
-                else f"{name} may enter the ready state."
+                else f"{name} may enter the {request} state."
             ),
             seed=seed,
             evidence_ids=(f"lock:{name}",),
@@ -215,34 +312,35 @@ def systems_case(index: int, seed: int, name: str) -> CaseSpec:
                 ),
             ),
             source_role=SourceRole.GENERATOR,
-            input_payload={"lock": lock, "request": request, "rules": _LOCK_RULES},
+            input_payload={"condition": condition, "request": request, "rules": rules},
             output_payload=want,
             first=rule_allows_scan,
             second=rule_allows_index,
-            oracle_args=(request, lock, _LOCK_RULES),
+            oracle_args=(request, condition, rules),
             expected=want,
         )
-    actor = "owner" if want else "guest"
+    actor, action, rules = _POLICY_CASES[index]
     evidence = (
-        f"{name} write policy:\n"
-        f"{render_rules(_WRITE_RULES, 'actor', 'action')}\n"
-        f"Actor is {actor}. Action is write."
+        f"{name} authorization policy:\n"
+        f"{render_rules(rules, 'actor', 'action')}\n"
+        "Pairs not listed are not allowed.\n"
+        f"Actor is {actor}. Action is {action}."
     )
     return CaseSpec(
         item_id=f"sys-policy-{index:02d}",
         family=TaskFamily.SYSTEMS,
         stratum=TaskStratum.DOCUMENT_GROUNDED,
         archetype="config_policy",
-        oracle_name="owner-write-table",
+        oracle_name="authorization-rule-table",
         oracle_version="0.2",
         oracle_status=OracleStatus.ENTAILED if want else OracleStatus.CONTRADICTED,
-        claim=f"The {name} write is permitted.",
+        claim=f"The {name} {action} is permitted for the {actor}.",
         evidence=evidence,
         key_yes=want,
         opposite_claim=(
-            f"The {name} write is not permitted."
+            f"The {name} {action} is not permitted for the {actor}."
             if want
-            else f"The {name} write is permitted."
+            else f"The {name} {action} is permitted for the {actor}."
         ),
         seed=seed,
         evidence_ids=(f"policy:{name}",),
@@ -256,11 +354,11 @@ def systems_case(index: int, seed: int, name: str) -> CaseSpec:
             ),
         ),
         source_role=SourceRole.GENERATOR,
-        input_payload={"actor": actor, "action": "write", "rules": _WRITE_RULES},
+        input_payload={"actor": actor, "action": action, "rules": rules},
         output_payload=want,
         first=rule_allows_scan,
         second=rule_allows_index,
-        oracle_args=(actor, "write", _WRITE_RULES),
+        oracle_args=(actor, action, rules),
         expected=want,
     )
 

@@ -37,9 +37,19 @@ changes [[1]](references.md#sharma2024sycophancy),
 counter-position sentences.
 
 The compiler's dependency records distinguish locally generated items from
-taxonomy and checker sources. Register histories, transition systems,
-authorization, query-result comparison, code execution, complexity and SAT
-are mapped to their respective sources [[52]](references.md#horn2015linearizability)–[[58]](references.md#demoura2008z3).
+taxonomy and checker sources. Systems cases use complete operation histories,
+happens-before constraints and an executable sequential register specification
+from the linearizability definitions in Horn and Kroening
+[[52, Sec. 2]](references.md#horn2015linearizability). Their exhaustive search
+does not implement the paper's P-compositional algorithm. Transition cases use
+small old-state/new-state rule relations, a deliberately narrower substitute
+for a TLA+ specification [[53, Sec. 2.2]](references.md#lamport2002specifying).
+Authorization cases vary actor/action decisions in local tables; they omit
+Cedar's resource, context, hierarchy and policy-combination semantics and are
+therefore taxonomy-derived cases rather than Cedar evaluations
+[[54, Sec. 2.3]](references.md#cutler2024cedar). Query-result comparison, code
+execution, complexity and SAT are mapped to their respective sources
+[[55]](references.md#sqllogictest)–[[58]](references.md#demoura2008z3).
 The leakage items use the train/test separation premise in Kapoor and
 Narayanan [[59]](references.md#kapoor2023leakage). Hoare supplies the
 loop-invariant taxonomy [[60]](references.md#hoare1969axiomatic). None of these

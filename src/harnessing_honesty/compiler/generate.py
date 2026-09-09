@@ -99,34 +99,18 @@ def _finish(
     )
 
 
-def _systems_item(index: int, seed: int, name: str) -> InstrumentItem:
-    return _finish(**systems_case(index, seed, name))
-
-
-def _pipelines_item(index: int, seed: int, name: str) -> InstrumentItem:
-    return _finish(**pipelines_case(index, seed, name))
-
-
-def _programs_item(index: int, seed: int, name: str) -> InstrumentItem:
-    return _finish(**programs_case(index, seed, name))
-
-
-def _logic_item(index: int, seed: int, name: str) -> InstrumentItem:
-    return _finish(**logic_case(index, seed, name))
-
-
 def generate_family(
     family: TaskFamily,
     seed: int,
     assigned_names: tuple[str, ...],
 ) -> tuple[InstrumentItem, ...]:
     builders = {
-        TaskFamily.SYSTEMS: _systems_item,
-        TaskFamily.PIPELINES: _pipelines_item,
-        TaskFamily.PROGRAMS: _programs_item,
-        TaskFamily.LOGIC: _logic_item,
+        TaskFamily.SYSTEMS: systems_case,
+        TaskFamily.PIPELINES: pipelines_case,
+        TaskFamily.PROGRAMS: programs_case,
+        TaskFamily.LOGIC: logic_case,
     }
     return tuple(
-        builders[family](index, seed + index, name)
+        _finish(**builders[family](index, seed + index, name))
         for index, name in enumerate(assigned_names)
     )
