@@ -39,12 +39,13 @@ class DevelopmentModelConfigurationError(RuntimeError):
 class PydanticAIModelClient:
     def __init__(
         self,
-        agent: Agent[None, AnswerResponse],
+        agent: Agent[None, str],
         manifest: ServingManifest | None = None,
     ) -> None:
         self._agent = agent
         self._manifest = manifest
         self.last_envelope: dict[str, object] | None = None
+        self.envelopes: list[dict[str, object]] = []
 
     @classmethod
     def from_environment(cls) -> "PydanticAIModelClient":
@@ -87,7 +88,9 @@ class PydanticAIModelClient:
             # require_parameters check uses the pin's list, which names
             # max_tokens (Anthropic, GPT-4o). extra_body keeps the cap.
             settings["extra_body"] = {"max_tokens": manifest.decoding.max_tokens}
-        agent = Agent(model, output_type=AnswerResponse, model_settings=settings)
+        # Plain text avoids adding a response-format tool to every policy arm.
+        # Pydantic AI 1.107.1 uses text output when ``str`` is requested [43].
+        agent = Agent(model, output_type=str, model_settings=settings)
         return cls(agent, manifest=manifest)
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
@@ -101,7 +104,7 @@ class PydanticAIModelClient:
         except UnexpectedModelBehavior as exc:
             detail = str(exc)
             # OpenRouter sometimes returns null completion shells; that is a
-            # provider transport failure, not an AnswerResponse schema miss.
+            # provider transport failure, not a binary-answer parse miss.
             if "chat completions endpoint" in detail.lower():
                 return ProviderFailure(detail=detail)
             return ParseFailure(detail=detail)
@@ -117,12 +120,23 @@ class PydanticAIModelClient:
                 return ProtocolFailure(detail="envelope has no provider identity")
         else:
             self.last_envelope = envelope
+            self.envelopes.append(envelope)
             failure = self.inspect_envelope(envelope)
             if failure is not None:
                 return failure
 
+        if not isinstance(result.output, str):
+            return ParseFailure(detail="model output was not text")
+        raw_response = result.output
+        normalized = raw_response.strip().lower()
+        if normalized not in {"yes", "no"}:
+            return ParseFailure(
+                detail=f"expected exactly yes or no; received {raw_response!r}"
+            )
+
         return AnswerSuccess(
-            response=result.output,
+            response=AnswerResponse(answer=normalized),
+            raw_response=raw_response,
             requested_message_count=len(messages),
             observed_message_count=_observed_message_count(
                 messages, result.all_messages()
@@ -132,6 +146,10 @@ class PydanticAIModelClient:
     def inspect_envelope(self, envelope: dict[str, object]) -> ProtocolFailure | None:
         """Classify a captured envelope. Called before the parse is accepted."""
         self.last_envelope = envelope
+        if envelope.get("finish_reason") == "tool_calls":
+            return ProtocolFailure(
+                detail="plain-text response unexpectedly finished with tool_calls"
+            )
         if self._manifest is None:
             return None
         return classify_envelope(envelope, self._manifest)
@@ -195,11 +213,17 @@ def _observed_message_count(
     Conversation turns are counted up to the model's own reply; system turns
     are counted where their content appears in the delivered instructions.
     """
+    response_indexes = [
+        index
+        for index, message in enumerate(assembled)
+        if isinstance(message, ModelResponse)
+    ]
+    final_response = response_indexes[-1] if response_indexes else len(assembled)
     delivered = 0
-    for message in assembled:
+    for index, message in enumerate(assembled):
+        if index == final_response:
+            break
         if isinstance(message, ModelResponse):
-            if not all(isinstance(part, TextPart) for part in message.parts):
-                break  # the model's own reply; everything after is internal
             delivered += len(message.parts)
         else:
             delivered += sum(
@@ -222,14 +246,6 @@ def _observed_message_count(
     return delivered
 
 
-# Harness roles that become user-role turns on the wire. ``tool`` is here
-# because the harness verifier output is fixed text, not a live tool call:
-# there is no preceding tool call for a provider tool result to answer, and
-# synthesising one would add an assistant turn to the tool cells only, which
-# is exactly what the registered call-matching rule forbids.
-_USER_SIDE_ROLES = frozenset({"user", "tool"})
-
-
 def _to_provider_request(
     messages: tuple[Message, ...],
 ) -> tuple[str, str | None, list[ModelMessage]]:
@@ -237,8 +253,8 @@ def _to_provider_request(
 
     Returns the final user prompt, the joined instructions, and every
     preceding turn as history. ``system`` turns become instructions;
-    ``assistant`` turns become model responses; ``user`` and ``tool`` turns
-    become user-role turns.
+    ``assistant`` turns become model responses and ``user`` turns remain user
+    turns. External verification is explicitly labelled in its user-side text.
 
     The whole conversation crosses the wire. A pressured turn is only a
     pressured turn if the model can still see the question it is being
@@ -252,7 +268,7 @@ def _to_provider_request(
         raise UnmappableRequestError("No conversation turns to send.")
 
     final = conversation[-1]
-    if final.role not in _USER_SIDE_ROLES:
+    if final.role != "user":
         raise UnmappableRequestError(
             f"The last turn must be user-side, not {final.role!r}. "
             "The provider is being asked to answer, so something must be asked."

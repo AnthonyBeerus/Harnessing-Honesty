@@ -18,8 +18,6 @@ from pydantic_ai.messages import (
     ModelResponse,
     SystemPromptPart,
     TextPart,
-    ToolCallPart,
-    ToolReturnPart,
     UserPromptPart,
 )
 from pydantic_ai.models.function import AgentInfo, FunctionModel
@@ -27,11 +25,11 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 
-TOOL_CELL_REQUEST = (
+EXTERNAL_CELL_REQUEST = (
     Message(role="user", content="QUESTION-TEXT"),
-    Message(role="assistant", content="PRIOR-ANSWER-JSON"),
+    Message(role="assistant", content="yes"),
     Message(role="user", content="PRESSURE-TEXT"),
-    Message(role="tool", content="VERIFIER-OUTPUT"),
+    Message(role="user", content="LABELLED-EXTERNAL-REPORT"),
     Message(role="user", content="POLICY-TEXT"),
 )
 
@@ -46,14 +44,10 @@ def _flatten(messages: list[ModelMessage]) -> list[tuple[str, str]]:
                     pairs.append(("system", part.content))
                 elif isinstance(part, UserPromptPart):
                     pairs.append(("user", str(part.content)))
-                elif isinstance(part, ToolReturnPart):
-                    pairs.append(("tool", str(part.content)))
         elif isinstance(message, ModelResponse):
             for part in message.parts:
                 if isinstance(part, TextPart):
                     pairs.append(("assistant", part.content))
-                elif isinstance(part, ToolCallPart):
-                    pairs.append(("assistant-tool-call", part.tool_name))
     return pairs
 
 
@@ -70,19 +64,8 @@ class CapturingProvider:
         self, messages: list[ModelMessage], info: AgentInfo
     ) -> ModelResponse:
         self.captured.append(messages)
-        assert info.output_tools, "expected a structured output tool"
-        return ModelResponse(
-            parts=[
-                ToolCallPart(
-                    info.output_tools[0].name,
-                    {
-                        "answer": "yes",
-                        "confidence": 1.0,
-                        "rationale": "captured",
-                    },
-                )
-            ]
-        )
+        assert not info.output_tools
+        return ModelResponse(parts=[TextPart(content="yes")])
 
     @property
     def last(self) -> list[tuple[str, str]]:
@@ -91,9 +74,7 @@ class CapturingProvider:
 
 def _capturing_client() -> tuple[PydanticAIModelClient, CapturingProvider]:
     provider = CapturingProvider()
-    agent = Agent[None, AnswerResponse](
-        FunctionModel(provider), output_type=AnswerResponse
-    )
+    agent = Agent[None, str](FunctionModel(provider), output_type=str)
     return PydanticAIModelClient(agent), provider
 
 
@@ -101,11 +82,11 @@ def test_every_message_reaches_the_provider() -> None:
     """A five-message tool cell must arrive as five messages, not one."""
     client, provider = _capturing_client()
 
-    client.complete(TOOL_CELL_REQUEST)
+    client.complete(EXTERNAL_CELL_REQUEST)
 
     delivered = provider.last
-    assert len(delivered) == len(TOOL_CELL_REQUEST), (
-        f"harness built {len(TOOL_CELL_REQUEST)} messages, "
+    assert len(delivered) == len(EXTERNAL_CELL_REQUEST), (
+        f"harness built {len(EXTERNAL_CELL_REQUEST)} messages, "
         f"provider received {len(delivered)}: {delivered}"
     )
 
@@ -113,20 +94,18 @@ def test_every_message_reaches_the_provider() -> None:
 def test_roles_and_order_survive_the_transport() -> None:
     """Order is preserved and roles follow one documented projection.
 
-    ``tool`` becomes a user-role turn. The harness verifier output is fixed
-    text, not a live tool call, so there is no preceding tool call for a
-    provider tool result to answer. This is a registered projection, not a
-    silent one.
+    The labelled external report is authored as a user-side harness message;
+    no fictitious provider tool role is projected.
     """
     client, provider = _capturing_client()
 
-    client.complete(TOOL_CELL_REQUEST)
+    client.complete(EXTERNAL_CELL_REQUEST)
 
     assert provider.last == [
         ("user", "QUESTION-TEXT"),
-        ("assistant", "PRIOR-ANSWER-JSON"),
+        ("assistant", "yes"),
         ("user", "PRESSURE-TEXT"),
-        ("user", "VERIFIER-OUTPUT"),
+        ("user", "LABELLED-EXTERNAL-REPORT"),
         ("user", "POLICY-TEXT"),
     ]
 
@@ -140,14 +119,14 @@ def test_the_tool_cell_gains_no_extra_assistant_turn() -> None:
     """
     client, provider = _capturing_client()
 
-    client.complete(TOOL_CELL_REQUEST)
+    client.complete(EXTERNAL_CELL_REQUEST)
     with_tool = [role for role, _ in provider.last].count("assistant")
 
     client.complete(
         tuple(
             message
-            for message in TOOL_CELL_REQUEST
-            if message.role != "tool"
+            for message in EXTERNAL_CELL_REQUEST
+            if message.content != "LABELLED-EXTERNAL-REPORT"
         )
     )
     without_tool = [role for role, _ in provider.last].count("assistant")
@@ -164,22 +143,22 @@ def test_the_question_reaches_the_pressured_turn() -> None:
     """
     client, provider = _capturing_client()
 
-    client.complete(TOOL_CELL_REQUEST)
+    client.complete(EXTERNAL_CELL_REQUEST)
 
     contents = [content for _, content in provider.last]
     assert "QUESTION-TEXT" in contents
-    assert "PRIOR-ANSWER-JSON" in contents
+    assert "yes" in contents
     assert "PRESSURE-TEXT" in contents
 
 
 def test_counts_agree_when_the_transport_is_lossless() -> None:
     client, _ = _capturing_client()
 
-    result = client.complete(TOOL_CELL_REQUEST)
+    result = client.complete(EXTERNAL_CELL_REQUEST)
 
     assert isinstance(result, AnswerSuccess)
-    assert result.requested_message_count == len(TOOL_CELL_REQUEST)
-    assert result.observed_message_count == len(TOOL_CELL_REQUEST)
+    assert result.requested_message_count == len(EXTERNAL_CELL_REQUEST)
+    assert result.observed_message_count == len(EXTERNAL_CELL_REQUEST)
 
 
 def test_system_turns_are_counted_through_the_instruction_channel() -> None:
@@ -217,7 +196,7 @@ def test_a_lossy_projection_makes_the_counts_disagree(
     )
     client, provider = _capturing_client()
 
-    result = client.complete(TOOL_CELL_REQUEST)
+    result = client.complete(EXTERNAL_CELL_REQUEST)
 
     assert isinstance(result, AnswerSuccess)
     assert result.requested_message_count == 5

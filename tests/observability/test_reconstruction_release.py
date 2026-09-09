@@ -18,17 +18,13 @@ from harnessing_honesty.models.routing import classify_envelope
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore
-from harnessing_honesty.evaluation.fixtures.scenarios import DEVELOPMENT_LOGIC_RATIONALE
 from harnessing_honesty.scoring import score_matrix_episode
 
 
 def _success(answer: str, count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=count,
     )
 

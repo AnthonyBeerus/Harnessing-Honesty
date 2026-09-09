@@ -10,10 +10,14 @@ Signed limits on what a confirmatory result may say.
 - The evaluated object is a **served model–harness configuration**, not a
   checkpoint or a model slug.
 - The instrument is **contamination-limited**, not contamination-free.
-- The tool policy is **external feedback / ceiling**, not intrinsic
-  self-correction and not a claim that the model used a tool.
-- `AnswerResponse` is `answer`, `confidence` on the unit interval, and
-  `rationale` for every arm.
+- The tool policy is a deterministic **external-feedback ceiling** delivered
+  by the harness, not intrinsic self-correction and not a claim that the model
+  selected or called a tool.
+- The model-visible response is exactly one plain-text `yes` or `no`.
+  `AnswerResponse` validates that commitment internally; confidence and
+  rationale are not elicited.
+- The intrinsic policy prompts one metacognitive self-check without external
+  feedback or displayed reasoning. The none policy is the minimal control.
 - H1 confirmation is a directional interval (CI excludes zero). Whether the
   point estimate reaches 0.10 is a magnitude note, not a minimum-effect
   claim.

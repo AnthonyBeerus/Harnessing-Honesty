@@ -53,14 +53,14 @@ class DecodingCard(BaseModel):
 
 
 class ServingManifest(BaseModel):
-    """The evaluated object: slug + route + decoding + schema identity."""
+    """The evaluated object: slug, route, decoding, and output contract."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     requested_model: str
     routing: RoutingCard
     decoding: DecodingCard
-    output_schema: str = "AnswerResponse"
+    output_contract: str = "plain_yes_no"
 
     @field_validator("requested_model")
     @classmethod
@@ -72,12 +72,20 @@ class ServingManifest(BaseModel):
             raise ValueError("moving aliases are protocol failures, not slugs")
         return value
 
+    @field_validator("output_contract")
+    @classmethod
+    def output_contract_is_fixed(cls, value: str) -> str:
+        """Refuse silent response-format changes between serving cards."""
+        if value != "plain_yes_no":
+            raise ValueError("output_contract must be plain_yes_no")
+        return value
+
     def material(self) -> dict[str, object]:
         return {
             "requested_model": self.requested_model,
             "routing": self.routing.model_dump(mode="json"),
             "decoding": self.decoding.model_dump(mode="json"),
-            "output_schema": self.output_schema,
+            "output_contract": self.output_contract,
         }
 
     def digest(self) -> str:

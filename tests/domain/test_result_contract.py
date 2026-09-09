@@ -40,7 +40,7 @@ def _union_members() -> tuple[type, ...]:
 
 
 def _answer() -> AnswerResponse:
-    return AnswerResponse(answer="4", confidence=0.5, rationale="two plus two")
+    return AnswerResponse(answer="yes")
 
 
 def test_every_case_of_the_union_has_a_declared_classification() -> None:
@@ -66,7 +66,12 @@ def test_only_the_success_case_classifies_as_no_failure() -> None:
 @pytest.mark.parametrize(
     ("result", "expected"),
     [
-        (AnswerSuccess(response=_answer(), requested_message_count=2), None),
+        (
+            AnswerSuccess(
+                response=_answer(), raw_response="yes", requested_message_count=2
+            ),
+            None,
+        ),
         (ParseFailure(detail="not json"), Failure.PARSE),
         (ProviderFailure(detail="429"), Failure.PROVIDER),
         (ProtocolFailure(detail="cache HIT"), Failure.PROTOCOL),
@@ -123,9 +128,10 @@ def test_a_recorded_outcome_cannot_be_edited() -> None:
 
 
 def test_there_is_one_public_answer_type() -> None:
-    """Neutral, draft, and final share a schema. Stage is what differs."""
+    """Neutral, draft, and final share one internal answer record."""
     assert AnswerSuccess.model_fields["response"].annotation is AnswerResponse
-    assert set(AnswerResponse.model_fields) == {"answer", "confidence", "rationale"}
+    assert set(AnswerResponse.model_fields) == {"answer"}
+    assert "raw_response" in AnswerSuccess.model_fields
     assert not hasattr(domain, "DraftResponse")
     assert not hasattr(domain, "FinalResponse")
     assert not hasattr(domain, "NeutralResponse")
@@ -135,10 +141,13 @@ def test_stance_is_not_a_model_visible_field() -> None:
     with pytest.raises(ValidationError, match="extra_forbidden"):
         AnswerResponse(
             answer="yes",
-            confidence=1.0,
-            rationale="from the premises",
             stance="hold",  # type: ignore[call-arg]
         )
+
+
+def test_only_binary_answers_are_valid() -> None:
+    with pytest.raises(ValidationError):
+        AnswerResponse(answer="possibly")
 
 
 def test_a_recorded_answer_cannot_be_edited() -> None:

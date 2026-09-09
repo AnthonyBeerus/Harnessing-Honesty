@@ -8,9 +8,9 @@ from harnessing_honesty.domain.episodes import (
 from harnessing_honesty.runtime.episode import (
     run_confirmatory_matrix,
     run_development_matrix,
-    run_episode,
     run_multi_turn_episode,
     run_pressured_episode,
+    run_shared_draft_episode,
 )
 from harnessing_honesty.domain import (
     AnswerResponse,
@@ -34,12 +34,18 @@ from harnessing_honesty.runtime.pressures import (
     wrap_false_counter_position,
 )
 from harnessing_honesty.evaluation.fixtures.scenarios import (
-    DEVELOPMENT_LOGIC_RATIONALE,
-    development_scenario,
+    DEVELOPMENT_SYSTEMS_COUNTER_POSITION,
+    DEVELOPMENT_SYSTEMS_OPERATIONS,
+    development_systems_scenario,
 )
 from harnessing_honesty.scoring import Score, score_episode
 
 MULTI_TURN_SEED = 0
+PRIMARY_LIVE_CONFIGS = (
+    "config/qualification.sonnet.anthropic.yaml",
+    "config/qualification.gpt4o.openai.yaml",
+    "config/qualification.gemma4.deepinfra.yaml",
+)
 
 
 def _print_messages(messages: tuple[Message, ...]) -> None:
@@ -55,8 +61,6 @@ def _abbrev(text: str, width: int = 76) -> str:
 def _print_result(result: ModelResult) -> None:
     if isinstance(result, AnswerSuccess):
         print(f"answer: {result.response.answer}")
-        print(f"confidence: {result.response.confidence}")
-        print(f"rationale: {result.response.rationale}")
     elif isinstance(result, ParseFailure):
         print(f"Parse Failure: {result.detail}")
     elif isinstance(result, ProviderFailure):
@@ -68,15 +72,10 @@ def _print_result(result: ModelResult) -> None:
 def _success(
     answer: str,
     requested_message_count: int,
-    *,
-    rationale: str = DEVELOPMENT_LOGIC_RATIONALE,
 ) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=rationale,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=requested_message_count,
     )
 
@@ -129,14 +128,10 @@ def run_fake() -> None:
         print()
 
 
-def _matrix_script(
-    answer: str,
-    *,
-    rationale: str = DEVELOPMENT_LOGIC_RATIONALE,
-) -> list[ModelResult]:
+def _matrix_script(answer: str) -> list[ModelResult]:
     """One neutral, three drafts, nine finals: all scripted as correct."""
     counts = (1,) + (3,) * 3 + (5,) * 9
-    return [_success(answer, count, rationale=rationale) for count in counts]
+    return [_success(answer, count) for count in counts]
 
 
 def show_matrix() -> None:
@@ -203,7 +198,10 @@ def show_matrix() -> None:
     print(f"same false proposition in every cell: {marker_ok}")
 
     verifier_ok = all(
-        (DEVELOPMENT_VERIFIER_OUTPUT in [m.content for m in branch.snapshot.request])
+        any(
+            DEVELOPMENT_VERIFIER_OUTPUT in message.content
+            for message in branch.snapshot.request
+        )
         == (branch.condition.policy.value == "tool")
         for branch in record.branches
     )
@@ -246,12 +244,7 @@ def show_matrix() -> None:
 def show_confirmatory_matrix() -> None:
     """Render one confirmatory item's 3×3 with per-item pressure wrappers."""
     item = confirmatory_pool()[0]
-    client = ScriptedModelClient(
-        _matrix_script(
-            item.answer_key.canonical_answer,
-            rationale="The supplied evidence determines the claim.",
-        )
-    )
+    client = ScriptedModelClient(_matrix_script(item.answer_key.canonical_answer))
     ceiling = confirmatory_ceiling_output(
         oracle_name=item.oracle_name,
         oracle_version=item.oracle_version,
@@ -309,15 +302,16 @@ def qualify_fake() -> None:
 
     config = load_run_config(Path("config/development.example.yaml"))
     prompt = PromptView(id="qual-probe", question="Is the claim supported?")
-    rationale = "The supplied evidence determines the claim."
     script: list[ModelResult] = [
         AnswerSuccess(
-            response=AnswerResponse(answer="yes", confidence=1.0, rationale=rationale),
+            response=AnswerResponse(answer="yes"),
+            raw_response="yes",
             requested_message_count=1,
             observed_message_count=1,
         ),
         AnswerSuccess(
-            response=AnswerResponse(answer="yes", confidence=1.0, rationale=rationale),
+            response=AnswerResponse(answer="yes"),
+            raw_response="yes",
             requested_message_count=1,
             observed_message_count=1,
         ),
@@ -334,7 +328,7 @@ def qualify_fake() -> None:
         envelope=envelope,
     )
     print(f"card: {card.name}")
-    print(f"structured_output_ok: {card.structured_output_ok}")
+    print(f"answer_output_ok: {card.answer_output_ok}")
     print(f"message_preservation_ok: {card.message_preservation_ok}")
     print(f"sensitivity items: {len(report.sensitivity.item_ids)}")
     print(f"live envelope classified: {report.live_envelope_classified}")
@@ -375,7 +369,7 @@ def qualify_live(config_path: str = "config/qualification.example.yaml") -> None
     card = report.cards[0]
     print(f"config: {path}")
     print(f"card: {card.name}")
-    print(f"structured_output_ok: {card.structured_output_ok}")
+    print(f"answer_output_ok: {card.answer_output_ok}")
     print(f"message_preservation_ok: {card.message_preservation_ok}")
     print(f"live envelope classified: {report.live_envelope_classified}")
     print(f"passed: {report.passed}")
@@ -391,25 +385,77 @@ def show_freeze() -> None:
     print(f"signer: {freeze.signer}")
 
 
-def run_live(config_path: str = "config/development.example.yaml") -> None:
-    """Development-only live smoke. Still a single call, not the pressured episode."""
+def run_live_policy_path(
+    config_paths: list[str], confirmed_requests: int,
+) -> None:
+    """Run one excluded systems pressure through all policies and SUTs."""
     from pathlib import Path
 
+    from harnessing_honesty.compiler.dual import agree
+    from harnessing_honesty.compiler.oracles import (
+        linearizable_by_extensions,
+        linearizable_by_search,
+    )
     from harnessing_honesty.models.config import load_run_config
+    from harnessing_honesty.runtime.policies import policy_follow_ups
 
-    print("development-only live smoke run")
-    scenario = development_scenario()
-    config = load_run_config(Path(config_path))
-    client = PydanticAIModelClient.from_manifest(config.serving)
-    result = run_episode(scenario.prompt, client)
-    print(f"Scenario: {scenario.prompt.id}")
-    _print_result(result)
-    if not isinstance(result, AnswerSuccess):
-        raise SystemExit(1)
+    expected_requests = 5 * len(config_paths)
+    if confirmed_requests != expected_requests:
+        raise SystemExit(
+            f"refusing live run: pass --confirm-paid-requests {expected_requests}"
+        )
+    if not agree(
+        linearizable_by_search,
+        linearizable_by_extensions,
+        DEVELOPMENT_SYSTEMS_OPERATIONS,
+    ):
+        raise SystemExit("excluded systems fixture failed its independent oracles")
+
+    scenario = development_systems_scenario()
+    pressure = wrap_false_counter_position(
+        DEVELOPMENT_SYSTEMS_COUNTER_POSITION
+    )[0].text
+    report = confirmatory_ceiling_output(
+        oracle_name="register-linearizability",
+        oracle_version="0.2",
+        evidence_ids=("history:Kestrel:operations",),
+        supported=True,
+        witness_id="sequential-order:B,A,C",
+    )
+
+    for config_path in config_paths:
+        path = Path(config_path)
+        config = load_run_config(path)
+        client = PydanticAIModelClient.from_manifest(config.serving)
+        record = run_shared_draft_episode(
+            scenario.prompt,
+            pressure,
+            policy_follow_ups(report),
+            client,
+            MULTI_TURN_SEED,
+        )
+        results = [record.shared.result]
+        if record.draft is not None:
+            results.append(record.draft.result)
+        results.extend(branch.snapshot.result for branch in record.branches)
+
+        print(f"=== {config.serving.requested_model} ===")
+        for label, result in zip(
+            ("neutral", "draft", "none", "intrinsic", "tool"),
+            results,
+            strict=False,
+        ):
+            print(f"{label}: ", end="")
+            _print_result(result)
+        print(f"classified envelopes: {len(client.envelopes)}/5")
+        if len(results) != 5 or len(client.envelopes) != 5:
+            raise SystemExit(1)
+        if not all(isinstance(result, AnswerSuccess) for result in results):
+            raise SystemExit(1)
 
 
 def main() -> None:
-    """CLI entry: ``run-fake``, ``show-matrix``, ``show-confirmatory-matrix``, ``qualify-fake``, ``qualify-live``, ``show-freeze``, or ``run-live``."""
+    """Command-line diagnostics and explicitly guarded development calls."""
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(required=True)
 
@@ -435,16 +481,19 @@ def main() -> None:
     freeze_parser = subcommands.add_parser("show-freeze")
     freeze_parser.set_defaults(command=show_freeze)
 
-    live_parser = subcommands.add_parser("run-live")
-    live_parser.add_argument(
-        "--config",
-        default="config/development.example.yaml",
+    policy_path_parser = subcommands.add_parser("run-live-policy-path")
+    policy_path_parser.add_argument(
+        "--config", action="append", default=None,
+        help="serving card; repeat once per SUT",
     )
-    live_parser.set_defaults(command=run_live)
+    policy_path_parser.add_argument("--confirm-paid-requests", type=int, required=True)
+    policy_path_parser.set_defaults(command=run_live_policy_path)
 
     arguments = parser.parse_args()
     command = arguments.command
-    if command in (qualify_live, run_live):
+    if command is run_live_policy_path:
+        command(arguments.config or list(PRIMARY_LIVE_CONFIGS), arguments.confirm_paid_requests)
+    elif command is qualify_live:
         command(arguments.config)
     else:
         command()

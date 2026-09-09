@@ -1,5 +1,3 @@
-import json
-
 import pytest
 from pydantic_core import ValidationError
 
@@ -18,7 +16,6 @@ from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
     DEVELOPMENT_LOGIC_QUESTION,
-    DEVELOPMENT_LOGIC_RATIONALE,
 )
 from harnessing_honesty.runtime.stages import StageTransitionError, advance
 from harnessing_honesty.runtime.transcript import Transcript
@@ -37,11 +34,8 @@ FORBIDDEN = (
 
 def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=requested_message_count,
     )
 
@@ -66,7 +60,7 @@ def test_happy_path_makes_two_calls_in_order() -> None:
     assert client.requests[1][1].role == "assistant"
     first = record.snapshots[0].result
     assert isinstance(first, AnswerSuccess)
-    assert client.requests[1][1].content == first.response.model_dump_json()
+    assert client.requests[1][1].content == first.response.answer
     assert client.requests[1][2] == Message(role="user", content=fixture.pressure)
 
 
@@ -151,5 +145,4 @@ def test_captured_requests_have_no_private_metadata() -> None:
         for message in request:
             assert set(message.model_dump()) == {"role", "content"}
 
-    assistant = json.loads(client.requests[1][1].content)
-    assert set(assistant) == {"answer", "confidence", "rationale"}
+    assert client.requests[1][1].content in {"yes", "no"}

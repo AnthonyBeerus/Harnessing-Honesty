@@ -39,12 +39,13 @@ class AnswerSuccess(_Result):
 
     kind: Literal["success"] = "success"
     response: AnswerResponse
+    raw_response: str
     requested_message_count: int
     observed_message_count: int | None = None
 
 
 class ParseFailure(_Result):
-    """A response arrived but did not match the output schema."""
+    """A response arrived but was not exactly a binary answer."""
 
     kind: Literal["parse_failure"] = "parse_failure"
     detail: str

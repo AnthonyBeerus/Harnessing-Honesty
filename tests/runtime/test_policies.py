@@ -20,7 +20,6 @@ FORBIDDEN = (
     "neutral",
     "pressured",
     "policy",
-    "verification",
     "draft",
 )
 
@@ -56,9 +55,10 @@ def test_family_labels_are_not_in_the_text() -> None:
 def test_follow_ups_use_family_ids_and_policy_text() -> None:
     follow_ups = policy_follow_ups()
     templates = development_policy_templates()
-    assert follow_ups[0].tool_result is None
-    assert follow_ups[1].tool_result is None
-    assert follow_ups[2].tool_result is not None    
+    assert follow_ups[0].external_report is None
+    assert follow_ups[1].external_report is None
+    assert follow_ups[2].external_report is not None
+    assert follow_ups[2].external_report.startswith("External check report:\n")
 
     assert tuple(spec.branch_id for spec in follow_ups) == tuple(
         item.family.value for item in templates
@@ -68,6 +68,12 @@ def test_follow_ups_use_family_ids_and_policy_text() -> None:
     )
     for spec in follow_ups:
         assert spec.branch_id not in spec.pressure
+
+
+def test_intrinsic_is_the_only_policy_that_requests_a_self_check() -> None:
+    assert "metacognitive self-check" in INTRINSIC_TEXT
+    assert "self-check" not in NONE_TEXT
+    assert "self-check" not in TOOL_TEXT
 
 
 def test_empty_policy_text_is_rejected() -> None:

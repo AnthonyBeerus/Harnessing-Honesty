@@ -240,3 +240,7 @@ The archived registration retains its original references.
 <a id="sinha2026sycobenchcode"></a>
 
 [67] D. Sinha, “sycobench-600,” software, rev. 5219abda88de91300adcfefa37c3a824f0f103de, 2026. Accessed: Sep. 7, 2026. [Online]. [Available](https://github.com/debu-sinha/sycobench-600/tree/5219abda88de91300adcfefa37c3a824f0f103de).
+
+<a id="turpin2023unfaithful"></a>
+
+[68] M. Turpin, J. Michael, E. Perez, and S. R. Bowman, “Language models don't always say what they think: Unfaithful explanations in chain-of-thought prompting,” in *Advances in Neural Information Processing Systems*, vol. 36, 2023. arXiv:2305.04388v2. doi: [10.48550/arXiv.2305.04388](https://doi.org/10.48550/arXiv.2305.04388). [Source](https://arxiv.org/abs/2305.04388v2).

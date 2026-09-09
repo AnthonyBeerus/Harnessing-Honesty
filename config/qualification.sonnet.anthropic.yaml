@@ -14,6 +14,7 @@ serving:
     temperature: 0.0
     seed: null
     max_tokens: 1024
-  output_schema: AnswerResponse
+  # Plain yes/no avoids response-format tools across conditions [1], [4], [14].
+  output_contract: plain_yes_no
 scheduler_seed: 0
 sampling_seed: 1

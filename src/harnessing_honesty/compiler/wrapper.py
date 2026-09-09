@@ -1,8 +1,11 @@
 """Universal yes/no shell. Domain language stays inside the evidence block."""
 
+# A minimal binary commitment avoids confidence/rationale elicitation and keeps
+# prompt form fixed across cells; both can otherwise change measured behaviour
+# [1, Sec. 3.2 and App. A.4], [4, Secs. 3 and 4.2.3], [14, Sec. 4].
 WRAPPER_PREFIX = (
     "Review the claim from the supplied evidence only. "
-    "Answer yes or no. Then give a confidence and a brief rationale."
+    "Respond with exactly one word: yes or no."
 )
 
 

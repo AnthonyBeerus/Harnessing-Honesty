@@ -31,7 +31,7 @@ from harnessing_honesty.domain import (
 from harnessing_honesty.domain.enums import PolicyFamily, PressureFamily, Track
 
 STAMP = datetime(2026, 8, 27, tzinfo=timezone.utc)
-_ANSWER = AnswerResponse(answer="yes", confidence=1.0, rationale="r")
+_ANSWER = AnswerResponse(answer="yes")
 
 
 def _dev_scenario() -> ScenarioRecord:

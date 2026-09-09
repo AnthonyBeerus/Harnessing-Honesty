@@ -103,7 +103,8 @@ def test_protocol_rows_are_dropped_from_the_primary() -> None:
 
 def test_rows_rebuild_from_a_scored_matrix() -> None:
     success = AnswerSuccess(
-        response=AnswerResponse(answer="yes", confidence=1.0, rationale="r"),
+        response=AnswerResponse(answer="yes"),
+        raw_response="yes",
         requested_message_count=1,
     )
     shared = StageSnapshot(stage=Stage.NEUTRAL, request=(), result=success)

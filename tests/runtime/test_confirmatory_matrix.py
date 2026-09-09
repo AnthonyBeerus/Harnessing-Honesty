@@ -36,11 +36,8 @@ ORION_NEEDLES = (
 
 def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=NEUTRAL_RATIONALE,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=requested_message_count,
     )
 

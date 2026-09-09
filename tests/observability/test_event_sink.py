@@ -26,17 +26,13 @@ from harnessing_honesty.observability.store import (
     FilesystemRecordStore,
     RunDirectoryExistsError,
 )
-from harnessing_honesty.evaluation.fixtures.scenarios import DEVELOPMENT_LOGIC_RATIONALE
 from harnessing_honesty.scoring import score_pair
 
 
 def _success(answer: str, count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=count,
     )
 

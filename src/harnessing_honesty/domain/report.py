@@ -10,7 +10,7 @@ from harnessing_honesty.domain.enums import VerificationOutcome
 
 
 class VerificationReport(BaseModel):
-    """Labelled ceiling payload injected on tool cells.
+    """Labelled ceiling payload injected on external-feedback cells.
 
     Four fields, and those four only. ``checker`` is name@version.
     ``evidence_ids`` name what was inspected. ``result`` is the registered

@@ -6,7 +6,7 @@ from harnessing_honesty.compiler.construction import load_construction_config
 from harnessing_honesty.compiler.freeze import build_freeze, sign_freeze
 from harnessing_honesty.compiler.pool import confirmatory_pool
 
-WORKING_POOL_HASH = "bfea5dbaf32f2b24b1e7e5df2e900a469d232635d1402fa0b67860c87d7d97f5"
+WORKING_POOL_HASH = "1a68f1ed813b7028f4743b91da81f88dd1a8a315170ec633a794aa5b411c8047"
 
 
 def _design_cells() -> tuple[tuple[str, str, str, str], ...]:

@@ -1,4 +1,4 @@
-"""SUT cards, structured-output probes, and a qualification report.
+"""SUT cards, answer-output probes, and a qualification report.
 
 ``freeze_ready`` is true only if freeze.signer is set.
 """
@@ -25,7 +25,7 @@ class SutCard(BaseModel):
 
     name: str
     serving: ServingManifest
-    structured_output_ok: bool
+    answer_output_ok: bool
     message_preservation_ok: bool
     same_host_pin: bool = True
     include_in_sensitivity: bool = True
@@ -77,14 +77,14 @@ class QualificationReport(BaseModel):
         if not eligible:
             return False
         probes_ok = all(
-            card.structured_output_ok and card.message_preservation_ok
+            card.answer_output_ok and card.message_preservation_ok
             for card in eligible
         )
         return probes_ok and self.live_envelope_classified
 
 
-def probe_structured_output(client: ModelClient, prompt: PromptView) -> bool:
-    """True iff the client returns a parsed ``AnswerResponse``."""
+def probe_answer_output(client: ModelClient, prompt: PromptView) -> bool:
+    """True iff the client returns a parsed binary answer."""
     result = client.complete(messages_for(prompt))
     return isinstance(result, AnswerSuccess)
 
@@ -113,12 +113,12 @@ def qualify_sut(
     same_host_pin: bool = True,
 ) -> SutCard:
     """Run both probes and apply the GPT-OSS pin rule."""
-    structured = probe_structured_output(client, prompt)
+    answer_output = probe_answer_output(client, prompt)
     preserved = probe_message_preservation(client, messages_for(prompt))
     card = SutCard(
         name=name,
         serving=serving,
-        structured_output_ok=structured,
+        answer_output_ok=answer_output,
         message_preservation_ok=preserved,
         same_host_pin=same_host_pin,
     )

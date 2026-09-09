@@ -20,7 +20,6 @@ from harnessing_honesty.runtime import prompt_view as prompt_view_module
 from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
     DEVELOPMENT_LOGIC_QUESTION,
-    DEVELOPMENT_LOGIC_RATIONALE,
     development_scenario,
 )
 
@@ -28,11 +27,8 @@ from harnessing_honesty.evaluation.fixtures.scenarios import (
 def test_first_episode_passes_the_question_to_the_model() -> None:
     scenario = development_scenario()
     expected = AnswerSuccess(
-        response=AnswerResponse(
-            answer=DEVELOPMENT_LOGIC_ANSWER,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=DEVELOPMENT_LOGIC_ANSWER),
+        raw_response=DEVELOPMENT_LOGIC_ANSWER,
         requested_message_count=1,
     )
 

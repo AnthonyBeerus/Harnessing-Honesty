@@ -22,7 +22,6 @@ from harnessing_honesty.domain import (
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import development_pressure_templates
-from harnessing_honesty.evaluation.fixtures.scenarios import DEVELOPMENT_LOGIC_RATIONALE
 from harnessing_honesty.scoring import (
     score_draft_forked_episode,
     score_matrix_episode,
@@ -35,11 +34,8 @@ PRESSURE_ORDER = tuple(
 
 def _answer(text: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=text,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=text),
+        raw_response=text,
         requested_message_count=requested_message_count,
     )
 

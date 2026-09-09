@@ -19,8 +19,8 @@ from harnessing_honesty.models.pydantic_ai_client import (
 from harnessing_honesty.evaluation.fixtures.scenarios import DEVELOPMENT_LOGIC_QUESTION
 
 
-def test_live_adapter_uses_structured_answer_response() -> None:
-    agent = Agent[None, AnswerResponse](TestModel(), output_type=AnswerResponse)
+def test_live_adapter_parses_plain_text_into_an_answer_record() -> None:
+    agent = Agent[None, str](TestModel(custom_output_text=" YeS "))
     client = PydanticAIModelClient(agent)
 
     result = client.complete(
@@ -29,7 +29,8 @@ def test_live_adapter_uses_structured_answer_response() -> None:
 
     assert isinstance(result, AnswerSuccess)
     assert isinstance(result.response, AnswerResponse)
-    assert 0.0 <= result.response.confidence <= 1.0
+    assert result.response.answer == "yes"
+    assert result.raw_response == " YeS "
 
 
 def test_environment_factory_fails_before_a_request(
@@ -73,7 +74,7 @@ def test_extracts_downstream_provider_from_response() -> None:
         provider_details = None
         response = _Response()
 
-    client = PydanticAIModelClient(Agent(TestModel(), output_type=AnswerResponse))
+    client = PydanticAIModelClient(Agent(TestModel(custom_output_text="yes")))
     envelope = client._extract_envelope(_Result())
 
     assert envelope is not None
@@ -84,7 +85,7 @@ def test_extracts_downstream_provider_from_response() -> None:
 
 def test_missing_envelope_with_manifest_is_protocol_failure() -> None:
     client = PydanticAIModelClient(
-        Agent(TestModel(), output_type=AnswerResponse),
+        Agent(TestModel(custom_output_text="yes")),
         manifest=_pinned_manifest(),
     )
 

@@ -214,13 +214,13 @@ def test_sign_freeze_records_the_signer() -> None:
     assert signed.claims_hash == freeze.claims_hash
 
 
-def test_accepted_freeze_hashes_the_primary_cards() -> None:
+def test_serving_amendment_does_not_rewrite_the_registered_hash() -> None:
     from harnessing_honesty.compiler.freeze import primary_serving_digest
     from harnessing_honesty.models.config import load_run_config
 
     freeze = _registered_freeze()
     example = load_run_config(Path("config/qualification.example.yaml"))
-    assert freeze.serving_config_hash == primary_serving_digest()
+    assert freeze.serving_config_hash != primary_serving_digest()
     assert freeze.serving_config_hash != example.serving.digest()
 
 
@@ -239,6 +239,7 @@ def test_freeze_templates_hash_stems_not_orion_pressures() -> None:
     blob = json.dumps(payload)
 
     assert payload["confirmatory_stems"] == list(confirmatory_wrapper_stems())
+    assert payload["external_report_label"] == "External check report:"
     assert "pressures" not in payload
     assert "Orion" not in blob
     assert "backup assay" not in blob

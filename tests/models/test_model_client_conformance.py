@@ -17,7 +17,6 @@ from pydantic_ai.messages import (
     ModelRequest,
     ModelResponse,
     TextPart,
-    ToolCallPart,
     UserPromptPart,
 )
 from pydantic_ai.models.function import AgentInfo, FunctionModel
@@ -35,17 +34,17 @@ from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 
 CONVERSATION = (
     Message(role="user", content="QUESTION-TEXT"),
-    Message(role="assistant", content="PRIOR-ANSWER-JSON"),
+    Message(role="assistant", content="yes"),
     Message(role="user", content="PRESSURE-TEXT"),
-    Message(role="tool", content="VERIFIER-OUTPUT"),
+    Message(role="user", content="LABELLED-EXTERNAL-REPORT"),
     Message(role="user", content="POLICY-TEXT"),
 )
 
 _SUCCESS = AnswerSuccess(
-    response=AnswerResponse(answer="yes", confidence=1.0, rationale="ok"),
+    response=AnswerResponse(answer="yes"),
+    raw_response="yes",
     requested_message_count=len(CONVERSATION),
 )
-_USER_SIDE = frozenset({"user", "tool"})
 Wire = list[tuple[str, str]]
 Observer = Callable[[], Wire]
 
@@ -85,22 +84,13 @@ class _FunctionBody:
 
 
 def _valid_answer(_messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
-    assert info.output_tools
-    return ModelResponse(
-        parts=[
-            ToolCallPart(
-                info.output_tools[0].name,
-                {"answer": "yes", "confidence": 1.0, "rationale": "ok"},
-            )
-        ]
-    )
+    assert not info.output_tools
+    return ModelResponse(parts=[TextPart(content="yes")])
 
 
 def _invalid_answer(_messages: list[ModelMessage], info: AgentInfo) -> ModelResponse:
-    assert info.output_tools
-    return ModelResponse(
-        parts=[ToolCallPart(info.output_tools[0].name, {"answer": "yes"})]
-    )
+    assert not info.output_tools
+    return ModelResponse(parts=[TextPart(content="yes because the claim follows")])
 
 
 def _http_error(_messages: list[ModelMessage], _info: AgentInfo) -> ModelResponse:
@@ -113,9 +103,7 @@ def _live_pair(
     respond: Callable[..., ModelResponse],
 ) -> tuple[PydanticAIModelClient, _FunctionBody]:
     body = _FunctionBody(respond)
-    agent = Agent[None, AnswerResponse](
-        FunctionModel(body), output_type=AnswerResponse
-    )
+    agent = Agent[None, str](FunctionModel(body), output_type=str)
     return PydanticAIModelClient(agent), body
 
 
@@ -124,14 +112,13 @@ def _identity_project(messages: tuple[Message, ...]) -> Wire:
 
 
 def _wire_project(messages: tuple[Message, ...]) -> Wire:
-    """The live client's documented projection: tool becomes user-role."""
+    """The live client's documented projection of native message roles."""
     pairs: Wire = []
     for message in messages:
         role = str(message.role)
         if role == "system":
             continue
-        projected = "user" if role in _USER_SIDE else role
-        pairs.append((projected, message.content))
+        pairs.append((role, message.content))
     return pairs
 
 
@@ -156,7 +143,7 @@ def _live_success() -> tuple[ModelClient, Observer]:
 SCRIPTED = _Backend(
     success=_scripted_success,
     malformed=lambda: ScriptedModelClient(
-        [ParseFailure(detail="not valid AnswerResponse JSON")]
+        [ParseFailure(detail="expected exactly yes or no")]
     ),
     unavailable=lambda: ScriptedModelClient(
         [ProviderFailure(detail="status_code: 429")]

@@ -21,7 +21,8 @@ class _Flaky:
         if self.calls < 3:
             return ProviderFailure(detail="429")
         return AnswerSuccess(
-            response=AnswerResponse(answer="yes", confidence=1.0, rationale="ok"),
+            response=AnswerResponse(answer="yes"),
+            raw_response="yes",
             requested_message_count=len(messages),
         )
 

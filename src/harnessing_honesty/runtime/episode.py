@@ -71,7 +71,7 @@ def run_pressured_episode(
     """Run neutral then pressured-final calls.
 
     The controller owns stage order. Assistant content is the public
-    ``AnswerResponse`` JSON only. If the first call is not
+    the parsed plain-text answer only. If the first call is not
     ``AnswerSuccess``, the episode stops and no assistant turn is invented.
     Rendering receives ``prompt`` only; the answer key never enters this
     function.
@@ -95,7 +95,7 @@ def run_pressured_episode(
 
     current = advance(current, Stage.PRESSURED_FINAL)
     transcript = transcript.append(
-        Message(role="assistant", content=result.response.model_dump_json())
+        Message(role="assistant", content=result.response.answer)
     )
     transcript = transcript.append(Message(role="user", content=pressure))
     request = transcript.snapshot()
@@ -142,7 +142,7 @@ def run_forked_episode(
         )
 
     prefix = transcript.append(
-        Message(role="assistant", content=result.response.model_dump_json())
+        Message(role="assistant", content=result.response.answer)
     )
     states = {
         branch_id: clone_branch(prefix, current, branch_id)
@@ -211,7 +211,7 @@ def run_shared_draft_episode(
         )
 
     transcript = transcript.append(
-        Message(role="assistant", content=result.response.model_dump_json())
+        Message(role="assistant", content=result.response.answer)
     )
     transcript = transcript.append(Message(role="user", content=pressure))
     current = advance(current, Stage.DRAFT)
@@ -232,7 +232,7 @@ def run_shared_draft_episode(
     prefix = transcript.append(
         Message(
             role="assistant",
-            content=draft_result.response.model_dump_json(),
+            content=draft_result.response.answer,
         )
     )
     states = {
@@ -247,9 +247,9 @@ def run_shared_draft_episode(
         state = states[branch_id]
         branch_stage = advance(state.stage, Stage.PRESSURED_FINAL)
         branch_transcript = state.transcript
-        if spec.tool_result is not None:
+        if spec.external_report is not None:
             branch_transcript = branch_transcript.append(
-                Message(role="tool", content=spec.tool_result)
+                Message(role="user", content=spec.external_report)
             )
         branch_transcript = branch_transcript.append(
             Message(role="user", content=spec.pressure)
@@ -307,7 +307,7 @@ def _run_matrix(
         )
 
     neutral_prefix = transcript.append(
-        Message(role="assistant", content=result.response.model_dump_json())
+        Message(role="assistant", content=result.response.answer)
     )
     pressure_order = permute_branch_ids(pressure_ids, order_seed)
     policy_order = permute_branch_ids(policy_ids, order_seed)
@@ -338,7 +338,7 @@ def _run_matrix(
         draft_prefix = draft_transcript.append(
             Message(
                 role="assistant",
-                content=draft_result.response.model_dump_json(),
+                content=draft_result.response.answer,
             )
         )
         for policy_id in policy_order:
@@ -350,9 +350,9 @@ def _run_matrix(
             state = clone_branch(draft_prefix, draft_stage, condition.identity)
             branch_stage = advance(state.stage, Stage.PRESSURED_FINAL)
             branch_transcript = state.transcript
-            if spec.tool_result is not None:
+            if spec.external_report is not None:
                 branch_transcript = branch_transcript.append(
-                    Message(role="tool", content=spec.tool_result)
+                    Message(role="user", content=spec.external_report)
                 )
             branch_transcript = branch_transcript.append(
                 Message(role="user", content=spec.pressure)
@@ -445,7 +445,7 @@ def _run_multi_turn(
         return MultiTurnRecord(shared=shared, turns=(), pressure_order=())
 
     transcript = transcript.append(
-        Message(role="assistant", content=result.response.model_dump_json())
+        Message(role="assistant", content=result.response.answer)
     )
     pressure_order = permute_branch_ids(pressure_ids, order_seed)
     turns: list[MultiTurnTurnRecord] = []
@@ -476,7 +476,7 @@ def _run_multi_turn(
         transcript = transcript.append(
             Message(
                 role="assistant",
-                content=turn_result.response.model_dump_json(),
+                content=turn_result.response.answer,
             )
         )
 

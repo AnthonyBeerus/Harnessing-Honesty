@@ -21,7 +21,7 @@ class BranchSpec(BaseModel):
 
     branch_id: str
     pressure: str
-    tool_result: str | None = None
+    external_report: str | None = None
 
     @field_validator("branch_id")
     @classmethod

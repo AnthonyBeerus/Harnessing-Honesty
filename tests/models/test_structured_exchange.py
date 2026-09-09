@@ -17,7 +17,6 @@ from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
     DEVELOPMENT_LOGIC_QUESTION,
-    DEVELOPMENT_LOGIC_RATIONALE,
 )
 
 
@@ -29,11 +28,8 @@ def test_fake_preserves_exact_role_order() -> None:
     client = ScriptedModelClient(
         [
             AnswerSuccess(
-                response=AnswerResponse(
-                    answer=DEVELOPMENT_LOGIC_ANSWER,
-                    confidence=0.9,
-                    rationale=DEVELOPMENT_LOGIC_RATIONALE,
-                ),
+                response=AnswerResponse(answer=DEVELOPMENT_LOGIC_ANSWER),
+                raw_response=DEVELOPMENT_LOGIC_ANSWER,
                 requested_message_count=2,
             )
         ]
@@ -49,25 +45,21 @@ def test_message_rejects_unknown_fields() -> None:
         Message(role="user", content="hi", hidden=True)  # type: ignore[call-arg]
 
 
-def test_confidence_must_be_between_zero_and_one() -> None:
+def test_nonbinary_answer_is_rejected() -> None:
     with pytest.raises(ValidationError):
-        AnswerResponse(
-            answer=DEVELOPMENT_LOGIC_ANSWER,
-            confidence=1.5,
-            rationale="nope",
-        )
+        AnswerResponse(answer="maybe")
 
 
 def test_malformed_scripted_output_is_parse_failure() -> None:
     client = ScriptedModelClient(
-        [ParseFailure(detail="not valid AnswerResponse JSON")]
+        [ParseFailure(detail="expected exactly yes or no")]
     )
 
     result = client.complete(
         (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
     )
 
-    assert result == ParseFailure(detail="not valid AnswerResponse JSON")
+    assert result == ParseFailure(detail="expected exactly yes or no")
 
 
 def test_complete_requires_message_tuple_not_plain_string() -> None:
@@ -77,7 +69,7 @@ def test_complete_requires_message_tuple_not_plain_string() -> None:
 
 
 def test_role_name_matches_the_enum() -> None:
-    """RoleName is the four names, not a second vocabulary."""
+    """RoleName is the three native names, not a second vocabulary."""
     assert set(get_args(RoleName)) == {member.value for member in Role}
 
 

@@ -25,7 +25,6 @@ from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 from harnessing_honesty.runtime.prompt_view import messages_for
-from harnessing_honesty.evaluation.fixtures.scenarios import DEVELOPMENT_LOGIC_RATIONALE
 from harnessing_honesty.scoring import (
     check_exact_arithmetic,
     score_episode,
@@ -38,11 +37,8 @@ SENTINEL_CANONICAL = "SENTINEL_ANSWER_KEY_CANONICAL_7f3a9c1e"
 
 def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=requested_message_count,
     )
 
@@ -127,15 +123,12 @@ def test_malformed_answers_are_not_correct() -> None:
     key = AnswerKey(canonical_answer="yes")
     parse_failure = ParseFailure(detail="not json")
     provider_failure = ProviderFailure(detail="timeout")
-    near_miss = _success("Yes", 1)
-    padded = _success("yes ", 1)
 
     assert score_pair(parse_failure, _success("yes", 3), key).initial_correct is False
     assert score_pair(_success("yes", 1), parse_failure, key).final_correct is False
     assert score_pair(provider_failure, None, key).initial_correct is False
     assert check_exact_arithmetic("Yes", "yes") is False
     assert check_exact_arithmetic("yes ", "yes") is False
-    assert score_pair(near_miss, padded, key).eligible is False
 
 
 def test_missing_final_is_not_correct() -> None:

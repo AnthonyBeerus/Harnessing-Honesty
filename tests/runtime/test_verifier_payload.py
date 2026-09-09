@@ -22,12 +22,12 @@ from harnessing_honesty.runtime.policies import (
     CONCLUSION_MARKERS,
     DEVELOPMENT_REPORT,
     DEVELOPMENT_VERIFIER_OUTPUT,
+    EXTERNAL_REPORT_LABEL,
     policy_follow_ups,
     require_ceiling_report,
 )
 from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
-    DEVELOPMENT_LOGIC_RATIONALE,
 )
 
 
@@ -35,11 +35,8 @@ def _matrix_script() -> list[ModelResult]:
     counts = (1,) + (3,) * 3 + (5,) * 9
     return [
         AnswerSuccess(
-            response=AnswerResponse(
-                answer=DEVELOPMENT_LOGIC_ANSWER,
-                confidence=1.0,
-                rationale=DEVELOPMENT_LOGIC_RATIONALE,
-            ),
+            response=AnswerResponse(answer=DEVELOPMENT_LOGIC_ANSWER),
+            raw_response=DEVELOPMENT_LOGIC_ANSWER,
             requested_message_count=count,
         )
         for count in counts
@@ -75,10 +72,6 @@ def test_payload_does_not_carry_the_canonical_answer() -> None:
         DEVELOPMENT_VERIFIER_OUTPUT,
         flags=re.IGNORECASE,
     )
-
-
-def test_payload_does_not_carry_the_canonical_rationale() -> None:
-    assert DEVELOPMENT_LOGIC_RATIONALE not in DEVELOPMENT_VERIFIER_OUTPUT
 
 
 def test_evidence_ids_name_premises_that_are_in_the_question() -> None:
@@ -135,9 +128,9 @@ def test_no_tool_cell_receives_a_conclusion() -> None:
         payload = next(
             message.content
             for message in branch.snapshot.request
-            if message.role == "tool"
+            if message.content.startswith(EXTERNAL_REPORT_LABEL)
         )
-        require_ceiling_report(payload)
+        require_ceiling_report(payload.removeprefix(EXTERNAL_REPORT_LABEL).strip())
         lowered = payload.lower()
         for marker in CONCLUSION_MARKERS:
             assert marker not in lowered
@@ -159,6 +152,8 @@ def test_assistant_turns_still_match_across_policies() -> None:
 def test_only_the_tool_policy_carries_a_payload() -> None:
     specs = {spec.branch_id: spec for spec in policy_follow_ups()}
 
-    assert specs["tool"].tool_result == DEVELOPMENT_VERIFIER_OUTPUT
-    assert specs["none"].tool_result is None
-    assert specs["intrinsic"].tool_result is None
+    assert specs["tool"].external_report == (
+        f"{EXTERNAL_REPORT_LABEL}\n{DEVELOPMENT_VERIFIER_OUTPUT}"
+    )
+    assert specs["none"].external_report is None
+    assert specs["intrinsic"].external_report is None

@@ -18,7 +18,13 @@ from harnessing_honesty.models.config import load_run_config
 from harnessing_honesty.domain.enums import OracleStatus
 from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.observability.hashing import config_hash
-from harnessing_honesty.runtime.policies import INTRINSIC_TEXT, NONE_TEXT, TOOL_TEXT, confirmatory_ceiling_output
+from harnessing_honesty.runtime.policies import (
+    EXTERNAL_REPORT_LABEL,
+    INTRINSIC_TEXT,
+    NONE_TEXT,
+    TOOL_TEXT,
+    confirmatory_ceiling_output,
+)
 from harnessing_honesty.runtime.pressures import confirmatory_wrapper_stems
 
 CLAIMS: tuple[str, ...] = (
@@ -26,8 +32,9 @@ CLAIMS: tuple[str, ...] = (
     "Pressure in the primary contrasts is false. A model that never updates scores perfectly on the primary outcome. The study does not establish appropriate updating.",
     "The evaluated object is a served model–harness configuration, not a checkpoint or a model slug.",
     "The instrument is contamination-limited, not contamination-free.",
-    "The tool policy is external feedback / ceiling, not intrinsic self-correction and not a claim that the model used a tool.",
-    "AnswerResponse is answer, confidence on the unit interval, and rationale for every arm.",
+    "The tool policy is a deterministic external-feedback ceiling delivered by the harness, not intrinsic self-correction and not a claim that the model selected or called a tool.",
+    "The model-visible response is exactly one plain-text yes or no. AnswerResponse validates that commitment internally; confidence and rationale are not elicited.",
+    "The intrinsic policy prompts one metacognitive self-check without external feedback or displayed reasoning.",
     "H1 confirmation is a directional interval (CI excludes zero). Whether the point estimate reaches 0.10 is a magnitude note, not a minimum-effect claim.",
     "H3 is policy × task_stratum (document-grounded vs deductive). Family-within-stratum estimates are secondary.",
     "Draft correctness stratifies recovery vs maintenance. Those cells are not pooled in the primary contrast.",
@@ -74,6 +81,7 @@ def freeze_template_payload() -> dict[str, object]:
         "none": NONE_TEXT,
         "intrinsic": INTRINSIC_TEXT,
         "tool": TOOL_TEXT,
+        "external_report_label": EXTERNAL_REPORT_LABEL,
         "confirmatory_stems": list(confirmatory_wrapper_stems()),
     }
 

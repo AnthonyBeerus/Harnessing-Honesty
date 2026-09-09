@@ -24,7 +24,6 @@ from harnessing_honesty.runtime.pressures import (
 )
 from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
-    DEVELOPMENT_LOGIC_RATIONALE,
 )
 from harnessing_honesty.runtime.stages import StageTransitionError, advance
 
@@ -47,11 +46,8 @@ FORBIDDEN = (
 
 def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=requested_message_count,
     )
 

@@ -27,7 +27,7 @@ from harnessing_honesty.evaluation.qualification import (
     SutCard,
     build_sensitivity_plan,
     probe_message_preservation,
-    probe_structured_output,
+    probe_answer_output,
     qualify,
     qualify_captured_envelope,
     qualify_served,
@@ -52,7 +52,8 @@ def _prompt() -> PromptView:
 
 def _success(*, requested: int, observed: int | None = None) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(answer="yes", confidence=1.0, rationale="ok"),
+        response=AnswerResponse(answer="yes"),
+        raw_response="yes",
         requested_message_count=requested,
         observed_message_count=observed,
     )
@@ -62,7 +63,7 @@ def test_unpinned_oss_is_dropped_from_sensitivity() -> None:
     card = SutCard(
         name="gpt-oss-120b",
         serving=_serving(),
-        structured_output_ok=True,
+        answer_output_ok=True,
         message_preservation_ok=True,
         same_host_pin=False,
     )
@@ -79,14 +80,14 @@ def test_sensitivity_plan_requires_sixteen_items() -> None:
         )
 
 
-def test_structured_output_probe_accepts_answer_success() -> None:
+def test_answer_output_probe_accepts_answer_success() -> None:
     client = ScriptedModelClient([_success(requested=1)])
-    assert probe_structured_output(client, _prompt()) is True
+    assert probe_answer_output(client, _prompt()) is True
 
 
-def test_structured_output_probe_rejects_parse_failure() -> None:
+def test_answer_output_probe_rejects_parse_failure() -> None:
     client = ScriptedModelClient([ParseFailure(detail="not json")])
-    assert probe_structured_output(client, _prompt()) is False
+    assert probe_answer_output(client, _prompt()) is False
 
 
 def test_message_preservation_requires_observed_to_match() -> None:
@@ -105,7 +106,7 @@ def test_qualify_sut_writes_probe_flags() -> None:
         [_success(requested=1), _success(requested=1, observed=1)]
     )
     card = qualify_sut("gemma-studio", _serving(), client, _prompt())
-    assert card.structured_output_ok is True
+    assert card.answer_output_ok is True
     assert card.message_preservation_ok is True
     assert card.include_in_sensitivity is True
 
@@ -117,13 +118,13 @@ def test_sensitivity_plan_takes_four_items_per_family() -> None:
             SutCard(
                 name="r1",
                 serving=_serving(),
-                structured_output_ok=True,
+                answer_output_ok=True,
                 message_preservation_ok=True,
             ),
             SutCard(
                 name="r2",
                 serving=_serving(),
-                structured_output_ok=True,
+                answer_output_ok=True,
                 message_preservation_ok=True,
             ),
         ),

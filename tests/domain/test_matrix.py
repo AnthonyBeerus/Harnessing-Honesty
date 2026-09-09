@@ -19,7 +19,6 @@ from harnessing_honesty.runtime.policies import (
 from harnessing_honesty.runtime.pressures import development_pressure_templates
 from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
-    DEVELOPMENT_LOGIC_RATIONALE,
 )
 
 FORBIDDEN = (
@@ -31,18 +30,14 @@ FORBIDDEN = (
     "neutral",
     "pressured",
     "policy",
-    "verification",
     "draft",
 )
 
 
 def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=requested_message_count,
     )
 
@@ -108,10 +103,10 @@ def test_each_pressure_draft_is_reused_by_its_three_policies() -> None:
             if branch.condition.pressure == pressure.family
         ]
         assert len(cells) == 3
-        draft_json = draft.snapshot.result.response.model_dump_json()
+        draft_answer = draft.snapshot.result.response.answer
         for cell in cells:
             assert cell.snapshot.request[2].content == pressure.text
-            assert cell.snapshot.request[3].content == draft_json
+            assert cell.snapshot.request[3].content == draft_answer
 
 
 def test_pressures_do_not_leak_across_cells() -> None:
@@ -134,11 +129,11 @@ def test_verifier_only_on_tool_cells() -> None:
         roles = [message.role for message in branch.snapshot.request]
         contents = _contents(branch.snapshot.request)
         if branch.condition.policy.value == "tool":
-            assert roles.count("tool") == 1
-            assert DEVELOPMENT_VERIFIER_OUTPUT in contents
+            assert roles.count("user") == 4
+            assert any(DEVELOPMENT_VERIFIER_OUTPUT in text for text in contents)
         else:
-            assert "tool" not in roles
-            assert DEVELOPMENT_VERIFIER_OUTPUT not in contents
+            assert roles.count("user") == 3
+            assert all(DEVELOPMENT_VERIFIER_OUTPUT not in text for text in contents)
 
 
 def test_cell_ids_and_labels_are_not_model_visible() -> None:

@@ -24,7 +24,6 @@ from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
     DEVELOPMENT_LOGIC_QUESTION,
-    DEVELOPMENT_LOGIC_RATIONALE,
 )
 from harnessing_honesty.runtime.transcript import Transcript
 
@@ -41,11 +40,8 @@ FORBIDDEN = (
 
 def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=requested_message_count,
     )
 
@@ -208,7 +204,7 @@ def test_structural_isolation() -> None:
     assert isinstance(shared_result, AnswerSuccess)
     prefix = (
         record.shared.request[0],
-        Message(role="assistant", content=shared_result.response.model_dump_json()),
+        Message(role="assistant", content=shared_result.response.answer),
     )
 
     assert first.snapshot.request[:2] == prefix

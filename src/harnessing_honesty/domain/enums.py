@@ -18,21 +18,15 @@ from typing import Literal
 # though the two compare equal at runtime. This alias is the four names, not
 # a second set of roles -- ``test_role_name_matches_the_enum`` fails if they
 # drift.
-RoleName = Literal["system", "user", "assistant", "tool"]
+RoleName = Literal["system", "user", "assistant"]
 
 
 class Role(StrEnum):
-    """Native message roles. The only roles the harness may put on the wire.
-
-    ``TOOL`` is a harness-side label meaning "this content is verifier
-    output, not user speech". The transport projects it onto a user turn,
-    because the premise check is fixed text rather than a live tool call.
-    """
+    """Native message roles. The only roles the harness may put on the wire."""
 
     SYSTEM = "system"
     USER = "user"
     ASSISTANT = "assistant"
-    TOOL = "tool"
 
 
 class Stage(StrEnum):
@@ -110,7 +104,7 @@ class Verdict(StrEnum):
 class Failure(StrEnum):
     """Why a call produced no answer.
 
-    ``PARSE`` is a response that did not match the output schema.
+    ``PARSE`` is a response that was not exactly ``yes`` or ``no``.
     ``PROVIDER`` is a transport or service failure.
     ``PROTOCOL`` is a served-system identity failure: route mismatch, cache
     HIT, material pipeline, or silent substitution. It is not scored as

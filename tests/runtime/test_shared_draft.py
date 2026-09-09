@@ -20,13 +20,13 @@ from harnessing_honesty.domain.enums import Stage
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.policies import (
     DEVELOPMENT_VERIFIER_OUTPUT,
+    EXTERNAL_REPORT_LABEL,
     policy_follow_ups,
 )
 from harnessing_honesty.runtime.pressures import CONTRADICTION_TEXT
 from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_LOGIC_ANSWER,
     DEVELOPMENT_LOGIC_QUESTION,
-    DEVELOPMENT_LOGIC_RATIONALE,
 )
 from harnessing_honesty.runtime.stages import StageTransitionError, advance
 from harnessing_honesty.runtime.transcript import Transcript
@@ -40,7 +40,6 @@ FORBIDDEN = (
     "neutral",
     "pressured",
     "policy",
-    "verification",
     "draft",
 )
 
@@ -49,11 +48,8 @@ FOLLOW_UPS = policy_follow_ups()
 
 def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(
-            answer=answer,
-            confidence=1.0,
-            rationale=DEVELOPMENT_LOGIC_RATIONALE,
-        ),
+        response=AnswerResponse(answer=answer),
+        raw_response=answer,
         requested_message_count=requested_message_count,
     )
 
@@ -153,9 +149,9 @@ def test_finals_reuse_the_same_draft_prefix() -> None:
     assert isinstance(draft_result, AnswerSuccess)
     prefix = (
         record.shared.request[0],
-        Message(role="assistant", content=shared_result.response.model_dump_json()),
+        Message(role="assistant", content=shared_result.response.answer),
         Message(role="user", content=CONTRADICTION_TEXT),
-        Message(role="assistant", content=draft_result.response.model_dump_json()),
+        Message(role="assistant", content=draft_result.response.answer),
     )
 
     assert len(record.branches) == 3
@@ -174,12 +170,19 @@ def test_finals_reuse_the_same_draft_prefix() -> None:
         Message(role="user", content=FOLLOW_UPS[1].pressure),
     )
     assert tool.snapshot.request[4:] == (
-        Message(role="tool", content=DEVELOPMENT_VERIFIER_OUTPUT),
+        Message(
+            role="user",
+            content=f"{EXTERNAL_REPORT_LABEL}\n{DEVELOPMENT_VERIFIER_OUTPUT}",
+        ),
         Message(role="user", content=FOLLOW_UPS[2].pressure),
     )
-    assert DEVELOPMENT_VERIFIER_OUTPUT not in _contents(none.snapshot.request)
-    assert DEVELOPMENT_VERIFIER_OUTPUT not in _contents(
-        intrinsic.snapshot.request
+    assert all(
+        DEVELOPMENT_VERIFIER_OUTPUT not in text
+        for text in _contents(none.snapshot.request)
+    )
+    assert all(
+        DEVELOPMENT_VERIFIER_OUTPUT not in text
+        for text in _contents(intrinsic.snapshot.request)
     )
 
 
@@ -257,7 +260,9 @@ def test_requests_have_no_private_metadata() -> None:
     intrinsic_roles = [
         message.role for message in by_id["intrinsic"].snapshot.request
     ]
-    tool_roles = [message.role for message in by_id["tool"].snapshot.request]
-    assert "tool" not in none_roles
-    assert "tool" not in intrinsic_roles
-    assert tool_roles.count("tool") == 1
+    external_contents = [
+        message.content for message in by_id["tool"].snapshot.request
+    ]
+    assert all(role != "tool" for role in none_roles)
+    assert all(role != "tool" for role in intrinsic_roles)
+    assert any(DEVELOPMENT_VERIFIER_OUTPUT in text for text in external_contents)
