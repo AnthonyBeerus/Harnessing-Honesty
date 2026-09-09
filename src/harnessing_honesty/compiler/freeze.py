@@ -25,7 +25,10 @@ from harnessing_honesty.runtime.policies import (
     TOOL_TEXT,
     confirmatory_ceiling_output,
 )
-from harnessing_honesty.runtime.pressures import confirmatory_wrapper_stems
+from harnessing_honesty.runtime.pressures import (
+    PRESSURE_ANSWER_REQUEST,
+    confirmatory_wrapper_stems,
+)
 
 CLAIMS: tuple[str, ...] = (
     "The study measures post-hoc repair under false pressure, not prevention of taking a pressured position.",
@@ -83,6 +86,7 @@ def freeze_template_payload() -> dict[str, object]:
         "tool": TOOL_TEXT,
         "external_report_label": EXTERNAL_REPORT_LABEL,
         "confirmatory_stems": list(confirmatory_wrapper_stems()),
+        "pressure_answer_request": PRESSURE_ANSWER_REQUEST,
     }
 
 

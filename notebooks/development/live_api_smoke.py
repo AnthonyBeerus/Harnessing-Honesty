@@ -13,13 +13,16 @@
 # %% [markdown]
 # # Development live API smoke
 #
-# This notebook sends one excluded development question through the existing
-# CLI and live model adapter. It is not a confirmatory run and does not exercise
-# pressure, finalization policies, scoring or collection. The response is only
-# evidence that this development request reached the configured service path.
+# This notebook sends one excluded systems question through the shared-draft
+# path for all three registered SUTs and all three finalization policies. It is
+# not a confirmatory run and does not score or collect outcomes. Its 15 answers
+# and provider envelopes are only evidence that the proposed path works.
 #
 # OpenRouter routing and observed metadata are assessed against [32] and [34].
-# The adapter uses the pinned Pydantic AI interface [43]. IEEE entries are in
+# Plain-text output uses the pinned Pydantic AI interface [43]. The intrinsic
+# and external conditions follow the distinction in [15] and [16]; displayed
+# rationales are omitted because they can rationalize biased answers [68].
+# IEEE entries are in
 # [the project bibliography](../../docs/references.md).
 
 # %%
@@ -27,15 +30,19 @@ from pathlib import Path
 import subprocess
 import sys
 
-from harnessing_honesty.evaluation.fixtures.scenarios import development_scenario
+from harnessing_honesty.evaluation.fixtures.scenarios import development_systems_scenario
 from harnessing_honesty.models.config import load_run_config
 
 root = next(path for path in (Path.cwd(), *Path.cwd().parents)
             if (path / "pyproject.toml").is_file()
             and (path / "config/qualification.example.yaml").is_file())
-config_path = root / "config/qualification.example.yaml"
-config = load_run_config(config_path)
-scenario = development_scenario()
+config_paths = [
+    root / "config/qualification.sonnet.anthropic.yaml",
+    root / "config/qualification.gpt4o.openai.yaml",
+    root / "config/qualification.gemma4.deepinfra.yaml",
+]
+configs = [load_run_config(path) for path in config_paths]
+scenario = development_systems_scenario()
 
 # %% [markdown]
 # ## Request preview
@@ -44,17 +51,20 @@ scenario = development_scenario()
 # not establish the provider that will serve a request.
 
 # %%
-print(f"Track: {config.track.value}")
 print(f"Scenario: {scenario.prompt.id} (excluded development fixture)")
-print(f"Requested model: {config.serving.requested_model}")
-print(f"Required provider: {', '.join(config.serving.routing.provider_only)}")
+for config in configs:
+    print(
+        f"{config.serving.requested_model} via "
+        f"{', '.join(config.serving.routing.provider_only)}"
+    )
 print(f"Question:\n{scenario.prompt.question}")
 
 # %% [markdown]
 # ## Explicit live launch
 #
-# Change the switch to `True`, then run this cell. It starts exactly one
-# development smoke call in a child process. The child process avoids running
+# Change the switch to `True`, then run this cell. It starts exactly 15 paid
+# model requests: five shared-path calls for each of three SUTs. The child
+# process avoids running
 # Pydantic AI's synchronous interface inside Jupyter's active event loop.
 # Re-running the cell with the switch enabled sends another paid request.
 
@@ -62,17 +72,20 @@ print(f"Question:\n{scenario.prompt.question}")
 RUN_LIVE_API = False
 
 if not RUN_LIVE_API:
-    print("Live API call skipped. Set RUN_LIVE_API = True to send one request.")
+    print("Live API calls skipped. Set RUN_LIVE_API = True to send 15 paid model requests.")
 else:
+    command = [
+        sys.executable,
+        "-m",
+        "harnessing_honesty.cli",
+        "run-live-policy-path",
+        "--confirm-paid-requests",
+        "15",
+    ]
+    for path in config_paths:
+        command.extend(["--config", str(path)])
     completed = subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "harnessing_honesty.cli",
-            "run-live",
-            "--config",
-            str(config_path),
-        ],
+        command,
         cwd=root,
         capture_output=True,
         text=True,

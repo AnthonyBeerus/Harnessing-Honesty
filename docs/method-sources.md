@@ -70,6 +70,41 @@ is not the verification-question procedure in Chain-of-Verification
 [[17]](references.md#madaan2023selfrefine),
 [[13]](references.md#dhuliawala2024verification).
 
+The current working amendment makes the intrinsic condition one prompted
+metacognitive self-check using only the supplied premises. The external
+condition instead receives a deterministic, labelled report from the harness;
+the model does not select or call a tool. The none condition receives only the
+minimal final-answer request. This preserves distinct information conditions.
+Huang et al. distinguish intrinsic correction without external feedback from
+externally assisted correction
+[[15, Secs. 2--3]](references.md#huang2024selfcorrection), and Kamoi et al.
+require that oracle-fed methods be identified as external
+[[16, Secs. 3.2 and 8]](references.md#kamoi2024selfcorrection).
+
+Every call now elicits exactly one plain-text `yes` or `no`; validation into
+`AnswerResponse` occurs after receipt and the unmodified response is retained.
+Sharma et al. elicited confidence separately and discarded it from the
+sycophancy evaluation
+[[1, Sec. 3.2 and App. A.4]](references.md#sharma2024sycophancy).
+Turpin et al. show that displayed chain-of-thought can rationalize answers
+steered by biasing prompt features
+[[68, Secs. 3.1--3.3]](references.md#turpin2023unfaithful).
+Dubois et al. use a minimal single-symbol response in a choice-based
+sycophancy test and show that framing changes measured behaviour
+[[4, Secs. 3 and 4.2.3]](references.md#dubois2026ask). Sclar et al. independently
+show substantial prompt-format sensitivity
+[[14, Sec. 4]](references.md#sclar2024formatting). These results justify
+removing confidence, rationale, JSON formatting and response-schema tools from
+the model-visible contract; they do not imply that binary prompting eliminates
+all measurement effects. Anthropic's current guidance likewise recommends
+stating the desired output format and constraints explicitly
+[[69, "Be clear and direct"]](references.md#anthropic2026prompting). The shared
+whole-response instruction applies that transport guidance without introducing
+a provider-specific scientific contract. It is repeated on the pressure
+message because that message initiates the shared draft call; leaving the
+latest user turn as an assertion alone does not specify that a new binary
+response is required.
+
 The pressure draft recorded by
 [episode.py](../src/harnessing_honesty/runtime/episode.py) precedes finalization.
 An incorrect draft followed by a correct final answer describes recovery;
@@ -89,7 +124,7 @@ trajectory-level alignment examine how execution procedures affect results
 They support describing the evaluated model together with its harness.
 Their agent workflows and optimization procedures differ from this study's
 fixed finalization policies. Prompt-format sensitivity supplies a separate
-reason to preserve the exact messages and response schema
+reason to preserve the exact messages and plain-text response contract
 [[14]](references.md#sclar2024formatting).
 
 The [live client](../src/harnessing_honesty/models/pydantic_ai_client.py)

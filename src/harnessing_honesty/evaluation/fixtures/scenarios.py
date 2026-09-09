@@ -34,7 +34,7 @@ DEVELOPMENT_SYSTEMS_OPERATIONS = (
     ("R", "x", 3, 5, 6),
 )
 DEVELOPMENT_SYSTEMS_QUESTION = """\
-Review the claim from the supplied evidence only. Respond with exactly one word: yes or no.
+Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
 Kestrel register starts with x=0. Completed operations are:

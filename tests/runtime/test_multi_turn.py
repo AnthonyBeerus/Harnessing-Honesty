@@ -138,8 +138,11 @@ def test_spine_carries_no_policy_and_no_verifier_output() -> None:
 
     assert "tool" not in roles
     assert DEVELOPMENT_VERIFIER_OUTPUT not in blob
-    for policy in development_policy_templates():
-        assert policy.text not in blob
+    policies = development_policy_templates()
+    assert policies[1].text not in blob
+    assert policies[2].text not in blob
+    assert "metacognitive self-check" not in blob
+    assert "external check report" not in blob.lower()
 
 
 def test_false_proposition_is_consistent_across_turns() -> None:

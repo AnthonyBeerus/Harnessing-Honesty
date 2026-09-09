@@ -78,10 +78,12 @@ No live model calls are made by these entrypoints.
 ## Development live smoke
 
 `development/live_api_smoke.py` is an interactive check of the existing live
-adapter. It uses the excluded Orion fixture and the routed development settings
-in `config/qualification.example.yaml`. It sends one neutral request; it does
-not run a pressure condition or produce study data. Its tracked switch is off,
-and the release notebook batch does not include the development directory.
+adapter and shared-draft runtime. It uses an independently checked, excluded
+systems fixture and the three primary serving cards. One execution sends five
+requests per SUT: neutral, pressure draft, and one final for each policy. Its
+tracked switch is off, and the release notebook batch does not include the
+development directory. This preserves the no-dispatch default recommended for
+reviewable computational notebooks [[26]](../docs/references.md#rule2019notebooks).
 
 Generate and open the local notebook with:
 
@@ -91,11 +93,11 @@ python -m jupyterlab notebooks/development/live_api_smoke.ipynb
 ```
 
 Review the request preview, change `RUN_LIVE_API` to `True`, and run the launch
-cell. Each execution with the switch enabled sends a new paid API request. The
-notebook invokes `python -m harnessing_honesty.cli run-live` in a child process,
+cell. Each execution with the switch enabled sends 15 paid API requests. The
+notebook invokes `python -m harnessing_honesty.cli run-live-policy-path` in a child process,
 so it uses the same adapter as the CLI and avoids an active event-loop conflict.
-The smoke result demonstrates request-path operation only; it does not validate
-pressure semantics, serving identity, scoring, reconstruction or the collector.
+The smoke result checks the three policy paths and classified provider
+envelopes only; it does not validate scoring, reconstruction or the collector.
 
 ## References
 

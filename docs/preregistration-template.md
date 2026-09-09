@@ -17,6 +17,32 @@ The registered manifest remains unchanged; confirmatory collection requires a
 reviewed amendment. See the [design decision](research-design-decisions.md#2026-09-04--counter-positions-assert-the-opposite-answer).
 The archived OSF record remains immutable [[51]](references.md#osfregistrations).
 
+Working-code amendment proposed 9 September 2026: every model-visible response
+is exactly one plain-text `yes` or `no`. `AnswerResponse` validates that value
+internally and retains the raw response; confidence, rationale, JSON response
+formatting and response-schema tools are not elicited. The intrinsic policy is
+one prompted metacognitive self-check without external feedback. The tool
+policy remains a deterministic external-feedback ceiling, but its labelled
+report is an honest user-side harness message rather than a fictional provider
+tool event. The none policy remains the minimal final-answer control. These
+changes affect the wrapper, policy and serving hashes; the registered manifest
+remains unchanged and MAIN collection requires review and a new freeze. The
+scientific basis and precise source locators are recorded in
+[method-sources.md](method-sources.md#finalization-and-verification).
+
+Proposed amendment hashes, computed from the working implementation:
+
+- wrapper: `d92577f0d7a9265313bb50dd65b72a7e9553b34e23795e766895066c61d6e7a6`
+- policy templates: `b60d75b1e1beb04de90e35bf89e0a360b8629e012a94771c1633dbc059c722d8`
+- external reports: `230886d155b2e56ef000a1361848c98f4171718916cc5a5788e2840b7d504935`
+- working pool: `ead285c30ba01baacd95e91df9efc95494fc2044b7e868a61cd93cceeeadca82`
+- claims: `5ab5f08968053bc83e6cbf53f0d13756700c18ec1c03a0a1506ba8250113b096`
+- primary serving cards: `7acf9655211a50a092482f6adabaa1c549120ac0d3380a28d202bdd895d9324e`
+
+Recording exact computational results makes later changes explicit
+[[61, Rule 6]](references.md#sandve2013reproducible). These are proposed values,
+not replacements for the preserved OSF hashes.
+
 - Date: 2026-09-02
 - Freeze file: `config/freeze.json`
 - Signer: Anthony Morima jr
@@ -50,7 +76,7 @@ Nemotron is out. Gemini, Grok, GPT-5.x, and a second Google production
 slug are out. Thinking / extended reasoning is off. `:free`, `:latest`,
 and `:batch` aliases are refused.
 
-If a production slug fails structured output or envelope classification
+If a production slug fails the plain `yes`/`no` contract or envelope classification
 before OSF, `openai/gpt-oss-20b` on OpenRouter `deepinfra` fills that
 slot. If both production slugs fail, primary is Gemma 4 and GPT-OSS
 (`13 × 60 × 2 × 1 = 1,560`) and the claim is open served instruct, not
@@ -70,7 +96,7 @@ exists.
 
 ## Live cards (2026-09-02)
 
-- `google/gemma-4-26b-a4b-it` on OpenRouter `deepinfra`: structured output
+- `google/gemma-4-26b-a4b-it` on OpenRouter `deepinfra`: the historical structured-output probe
   and message preservation passed; envelope classified.
 - `anthropic/claude-sonnet-4.6` on OpenRouter `anthropic`: same.
   Downstream host `Anthropic`.
@@ -87,7 +113,8 @@ Canonical slugs only.
 
 Each primary SUT is a concrete slug, one `provider.only` / `order` pin,
 fallbacks off, required parameters on, cache off, compression off,
-temperature 0.0, thinking off, `AnswerResponse`. Production cards set
+temperature 0.0, thinking off, and the `plain_yes_no` output contract.
+`AnswerResponse` is internal validation, not a provider response schema. Production cards set
 `max_tokens: 1024`. Seed is sent where the pin accepts it; omitting seed
 is part of that SUT’s identity. Default OpenRouter routing is a protocol
 failure.
@@ -109,7 +136,8 @@ A replacement freeze records both the seed and the configuration hash [[61]](ref
 
 Pressures: `contradiction`, `authority`, `citation`.
 Policies: `none`, `intrinsic`, `tool`.
-Tool is a labelled external-verification ceiling.
+Tool is a labelled external-feedback ceiling delivered by the harness; the
+model does not autonomously select or call a tool.
 
 ## Hypotheses
 

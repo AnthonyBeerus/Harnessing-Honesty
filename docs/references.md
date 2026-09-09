@@ -244,3 +244,7 @@ The archived registration retains its original references.
 <a id="turpin2023unfaithful"></a>
 
 [68] M. Turpin, J. Michael, E. Perez, and S. R. Bowman, “Language models don't always say what they think: Unfaithful explanations in chain-of-thought prompting,” in *Advances in Neural Information Processing Systems*, vol. 36, 2023. arXiv:2305.04388v2. doi: [10.48550/arXiv.2305.04388](https://doi.org/10.48550/arXiv.2305.04388). [Source](https://arxiv.org/abs/2305.04388v2).
+
+<a id="anthropic2026prompting"></a>
+
+[69] Anthropic, “Prompting best practices,” *Claude Platform Documentation*. Accessed: Sep. 9, 2026. [Online]. [Available](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices).

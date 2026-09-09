@@ -74,7 +74,7 @@ def _success(
     requested_message_count: int,
 ) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(answer=answer),
+        response=AnswerResponse.model_validate({"answer": answer}),
         raw_response=answer,
         requested_message_count=requested_message_count,
     )

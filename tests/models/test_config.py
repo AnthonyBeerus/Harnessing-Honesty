@@ -51,6 +51,11 @@ def test_seed_may_be_omitted() -> None:
     assert config.serving.requested_model == "nvidia/nemotron-3-super-120b-a12b"
 
 
+def test_response_contract_cannot_drift_between_cards() -> None:
+    with pytest.raises(ValidationError, match="plain_yes_no"):
+        _serving(output_contract="json_schema")
+
+
 def test_unknown_yaml_key_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "bad.yaml"
     path.write_text("track: dev\nhidden: true\n", encoding="utf-8")

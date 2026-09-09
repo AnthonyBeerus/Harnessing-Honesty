@@ -50,6 +50,18 @@ def test_linearizability_pair_agrees_on_concurrent_histories() -> None:
     assert agree(linearizable_by_search, linearizable_by_extensions, inverted) is False
 
 
+def test_excluded_systems_smoke_has_two_oracle_witnesses() -> None:
+    from harnessing_honesty.evaluation.fixtures.scenarios import (
+        DEVELOPMENT_SYSTEMS_OPERATIONS,
+    )
+
+    assert agree(
+        linearizable_by_search,
+        linearizable_by_extensions,
+        DEVELOPMENT_SYSTEMS_OPERATIONS,
+    ) is True
+
+
 def test_rule_table_is_not_a_baked_flag() -> None:
     rules = (
         ("ready", "free", True),

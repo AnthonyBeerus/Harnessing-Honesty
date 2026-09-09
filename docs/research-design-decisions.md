@@ -1024,3 +1024,65 @@ requires the reviewed amendment.
 two `no` uses. The instrument notebook reports raw and name-masked length by key
 within archetype so name spelling is distinguishable from case wording. No model
 responses were used.
+
+---
+
+## 2026-09-09 — Minimal answer contract and distinct verification conditions
+
+**Decision.** The provider is asked for plain text and the adapter accepts only
+`yes` or `no` after trimming and case normalization, while retaining the raw
+response. Confidence, rationale, JSON formatting and provider response tools
+are removed. The intrinsic arm prompts one metacognitive self-check using only
+the premises. The external arm receives a deterministic labelled report as a
+user-side harness message; it does not contain a fabricated tool call. The none
+arm remains a minimal answer request.
+
+**Why.** Confidence is not part of the registered primary outcome, and Sharma
+et al. elicited it separately before discarding it from their sycophancy
+evaluation [[1, Sec. 3.2 and App. A.4]](references.md#sharma2024sycophancy).
+Displayed explanations can rationalize answers induced by prompt bias
+[[68, Secs. 3.1--3.3]](references.md#turpin2023unfaithful). Prompt formatting
+and question framing can materially change measured behaviour
+[[14, Sec. 4]](references.md#sclar2024formatting),
+[[4, Secs. 3 and 4.2.3]](references.md#dubois2026ask). Separating a model-only
+recheck from oracle feedback follows the intrinsic/external distinction
+[[15, Secs. 2--3]](references.md#huang2024selfcorrection),
+[[16, Secs. 3.2 and 8]](references.md#kamoi2024selfcorrection).
+
+**Registration consequence.** Model-visible wrapper and policy text, provider
+output behaviour, and serving-card material change. The OSF record and
+`config/freeze.json` remain unchanged. MAIN collection requires review and a
+new accepted manifest.
+
+**Verification.** Offline tests require native user/assistant wire roles,
+absence of output tools, exact binary parsing, raw-response retention, branch
+isolation, reconstruction and refusal of the old accepted freeze. The excluded
+systems path smoke is guarded by an exact 15-request acknowledgement and is
+not run until this amendment is inspected and committed.
+
+The first post-commit smoke attempt reached the pinned Anthropic route, but
+Sonnet 4.6 returned a correct explanation followed by `yes` on the neutral
+call. The strict parser classified that response as a parse failure and the
+smoke stopped before the other fourteen calls. No outcome was scored or used
+to revise a case. The endpoint instruction was therefore clarified to constrain
+the entire response, consistently across the wrapper and all three policies.
+This follows the provider's recommendation to state output constraints
+explicitly [[69, "Be clear and direct"]](references.md#anthropic2026prompting)
+while preserving prose as a failure rather than extracting a trailing answer.
+
+A second attempt passed all five Sonnet calls. GPT-4o then passed the neutral
+call but answered the assertion-only pressure with an acknowledgement rather
+than a binary draft, after which the smoke stopped; Gemma was not called. This
+revealed that the draft turn itself did not explicitly request a response after
+the response-schema tool was removed. The same answer-only sentence is now
+appended to every pressure wrapper and included in the template hash. The false
+counter-position, attribution differences, call graph, strict parser and
+shared-draft construction are unchanged.
+
+The third attempt exercised the corrected working tree. Sonnet 4.6, GPT-4o and
+Gemma 4 each returned five parse-valid binary answers and five classified
+provider envelopes. All three produced the sequence `yes`, `no`, `no`, `yes`,
+`yes` for neutral, shared draft, none, intrinsic and external-ceiling calls.
+This excluded diagnostic establishes acceptance of the 15-call message path
+only. It is not confirmatory evidence, was not used to select or revise a case,
+and does not establish durable recording, reconstruction or outcome validity.

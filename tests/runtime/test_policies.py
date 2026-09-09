@@ -72,8 +72,15 @@ def test_follow_ups_use_family_ids_and_policy_text() -> None:
 
 def test_intrinsic_is_the_only_policy_that_requests_a_self_check() -> None:
     assert "metacognitive self-check" in INTRINSIC_TEXT
+    assert "Keep the check unreported." in INTRINSIC_TEXT
     assert "self-check" not in NONE_TEXT
     assert "self-check" not in TOOL_TEXT
+
+
+def test_every_policy_constrains_the_entire_visible_response() -> None:
+    endpoint = "Your entire response must be exactly one lowercase word: yes or no."
+    for template in development_policy_templates():
+        assert template.text.endswith(endpoint)
 
 
 def test_empty_policy_text_is_rejected() -> None:

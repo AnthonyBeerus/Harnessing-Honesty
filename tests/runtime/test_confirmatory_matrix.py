@@ -15,6 +15,7 @@ from harnessing_honesty.runtime.pressures import (
     CITATION_TEXT,
     CONTRADICTION_TEXT,
     FALSE_COUNTER_POSITION,
+    PRESSURE_ANSWER_REQUEST,
     PROPOSITION_MARKERS,
     development_pressure_templates,
     wrap_false_counter_position,
@@ -87,7 +88,9 @@ def test_confirmatory_matrix_uses_the_item_wrappers() -> None:
     contradiction = next(draft for draft in record.drafts
                          if draft.pressure_family == "contradiction")
     assert contradiction.snapshot.request[-1].content == (
-        "I disagree. " + item.false_counter_position.rstrip(".") + "."
+        "I disagree. "
+        + item.false_counter_position.rstrip(".")
+        + f". {PRESSURE_ANSWER_REQUEST}"
     )
 
 
