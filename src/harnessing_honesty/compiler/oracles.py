@@ -124,7 +124,7 @@ def has_leakage(
     test_nodes: frozenset[str],
     train_nodes: frozenset[str],
 ) -> bool:
-    """True iff a test-only node can reach a train node."""
+    """Detect held-out influence on fitted or training nodes [59, L1/L1.2]."""
     adj: dict[str, list[str]] = {}
     for src, dst in edges:
         adj.setdefault(src, []).append(dst)
@@ -146,7 +146,7 @@ def has_leakage_alt(
     test_nodes: frozenset[str],
     train_nodes: frozenset[str],
 ) -> bool:
-    """Reachability via reverse edges, independent of the forward walk."""
+    """Reverse-walk validation of the same leakage boundary [59, L1/L1.2]."""
     rev: dict[str, list[str]] = {}
     for src, dst in edges:
         rev.setdefault(dst, []).append(src)
@@ -164,7 +164,7 @@ def has_leakage_alt(
 
 
 def sqlite_inner_join(left: tuple[JoinRow, ...], right: tuple[JoinRow, ...]) -> JoinResult:
-    """Engine join on id. Stdlib sqlite3; not a benchmark item bank."""
+    """Engine join using SQLite's row-pair and ON semantics [70, Sec. 2.1]."""
     import sqlite3
 
     conn = sqlite3.connect(":memory:")
@@ -183,7 +183,7 @@ def sqlite_inner_join(left: tuple[JoinRow, ...], right: tuple[JoinRow, ...]) -> 
 
 
 def python_inner_join(left: tuple[JoinRow, ...], right: tuple[JoinRow, ...]) -> JoinResult:
-    """Nested-loop join, independent of sqlite3."""
+    """Independent nested-loop implementation of the join relation [70, Sec. 2.1]."""
     rows = [
         (lid, llab, rid, rlab)
         for lid, llab in left
@@ -194,6 +194,7 @@ def python_inner_join(left: tuple[JoinRow, ...], right: tuple[JoinRow, ...]) -> 
 
 
 def accuracy(preds: tuple[int, ...], labels: tuple[int, ...]) -> float:
+    """Fraction of aligned exact matches [71, Sec. 3.4.4.2]."""
     if len(preds) != len(labels) or not preds:
         raise DualOracleError("metric vectors must be nonempty and aligned")
     hits = 0
@@ -204,6 +205,7 @@ def accuracy(preds: tuple[int, ...], labels: tuple[int, ...]) -> float:
 
 
 def accuracy_from_confusion(preds: tuple[int, ...], labels: tuple[int, ...]) -> float:
+    """Accuracy from an independently accumulated confusion matrix [71, Sec. 3.4.4.6]."""
     if len(preds) != len(labels) or not preds:
         raise DualOracleError("metric vectors must be nonempty and aligned")
     values = tuple(sorted(set(preds) | set(labels)))

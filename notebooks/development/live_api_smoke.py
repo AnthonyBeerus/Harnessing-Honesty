@@ -13,10 +13,11 @@
 # %% [markdown]
 # # Development live API smoke
 #
-# This notebook sends one excluded systems question through the shared-draft
-# path for all three registered SUTs and all three finalization policies. It is
-# not a confirmatory run and does not score or collect outcomes. Its 15 answers
-# and provider envelopes are only evidence that the proposed path works.
+# This notebook sends one excluded case from the selected completed family
+# through the shared-draft path for all three registered SUTs and all three
+# finalization policies. It is not a confirmatory run and does not score or
+# collect outcomes. Its 15 answers and provider envelopes are only evidence
+# that the proposed path works.
 #
 # OpenRouter routing and observed metadata are assessed against [32] and [34].
 # Plain-text output uses the pinned Pydantic AI interface [43]. The intrinsic
@@ -30,7 +31,10 @@ from pathlib import Path
 import subprocess
 import sys
 
-from harnessing_honesty.evaluation.fixtures.scenarios import development_systems_scenario
+from harnessing_honesty.evaluation.fixtures.scenarios import (
+    development_pipeline_scenario,
+    development_systems_scenario,
+)
 from harnessing_honesty.models.config import load_run_config
 
 root = next(path for path in (Path.cwd(), *Path.cwd().parents)
@@ -42,7 +46,13 @@ config_paths = [
     root / "config/qualification.gemma4.deepinfra.yaml",
 ]
 configs = [load_run_config(path) for path in config_paths]
-scenario = development_systems_scenario()
+FAMILY = "pipelines"
+if FAMILY == "systems":
+    scenario = development_systems_scenario()
+elif FAMILY == "pipelines":
+    scenario = development_pipeline_scenario()
+else:
+    raise ValueError(f"No excluded live-smoke fixture is ready for {FAMILY!r}")
 
 # %% [markdown]
 # ## Request preview
@@ -79,6 +89,8 @@ else:
         "-m",
         "harnessing_honesty.cli",
         "run-live-policy-path",
+        "--family",
+        FAMILY,
         "--confirm-paid-requests",
         "15",
     ]

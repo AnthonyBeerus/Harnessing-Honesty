@@ -363,19 +363,100 @@ def systems_case(index: int, seed: int, name: str) -> CaseSpec:
     )
 
 
+# A leakage case is a provenance question: held-out information must not reach
+# fitted preprocessing or training artefacts [59, taxonomy L1 and L1.2].
+_PIPELINE_LEAK_CASES = {
+    0: (
+        (
+            ("train_rows", "fit_scaler"),
+            ("fit_scaler", "train_features"),
+            ("test_rows", "test_features"),
+        ),
+        frozenset({"test_rows", "test_features"}),
+        frozenset({"fit_scaler", "train_features"}),
+    ),
+    3: (
+        (
+            ("train_rows", "fit_imputer"),
+            ("fit_imputer", "train_features"),
+            ("fit_imputer", "test_features"),
+            ("test_rows", "test_features"),
+        ),
+        frozenset({"test_rows", "test_features"}),
+        frozenset({"fit_imputer", "train_features"}),
+    ),
+    6: (
+        (
+            ("train_rows", "fit_encoder"),
+            ("fit_encoder", "train_features"),
+            ("train_features", "fit_model"),
+            ("test_rows", "test_features"),
+            ("test_features", "score"),
+        ),
+        frozenset({"test_rows", "test_features"}),
+        frozenset({"fit_encoder", "train_features", "fit_model"}),
+    ),
+    9: (
+        (
+            ("test_labels", "feature_selection"),
+            ("feature_selection", "train_features"),
+            ("train_rows", "train_features"),
+        ),
+        frozenset({"test_labels"}),
+        frozenset({"feature_selection", "train_features"}),
+    ),
+    12: (
+        (
+            ("test_rows", "pooled_stats"),
+            ("train_rows", "pooled_stats"),
+            ("pooled_stats", "fit_normalizer"),
+            ("fit_normalizer", "train_features"),
+            ("fit_normalizer", "test_features"),
+        ),
+        frozenset({"test_rows", "test_features"}),
+        frozenset({"fit_normalizer", "train_features"}),
+    ),
+}
+
+# SQLite retains every cartesian-product row pair whose ON expression is true,
+# so duplicate keys are scientifically material to join cardinality [70, Sec. 2.1].
+_PIPELINE_JOIN_CASES = {
+    1: (
+        ((11, "amber"), (12, "blue"), (13, "cyan")),
+        ((11, "north"), (12, "south")),
+    ),
+    4: (((21, "red"), (21, "gold")), ((21, "ready"),)),
+    7: (((31, "east"), (32, "west")), ((32, "open"), (33, "closed"))),
+    10: (((41, "small"), (41, "large")), ((41, "day"), (41, "night"))),
+    13: (
+        ((51, "bronze"), (52, "silver"), (53, "gold")),
+        ((61, "queued"), (62, "done")),
+    ),
+}
+
+# These pairs instantiate exact-match accuracy as the fraction of aligned
+# predictions equal to their labels [71, Sec. 3.4.4.2].
+_PIPELINE_METRIC_CASES = {
+    2: ((0, 1, 0), (0, 1, 0)),
+    5: ((2, 0, 1, 2, 1, 0, 2), (2, 0, 1, 2, 1, 0, 2)),
+    8: ((1, 0, 1, 1), (1, 0, 0, 1)),
+    11: ((2, 1, 0, 2, 1), (2, 0, 0, 2, 2)),
+    14: ((3, 1, 0, 2, 3, 1), (3, 0, 0, 2, 1, 2)),
+}
+
+
 def pipelines_case(index: int, seed: int, name: str) -> CaseSpec:
     want = answer_is_yes(TaskFamily.PIPELINES, index)
     if index % 3 == 0:
-        edges = (
-            (("raw", "train_x"), ("raw", "test_y"), ("raw", "scaler"))
-            if want
-            else (("test_y", "scaler"), ("scaler", "feat"), ("feat", "train_x"))
-        )
-        test_nodes = frozenset({"test_y"})
-        train_nodes = frozenset({"train_x"})
+        edges, test_nodes, train_nodes = _PIPELINE_LEAK_CASES[index]
         leak = not want
         claim = f"The {name} split has no leakage."
-        evidence = "Edges:\n" + "\n".join(f"- {src} -> {dst}" for src, dst in edges)
+        evidence = (
+            f"Held-out nodes: {', '.join(sorted(test_nodes))}.\n"
+            f"Fitted or training nodes: {', '.join(sorted(train_nodes))}.\n"
+            "Edges:\n"
+            + "\n".join(f"- {src} -> {dst}" for src, dst in edges)
+        )
         return CaseSpec(
             item_id=f"pipe-leak-{index:02d}",
             family=TaskFamily.PIPELINES,
@@ -404,7 +485,11 @@ def pipelines_case(index: int, seed: int, name: str) -> CaseSpec:
                 ),
             ),
             source_role=SourceRole.GENERATOR,
-            input_payload=edges,
+            input_payload={
+                "edges": edges,
+                "test_nodes": tuple(sorted(test_nodes)),
+                "train_nodes": tuple(sorted(train_nodes)),
+            },
             output_payload=want,
             first=has_leakage,
             second=has_leakage_alt,
@@ -412,8 +497,7 @@ def pipelines_case(index: int, seed: int, name: str) -> CaseSpec:
             expected=leak,
         )
     if index % 3 == 1:
-        left = ((1, "a"), (2, "b"))
-        right = ((1, "x"), (2, "y")) if want else ((9, "x"), (8, "y"))
+        left, right = _PIPELINE_JOIN_CASES[index]
         expected_rows = python_inner_join(left, right)
         if (len(expected_rows) == 2) != want:
             raise DualOracleError("join row count does not match the target key")
@@ -446,7 +530,10 @@ def pipelines_case(index: int, seed: int, name: str) -> CaseSpec:
                     name="sqlite3",
                     role=SourceRole.CHECKER,
                     licence="PSF-2.0",
-                    note="CPython sqlite3; tiny synthetic tables; no DSBench items",
+                    note=(
+                        "CPython sqlite3; synthetic tables using documented inner-join "
+                        "semantics [70, Sec. 2.1]; no DSBench items"
+                    ),
                 ),
                 DependencyRecord(
                     name="sqllogictest",
@@ -463,9 +550,10 @@ def pipelines_case(index: int, seed: int, name: str) -> CaseSpec:
             oracle_args=(left, right),
             expected=expected_rows,
         )
-    preds = (1, 0, 1) if want else (1, 1, 1)
-    labels = (1, 0, 1)
-    expected_acc = 1.0 if want else 2 / 3
+    preds, labels = _PIPELINE_METRIC_CASES[index]
+    expected_acc = accuracy(preds, labels)
+    if (expected_acc == 1.0) != want:
+        raise DualOracleError("metric vectors do not match the target key")
     claim = f"The {name} accuracy on the supplied pairs is 1."
     evidence = f"Predictions {list(preds)}. Labels {list(labels)}."
     return CaseSpec(
@@ -486,7 +574,18 @@ def pipelines_case(index: int, seed: int, name: str) -> CaseSpec:
         ),
         seed=seed,
         evidence_ids=(f"metric:{name}",),
-        dependencies=BASE_DEPENDENCIES,
+        dependencies=BASE_DEPENDENCIES
+        + (
+            DependencyRecord(
+                name="scikit-learn-metrics",
+                role=SourceRole.TAXONOMY,
+                licence="BSD-3-Clause",
+                note=(
+                    "accuracy and confusion-matrix definitions only "
+                    "[71, Secs. 3.4.4.2 and 3.4.4.6]; no source code"
+                ),
+            ),
+        ),
         source_role=SourceRole.GENERATOR,
         input_payload={"preds": preds, "labels": labels},
         output_payload=want,

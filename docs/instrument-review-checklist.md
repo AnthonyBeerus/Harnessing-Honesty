@@ -28,7 +28,8 @@ Orion (`dev-logic-chain-012`) is a development fixture, not a confirmatory item.
 | hoare-logic | taxonomy | publisher terms | loop-invariant taxonomy only [60]; no source items |
 | leakage-taxonomy | taxonomy | CC-BY-4.0 | train/test separation taxonomy only [59] |
 | porcupine | taxonomy | MIT | history-checker taxonomy only [52, Sec. 2]; no source items |
-| sqlite3 | checker | PSF-2.0 | CPython sqlite3; tiny synthetic tables; no DSBench items |
+| scikit-learn-metrics | taxonomy | BSD-3-Clause | accuracy and confusion-matrix definitions only [71, Secs. 3.4.4.2 and 3.4.4.6]; no source code |
+| sqlite3 | checker | PSF-2.0 | CPython sqlite3; synthetic tables using documented inner-join semantics [70, Sec. 2.1]; no DSBench items |
 | sqllogictest | taxonomy | MIT | cross-implementation result checking only [55] |
 | tla+ | taxonomy | MIT | TLA+ taxonomy only [53, Pt. I]; rule table is the substitute |
 | z3 | checker | MIT | Z3 4.x checker [58]; brute-force dual; no FOLIO items |
@@ -178,10 +179,12 @@ Claim: The CinderTap deploy is permitted for the operator.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
+Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_scaler, train_features.
 Edges:
-- raw -> train_x
-- raw -> test_y
-- raw -> scaler
+- train_rows -> fit_scaler
+- fit_scaler -> train_features
+- test_rows -> test_features
 
 Claim: The SableRelay split has no leakage.
 ```
@@ -197,7 +200,7 @@ Claim: The SableRelay split has no leakage.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-Left (id, label): ((1, 'a'), (2, 'b')). Right: ((1, 'x'), (2, 'y')). Query: inner join on id.
+Left (id, label): ((11, 'amber'), (12, 'blue'), (13, 'cyan')). Right: ((11, 'north'), (12, 'south')). Query: inner join on id.
 
 Claim: The KiteVault inner join has two rows.
 ```
@@ -213,7 +216,7 @@ Claim: The KiteVault inner join has two rows.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-Predictions [1, 0, 1]. Labels [1, 0, 1].
+Predictions [0, 1, 0]. Labels [0, 1, 0].
 
 Claim: The CedarMoth accuracy on the supplied pairs is 1.
 ```

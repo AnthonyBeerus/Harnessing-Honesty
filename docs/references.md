@@ -248,3 +248,11 @@ The archived registration retains its original references.
 <a id="anthropic2026prompting"></a>
 
 [69] Anthropic, “Prompting best practices,” *Claude Platform Documentation*. Accessed: Sep. 9, 2026. [Online]. [Available](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices).
+
+<a id="sqlite-select"></a>
+
+[70] SQLite, “SELECT,” *SQLite Documentation*, sec. 2.1, “Determination of input data (FROM clause processing).” Updated: Jan. 26, 2026. Accessed: Sep. 10, 2026. [Online]. [Available](https://www.sqlite.org/lang_select.html).
+
+<a id="sklearn-model-evaluation"></a>
+
+[71] scikit-learn developers, “Metrics and scoring: Quantifying the quality of predictions,” *scikit-learn 1.9.0 Documentation*, secs. 3.4.4.2 and 3.4.4.6. Accessed: Sep. 10, 2026. [Online]. [Available](https://scikit-learn.org/stable/modules/model_evaluation.html).

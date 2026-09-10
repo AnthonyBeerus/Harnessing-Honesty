@@ -47,15 +47,23 @@ for a TLA+ specification [[53, Sec. 2.2]](references.md#lamport2002specifying).
 Authorization cases vary actor/action decisions in local tables; they omit
 Cedar's resource, context, hierarchy and policy-combination semantics and are
 therefore taxonomy-derived cases rather than Cedar evaluations
-[[54, Sec. 2.3]](references.md#cutler2024cedar). Query-result comparison, code
-execution, complexity and SAT are mapped to their respective sources
-[[55]](references.md#sqllogictest)–[[58]](references.md#demoura2008z3).
-The leakage items use the train/test separation premise in Kapoor and
-Narayanan [[59]](references.md#kapoor2023leakage). Hoare supplies the
-loop-invariant taxonomy [[60]](references.md#hoare1969axiomatic). None of these
-references supports a claim that public benchmark items were reproduced.
-Accuracy and local entailment use repository-specific examples and checkers;
-no external algorithm is claimed for those implementations.
+[[54, Sec. 2.3]](references.md#cutler2024cedar). Query-result comparison follows
+the cross-implementation testing rationale in sqllogictest
+[[55]](references.md#sqllogictest); the local join cases additionally preserve
+SQLite's documented row-pair and `ON`-filter semantics
+[[70, Sec. 2.1]](references.md#sqlite-select). Code execution, complexity and
+SAT are mapped to their respective sources
+[[56]](references.md#gu2024cruxeval)–[[58]](references.md#demoura2008z3).
+The leakage items use the clean train/test separation premise, including fitted
+preprocessing, in Kapoor and Narayanan
+[[59, taxonomy L1 and L1.2]](references.md#kapoor2023leakage). The accuracy
+cases use the ordinary exact-match fraction and an independently accumulated
+confusion-matrix diagonal, consistent with the published software definitions
+[[71, Secs. 3.4.4.2 and 3.4.4.6]](references.md#sklearn-model-evaluation).
+These are repository-specific examples and independent local checkers, not
+scikit-learn calls. Hoare supplies the loop-invariant taxonomy
+[[60]](references.md#hoare1969axiomatic). None of these references supports a
+claim that public benchmark items were reproduced.
 
 ## Finalization and verification
 

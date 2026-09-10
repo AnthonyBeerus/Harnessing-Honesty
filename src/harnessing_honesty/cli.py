@@ -20,6 +20,7 @@ from harnessing_honesty.domain import (
     ParseFailure,
     ProtocolFailure,
     ProviderFailure,
+    ScenarioRecord,
 )
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
@@ -34,8 +35,13 @@ from harnessing_honesty.runtime.pressures import (
     wrap_false_counter_position,
 )
 from harnessing_honesty.evaluation.fixtures.scenarios import (
+    DEVELOPMENT_PIPELINE_EDGES,
+    DEVELOPMENT_PIPELINE_COUNTER_POSITION,
+    DEVELOPMENT_PIPELINE_TEST_NODES,
+    DEVELOPMENT_PIPELINE_TRAIN_NODES,
     DEVELOPMENT_SYSTEMS_COUNTER_POSITION,
     DEVELOPMENT_SYSTEMS_OPERATIONS,
+    development_pipeline_scenario,
     development_systems_scenario,
 )
 from harnessing_honesty.scoring import Score, score_episode
@@ -385,17 +391,45 @@ def show_freeze() -> None:
     print(f"signer: {freeze.signer}")
 
 
-def run_live_policy_path(
-    config_paths: list[str], confirmed_requests: int,
-) -> None:
-    """Run one excluded systems pressure through all policies and SUTs."""
-    from pathlib import Path
-
+def _checked_live_family_scenario(family: str) -> ScenarioRecord:
+    """Return an excluded fixture after its two repository oracles agree."""
     from harnessing_honesty.compiler.dual import agree
     from harnessing_honesty.compiler.oracles import (
+        has_leakage,
+        has_leakage_alt,
         linearizable_by_extensions,
         linearizable_by_search,
     )
+
+    if family == "systems":
+        valid = agree(
+            linearizable_by_search,
+            linearizable_by_extensions,
+            DEVELOPMENT_SYSTEMS_OPERATIONS,
+        )
+        scenario = development_systems_scenario()
+    elif family == "pipelines":
+        valid = not agree(
+            has_leakage,
+            has_leakage_alt,
+            DEVELOPMENT_PIPELINE_EDGES,
+            DEVELOPMENT_PIPELINE_TEST_NODES,
+            DEVELOPMENT_PIPELINE_TRAIN_NODES,
+        )
+        scenario = development_pipeline_scenario()
+    else:
+        raise SystemExit(f"family smoke is not available for {family!r}")
+    if not valid:
+        raise SystemExit(f"excluded {family} fixture failed its independent oracles")
+    return scenario
+
+
+def run_live_policy_path(
+    config_paths: list[str], confirmed_requests: int, family: str = "systems",
+) -> None:
+    """Run one excluded family pressure through all policies and SUTs."""
+    from pathlib import Path
+
     from harnessing_honesty.models.config import load_run_config
     from harnessing_honesty.runtime.policies import policy_follow_ups
 
@@ -404,24 +438,28 @@ def run_live_policy_path(
         raise SystemExit(
             f"refusing live run: pass --confirm-paid-requests {expected_requests}"
         )
-    if not agree(
-        linearizable_by_search,
-        linearizable_by_extensions,
-        DEVELOPMENT_SYSTEMS_OPERATIONS,
-    ):
-        raise SystemExit("excluded systems fixture failed its independent oracles")
-
-    scenario = development_systems_scenario()
-    pressure = wrap_false_counter_position(
-        DEVELOPMENT_SYSTEMS_COUNTER_POSITION
-    )[0].text
-    report = confirmatory_ceiling_output(
-        oracle_name="register-linearizability",
-        oracle_version="0.2",
-        evidence_ids=("history:Kestrel:operations",),
-        supported=True,
-        witness_id="sequential-order:B,A,C",
-    )
+    scenario = _checked_live_family_scenario(family)
+    if family == "systems":
+        counter_position = DEVELOPMENT_SYSTEMS_COUNTER_POSITION
+        report = confirmatory_ceiling_output(
+            oracle_name="register-linearizability",
+            oracle_version="0.2",
+            evidence_ids=("history:Kestrel:operations",),
+            supported=True,
+            witness_id="sequential-order:B,A,C",
+        )
+    elif family == "pipelines":
+        counter_position = DEVELOPMENT_PIPELINE_COUNTER_POSITION
+        report = confirmatory_ceiling_output(
+            oracle_name="leak-dag",
+            oracle_version="0.2",
+            evidence_ids=("dag:Finch",),
+            supported=True,
+            witness_id="no-held-out-to-training-path",
+        )
+    else:
+        raise SystemExit(f"policy-path smoke is not available for {family!r}")
+    pressure = wrap_false_counter_position(counter_position)[0].text
 
     for config_path in config_paths:
         path = Path(config_path)
@@ -486,13 +524,20 @@ def main() -> None:
         "--config", action="append", default=None,
         help="serving card; repeat once per SUT",
     )
+    policy_path_parser.add_argument(
+        "--family", choices=("systems", "pipelines"), default="systems",
+    )
     policy_path_parser.add_argument("--confirm-paid-requests", type=int, required=True)
     policy_path_parser.set_defaults(command=run_live_policy_path)
 
     arguments = parser.parse_args()
     command = arguments.command
     if command is run_live_policy_path:
-        command(arguments.config or list(PRIMARY_LIVE_CONFIGS), arguments.confirm_paid_requests)
+        command(
+            arguments.config or list(PRIMARY_LIVE_CONFIGS),
+            arguments.confirm_paid_requests,
+            arguments.family,
+        )
     elif command is qualify_live:
         command(arguments.config)
     else:

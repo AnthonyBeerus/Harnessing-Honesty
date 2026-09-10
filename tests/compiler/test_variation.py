@@ -2,7 +2,7 @@
 
 import pytest
 
-from harnessing_honesty.compiler.case_specs import systems_case
+from harnessing_honesty.compiler.case_specs import pipelines_case, systems_case
 from harnessing_honesty.compiler.construction import load_construction_config
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.compiler.variation import (
@@ -101,3 +101,97 @@ def test_systems_questions_remain_distinct_after_name_masking() -> None:
 
     assert len(normalized) == 15
     assert len(set(normalized)) == 15
+
+
+def test_each_pipeline_case_has_a_distinct_formal_input() -> None:
+    cases = [pipelines_case(index, 100 + index, "Service") for index in range(15)]
+
+    for archetype in {case["archetype"] for case in cases}:
+        inputs = [
+            repr(case["input_payload"])
+            for case in cases
+            if case["archetype"] == archetype
+        ]
+        assert len(inputs) == 5
+        assert len(set(inputs)) == 5
+
+
+def test_pipeline_cases_vary_structure_not_only_labels() -> None:
+    cases = [pipelines_case(index, 100 + index, "Service") for index in range(15)]
+    shapes: dict[str, list[object]] = {}
+    for case in cases:
+        payload = case["input_payload"]
+        assert isinstance(payload, dict)
+        if case["archetype"] == "split_leakage":
+            edges = payload["edges"]
+            test_nodes = payload["test_nodes"]
+            train_nodes = payload["train_nodes"]
+            assert isinstance(edges, tuple)
+            assert isinstance(test_nodes, tuple)
+            assert isinstance(train_nodes, tuple)
+            degree_pairs = tuple(
+                sorted(
+                    (
+                        sum(src == node for src, _ in edges),
+                        sum(dst == node for _, dst in edges),
+                    )
+                    for node in {part for edge in edges for part in edge}
+                )
+            )
+            shape = (len(edges), len(test_nodes), len(train_nodes), degree_pairs)
+        elif case["archetype"] == "join_schema":
+            left = payload["left"]
+            right = payload["right"]
+            assert isinstance(left, tuple)
+            assert isinstance(right, tuple)
+            joined = sum(lid == rid for lid, _ in left for rid, _ in right)
+            left_counts = tuple(
+                sorted(
+                    sum(row_id == key for row_id, _ in left)
+                    for key in {row[0] for row in left}
+                )
+            )
+            right_counts = tuple(
+                sorted(
+                    sum(row_id == key for row_id, _ in right)
+                    for key in {row[0] for row in right}
+                )
+            )
+            shape = (
+                len(left),
+                len(right),
+                left_counts,
+                right_counts,
+                joined,
+            )
+        else:
+            preds = payload["preds"]
+            labels = payload["labels"]
+            assert isinstance(preds, tuple)
+            assert isinstance(labels, tuple)
+            mismatches = tuple(
+                place
+                for place, pair in enumerate(zip(preds, labels, strict=True))
+                if pair[0] != pair[1]
+            )
+            shape = (
+                len(labels),
+                len(set(preds) | set(labels)),
+                mismatches,
+            )
+        shapes.setdefault(case["archetype"], []).append(shape)
+
+    assert all(len(set(group)) == 5 for group in shapes.values())
+
+
+def test_pipeline_questions_remain_distinct_after_normalization() -> None:
+    items = [item for item in confirmatory_pool() if item.family is TaskFamily.PIPELINES]
+    names = load_construction_config().service_names
+
+    for mask_numbers in (False, True):
+        normalized = [
+            normalize_question(item.prompt.question, names, mask_numbers=mask_numbers)
+            for item in items
+        ]
+        assert len(normalized) == 15
+        assert len(set(normalized)) == 15
