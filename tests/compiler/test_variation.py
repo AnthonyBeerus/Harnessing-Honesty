@@ -2,7 +2,11 @@
 
 import pytest
 
-from harnessing_honesty.compiler.case_specs import pipelines_case, systems_case
+from harnessing_honesty.compiler.case_specs import (
+    pipelines_case,
+    programs_case,
+    systems_case,
+)
 from harnessing_honesty.compiler.construction import load_construction_config
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.compiler.variation import (
@@ -195,3 +199,46 @@ def test_pipeline_questions_remain_distinct_after_normalization() -> None:
         ]
         assert len(normalized) == 15
         assert len(set(normalized)) == 15
+
+
+def test_each_program_case_has_a_distinct_formal_input() -> None:
+    cases = [programs_case(index, 100 + index, "Service") for index in range(15)]
+
+    for archetype in {case["archetype"] for case in cases}:
+        inputs = [
+            repr(case["input_payload"])
+            for case in cases
+            if case["archetype"] == archetype
+        ]
+        assert len(inputs) == 5
+        assert len(set(inputs)) == 5
+
+
+def test_program_cases_vary_structure_not_only_labels() -> None:
+    cases = [programs_case(index, 100 + index, "Service") for index in range(15)]
+    shapes: dict[str, list[object]] = {}
+    for case in cases:
+        payload = case["input_payload"]
+        if case["archetype"] == "execution_trace":
+            assert isinstance(payload, dict)
+            stmts = payload["stmts"]
+            assert isinstance(stmts, tuple)
+            shape = repr(stmts)
+        elif case["archetype"] == "invariant":
+            assert isinstance(payload, dict)
+            shape = (payload["start"], payload["step"], payload["guard"])
+        else:
+            assert isinstance(payload, tuple)
+            shape = payload
+        shapes.setdefault(case["archetype"], []).append(shape)
+
+    assert all(len(set(group)) == 5 for group in shapes.values())
+
+
+def test_program_questions_remain_distinct_after_normalization() -> None:
+    items = [item for item in confirmatory_pool() if item.family is TaskFamily.PROGRAMS]
+    names = load_construction_config().service_names
+
+    normalized = [normalize_question(item.prompt.question, names) for item in items]
+    assert len(normalized) == 15
+    assert len(set(normalized)) == 15

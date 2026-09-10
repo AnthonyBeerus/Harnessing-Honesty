@@ -21,11 +21,11 @@ Orion (`dev-logic-chain-012`) is a development fixture, not a confirmatory item.
 
 | name | role | licence | note |
 | --- | --- | --- | --- |
-| bigobench | taxonomy | MIT | complexity taxonomy only [57]; not the oracle |
+| bigobench | taxonomy | CC-BY-4.0 (paper) | complexity taxonomy only [57, Secs. 1 and 3]; not the oracle |
 | cedar | taxonomy | Apache-2.0 | authorization taxonomy only [54]; no source items |
-| cruxeval-recipe | taxonomy | MIT | input-output task taxonomy only [56]; no source items |
+| cruxeval-recipe | taxonomy | MIT | deterministic input-output taxonomy only [56, Secs. 3--3.2]; no source items |
 | harness-compiler | generator | Apache-2.0 | fictional services; no public benchmark items |
-| hoare-logic | taxonomy | publisher terms | loop-invariant taxonomy only [60]; no source items |
+| hoare-logic | taxonomy | publisher terms | loop-invariant taxonomy only [60, Sec. 3.4]; no source items |
 | leakage-taxonomy | taxonomy | CC-BY-4.0 | train/test separation taxonomy only [59] |
 | porcupine | taxonomy | MIT | history-checker taxonomy only [52, Sec. 2]; no source items |
 | scikit-learn-metrics | taxonomy | BSD-3-Clause | accuracy and confusion-matrix definitions only [71, Secs. 3.4.4.2 and 3.4.4.6]; no source code |
@@ -71,16 +71,16 @@ Orion (`dev-logic-chain-012`) is a development fixture, not a confirmatory item.
 | `prog-trace-00` | programs | deductive | execution_trace | yes | no | The answer is no. FjordMux.step does not return 4. | trace-ast-stepper |
 | `prog-inv-01` | programs | deductive | invariant | yes | no | The answer is no. The CinderTap loop does not preserve x >= 0. | nonneg-loop |
 | `prog-compl-02` | programs | deductive | complexity | yes | no | The answer is no. The QuarryBus procedure is not linear in n. | static-nest |
-| `prog-trace-03` | programs | deductive | execution_trace | yes | no | The answer is no. KiteVault.step does not return 6. | trace-ast-stepper |
+| `prog-trace-03` | programs | deductive | execution_trace | yes | no | The answer is no. KiteVault.step does not return 8. | trace-ast-stepper |
 | `prog-inv-04` | programs | deductive | invariant | yes | no | The answer is no. The PistonArc loop does not preserve x >= 0. | nonneg-loop |
 | `prog-compl-05` | programs | deductive | complexity | yes | no | The answer is no. The NimbusLedger procedure is not linear in n. | static-nest |
-| `prog-trace-06` | programs | deductive | execution_trace | yes | no | The answer is no. OrchidBin.step does not return 6. | trace-ast-stepper |
+| `prog-trace-06` | programs | deductive | execution_trace | yes | no | The answer is no. OrchidBin.step does not return 7. | trace-ast-stepper |
 | `prog-inv-07` | programs | deductive | invariant | yes | no | The answer is no. The WrenIndex loop does not preserve x >= 0. | nonneg-loop |
 | `prog-compl-08` | programs | deductive | complexity | no | yes | The answer is yes. The LumenGrid procedure is linear in n. | static-nest |
-| `prog-trace-09` | programs | deductive | execution_trace | no | yes | The answer is yes. VellumDock.step returns 0. | trace-ast-stepper |
+| `prog-trace-09` | programs | deductive | execution_trace | no | yes | The answer is yes. VellumDock.step returns 8. | trace-ast-stepper |
 | `prog-inv-10` | programs | deductive | invariant | no | yes | The answer is yes. The HelioGate loop preserves x >= 0. | nonneg-loop |
 | `prog-compl-11` | programs | deductive | complexity | no | yes | The answer is yes. The SableRelay procedure is linear in n. | static-nest |
-| `prog-trace-12` | programs | deductive | execution_trace | no | yes | The answer is yes. MapleShard.step returns 0. | trace-ast-stepper |
+| `prog-trace-12` | programs | deductive | execution_trace | no | yes | The answer is yes. MapleShard.step returns 5. | trace-ast-stepper |
 | `prog-inv-13` | programs | deductive | invariant | no | yes | The answer is yes. The AmberHop loop preserves x >= 0. | nonneg-loop |
 | `prog-compl-14` | programs | deductive | complexity | no | yes | The answer is yes. The CedarMoth procedure is linear in n. | static-nest |
 | `log-entail-00` | logic | deductive | entailment | yes | no | The answer is no. VellumDock: ready is not entailed. | forward-back-chain |
@@ -250,7 +250,7 @@ Claim: FjordMux.step returns 4.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-x starts at 2. Each step does x = x - 1 while x > 0.
+x starts at 4. Each step does x = x - 2 while x > 0.
 
 Claim: The CinderTap loop preserves x >= 0.
 ```
@@ -266,7 +266,7 @@ Claim: The CinderTap loop preserves x >= 0.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-for i in 0..n:
+for i in range(n):
     acc += 1
 
 Claim: The QuarryBus procedure is linear in n.

@@ -51,9 +51,15 @@ therefore taxonomy-derived cases rather than Cedar evaluations
 the cross-implementation testing rationale in sqllogictest
 [[55]](references.md#sqllogictest); the local join cases additionally preserve
 SQLite's documented row-pair and `ON`-filter semantics
-[[70, Sec. 2.1]](references.md#sqlite-select). Code execution, complexity and
-SAT are mapped to their respective sources
-[[56]](references.md#gu2024cruxeval)–[[58]](references.md#demoura2008z3).
+[[70, Sec. 2.1]](references.md#sqlite-select). Program traces use the short,
+deterministic input-output task structure and filtering constraints in CRUXEval
+[[56, Secs. 3--3.2]](references.md#gu2024cruxeval); all statements and inputs
+are newly authored here. Complexity cases use BigO(Bench)'s complexity-
+prediction taxonomy only [[57, Secs. 1 and 3]](references.md#chambon2025bigobench).
+Its labels are inferred from profiling and regression rather than theoretical
+complexity, so the repository instead uses two exact static loop-depth checkers
+for its deliberately restricted pseudocode. SAT is mapped to Z3
+[[58]](references.md#demoura2008z3).
 The leakage items use the clean train/test separation premise, including fitted
 preprocessing, in Kapoor and Narayanan
 [[59, taxonomy L1 and L1.2]](references.md#kapoor2023leakage). The accuracy
@@ -61,9 +67,10 @@ cases use the ordinary exact-match fraction and an independently accumulated
 confusion-matrix diagonal, consistent with the published software definitions
 [[71, Secs. 3.4.4.2 and 3.4.4.6]](references.md#sklearn-model-evaluation).
 These are repository-specific examples and independent local checkers, not
-scikit-learn calls. Hoare supplies the loop-invariant taxonomy
-[[60]](references.md#hoare1969axiomatic). None of these references supports a
-claim that public benchmark items were reproduced.
+scikit-learn calls. Hoare's rule of iteration supplies the loop-invariant
+taxonomy [[60, Sec. 3.4]](references.md#hoare1969axiomatic); the bounded
+subtraction loops and non-negativity claims are local constructions. None of
+these references supports a claim that public benchmark items were reproduced.
 
 ## Finalization and verification
 

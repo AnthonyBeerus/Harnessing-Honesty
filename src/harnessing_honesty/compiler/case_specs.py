@@ -11,6 +11,8 @@ from typing import TypedDict, cast
 
 from harnessing_honesty.compiler.dual import DualOracleError, agree
 from harnessing_honesty.compiler.oracles import (
+    LoopTree,
+    Stmt,
     accuracy,
     accuracy_from_confusion,
     entailed,
@@ -637,17 +639,38 @@ def _render_program(stmts: tuple[tuple[object, ...], ...], indent: int = 0) -> s
 
 def _render_loops(tree: tuple[object, ...], indent: int = 0) -> str:
     pad = "    " * indent
-    if tree[0] == "body":
+    tag = tree[0]
+    if tag == "body":
         return f"{pad}acc += 1"
-    var = "i" if indent == 0 else "j"
+    if tag == "seq":
+        return "\n".join(
+            _render_loops(_as_tree(part), indent) for part in tree[1:]
+        )
+    if tag != "for":
+        raise DualOracleError(f"unknown loop tree {tag!r}")
+    var = ("i", "j", "k")[min(indent, 2)]
     inner = _render_loops(_as_tree(tree[1]), indent + 1)
-    return f"{pad}for {var} in 0..n:\n{inner}"
+    return f"{pad}for {var} in range(n):\n{inner}"
 
 
-def _trace_program(index: int) -> tuple[tuple[tuple[object, ...], ...], dict[str, int]]:
-    if index in {6, 12}:
-        stmts = (
-            ("assign", "acc", ("const", 0)),
+_PROGRAM_TRACE_CASES: tuple[tuple[tuple[Stmt, ...], dict[str, int]], ...] = (
+    (
+        (
+            ("assign", "n", ("add", ("var", "n"), ("const", 1))),
+            ("return", ("var", "n")),
+        ),
+        {"n": 3},
+    ),
+    (
+        (
+            ("assign", "n", ("add", ("var", "n"), ("var", "n"))),
+            ("return", ("var", "n")),
+        ),
+        {"n": 4},
+    ),
+    (
+        (
+            ("assign", "acc", ("const", 1)),
             (
                 "while_gt",
                 "n",
@@ -658,28 +681,64 @@ def _trace_program(index: int) -> tuple[tuple[tuple[object, ...], ...], dict[str
                 ),
             ),
             ("return", ("var", "acc")),
-        )
-        return stmts, {"n": 3, "acc": 0}
-    if index == 3:
-        stmts = (
-            ("assign", "n", ("add", ("var", "n"), ("var", "n"))),
-            ("return", ("var", "n")),
-        )
-        return stmts, {"n": 3}
-    stmts = (
-        ("assign", "n", ("add", ("var", "n"), ("const", 1))),
-        ("return", ("var", "n")),
-    )
-    return stmts, {"n": 3}
+        ),
+        {"n": 3},
+    ),
+    (
+        (
+            ("assign", "offset", ("sub", ("var", "n"), ("const", 1))),
+            ("return", ("add", ("var", "offset"), ("var", "n"))),
+        ),
+        {"n": 4},
+    ),
+    (
+        (
+            ("assign", "remaining", ("var", "n")),
+            ("assign", "acc", ("const", 0)),
+            (
+                "while_gt",
+                "remaining",
+                1,
+                (
+                    ("assign", "acc", ("add", ("var", "acc"), ("const", 3))),
+                    (
+                        "assign",
+                        "remaining",
+                        ("sub", ("var", "remaining"), ("const", 2)),
+                    ),
+                ),
+            ),
+            ("return", ("var", "acc")),
+        ),
+        {"n": 5},
+    ),
+)
+
+_PROGRAM_INVARIANT_CASES: tuple[tuple[int, int, int], ...] = (
+    (4, 2, 0),
+    (5, 2, 1),
+    (3, 1, 0),
+    (4, 3, 0),
+    (6, 4, 1),
+)
+
+_PROGRAM_COMPLEXITY_CASES: tuple[LoopTree, ...] = (
+    ("for", ("body",)),
+    ("seq", ("for", ("body",)), ("for", ("body",))),
+    ("for", ("for", ("body",))),
+    ("seq", ("for", ("body",)), ("for", ("for", ("body",)))),
+    ("for", ("for", ("for", ("body",)))),
+)
 
 
 def programs_case(index: int, seed: int, name: str) -> CaseSpec:
-    """Build execution, invariant and complexity cases [56], [57], [60]."""
+    """Build short deterministic program cases [56, Secs. 3--3.2]."""
     want = answer_is_yes(TaskFamily.PROGRAMS, index)
+    variant = index // 3
     if index % 3 == 0:
-        stmts, env = _trace_program(index)
+        stmts, env = _PROGRAM_TRACE_CASES[variant]
         actual = agree(run_ast, run_stepper, stmts, env)
-        claimed = actual if want else (0 if actual != 0 else 1)
+        claimed = actual if want else actual + (1 if variant % 2 else -1)
         if (actual == claimed) != want:
             raise DualOracleError("claimed return does not match the target key")
         env_line = ", ".join(f"{key}={value}" for key, value in env.items())
@@ -708,7 +767,10 @@ def programs_case(index: int, seed: int, name: str) -> CaseSpec:
                     name="cruxeval-recipe",
                     role=SourceRole.TAXONOMY,
                     licence="MIT",
-                    note="input-output task taxonomy only [56]; no source items",
+                    note=(
+                        "deterministic input-output taxonomy only "
+                        "[56, Secs. 3--3.2]; no source items"
+                    ),
                 ),
             ),
             source_role=SourceRole.GENERATOR,
@@ -720,8 +782,10 @@ def programs_case(index: int, seed: int, name: str) -> CaseSpec:
             expected=actual,
         )
     if index % 3 == 1:
-        start, guard = 2, 0
-        step = 1 if want else 3
+        start, step, guard = _PROGRAM_INVARIANT_CASES[variant]
+        preserves = agree(loop_nonneg_trace, loop_nonneg_closed, start, step, guard)
+        if preserves != want:
+            raise DualOracleError("loop invariant does not match the target key")
         evidence = (
             f"x starts at {start}. Each step does x = x - {step} while x > {guard}."
         )
@@ -749,7 +813,10 @@ def programs_case(index: int, seed: int, name: str) -> CaseSpec:
                     name="hoare-logic",
                     role=SourceRole.TAXONOMY,
                     licence="publisher terms",
-                    note="loop-invariant taxonomy only [60]; no source items",
+                    note=(
+                        "loop-invariant taxonomy only "
+                        "[60, Sec. 3.4]; no source items"
+                    ),
                 ),
             ),
             source_role=SourceRole.GENERATOR,
@@ -758,9 +825,12 @@ def programs_case(index: int, seed: int, name: str) -> CaseSpec:
             first=loop_nonneg_trace,
             second=loop_nonneg_closed,
             oracle_args=(start, step, guard),
-            expected=want,
+            expected=preserves,
         )
-    tree = ("for", ("body",)) if want else ("for", ("for", ("body",)))
+    tree = _PROGRAM_COMPLEXITY_CASES[variant]
+    depth = agree(loop_nest_depth, loop_nest_depth_alt, tree)
+    if (depth == 1) != want:
+        raise DualOracleError("loop depth does not match the target key")
     return CaseSpec(
         item_id=f"prog-compl-{index:02d}",
         family=TaskFamily.PROGRAMS,
@@ -784,8 +854,8 @@ def programs_case(index: int, seed: int, name: str) -> CaseSpec:
             DependencyRecord(
                 name="bigobench",
                 role=SourceRole.TAXONOMY,
-                licence="MIT",
-                note="complexity taxonomy only [57]; not the oracle",
+                licence="CC-BY-4.0 (paper)",
+                note="complexity taxonomy only [57, Secs. 1 and 3]; not the oracle",
             ),
         ),
         source_role=SourceRole.GENERATOR,
@@ -794,7 +864,7 @@ def programs_case(index: int, seed: int, name: str) -> CaseSpec:
         first=loop_nest_depth,
         second=loop_nest_depth_alt,
         oracle_args=(tree,),
-        expected=1 if want else 2,
+        expected=depth,
     )
 
 

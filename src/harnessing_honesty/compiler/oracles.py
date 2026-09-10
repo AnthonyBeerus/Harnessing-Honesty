@@ -346,15 +346,20 @@ def loop_nonneg_closed(start: int, step: int, guard_gt: int) -> bool:
 
 
 def loop_nest_depth(tree: LoopTree) -> int:
-    """Static nest depth. ("body",) is 0; ("for", inner) adds one."""
+    """Static loop depth; sequential loops take their maximum [57, Sec. 3]."""
     tag = tree[0]
     if tag == "body":
         return 0
+    if tag == "seq":
+        children = tree[1:]
+        if not children or not all(isinstance(child, tuple) for child in children):
+            raise DualOracleError("seq-node requires loop-tree children")
+        return max(loop_nest_depth(cast(LoopTree, child)) for child in children)
     if tag == "for":
         inner = tree[1]
         if not isinstance(inner, tuple):
             raise DualOracleError("for-node is missing its inner tree")
-        return 1 + loop_nest_depth(inner)
+        return 1 + loop_nest_depth(cast(LoopTree, inner))
     raise DualOracleError(f"unknown loop tree {tag!r}")
 
 
@@ -368,11 +373,17 @@ def loop_nest_depth_alt(tree: LoopTree) -> int:
         if tag == "body":
             best = max(best, depth)
             continue
+        if tag == "seq":
+            children = node[1:]
+            if not children or not all(isinstance(child, tuple) for child in children):
+                raise DualOracleError("seq-node requires loop-tree children")
+            stack.extend((cast(LoopTree, child), depth) for child in children)
+            continue
         if tag == "for":
             inner = node[1]
             if not isinstance(inner, tuple):
                 raise DualOracleError("for-node is missing its inner tree")
-            stack.append((inner, depth + 1))
+            stack.append((cast(LoopTree, inner), depth + 1))
             continue
         raise DualOracleError(f"unknown loop tree {tag!r}")
     return best

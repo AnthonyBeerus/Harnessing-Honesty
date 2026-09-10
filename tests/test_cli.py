@@ -9,6 +9,12 @@ from harnessing_honesty.domain import AnswerResponse, AnswerSuccess
 from harnessing_honesty.models.fake import ScriptedModelClient
 
 
+class EnvelopeScriptedModelClient(ScriptedModelClient):
+    def __init__(self, results: list[AnswerSuccess]) -> None:
+        super().__init__(results)
+        self.envelopes: list[dict[str, object]] = []
+
+
 def test_policy_path_refuses_dispatch_without_exact_call_confirmation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -29,9 +35,9 @@ def test_policy_path_refuses_dispatch_without_exact_call_confirmation(
 def test_policy_path_exercises_five_calls_for_each_sut(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    clients: list[ScriptedModelClient] = []
+    clients: list[EnvelopeScriptedModelClient] = []
 
-    def client_for(_manifest: object) -> ScriptedModelClient:
+    def client_for(_manifest: object) -> EnvelopeScriptedModelClient:
         results = [
             AnswerSuccess(
                 response=AnswerResponse(answer="yes"),
@@ -40,8 +46,8 @@ def test_policy_path_exercises_five_calls_for_each_sut(
             )
             for count in (1, 3, 5, 5, 6)
         ]
-        client = ScriptedModelClient(results)
-        client.envelopes = [{} for _ in results]  # type: ignore[attr-defined]
+        client = EnvelopeScriptedModelClient(results)
+        client.envelopes = [{} for _ in results]
         clients.append(client)
         return client
 
@@ -58,12 +64,33 @@ def test_policy_path_exercises_five_calls_for_each_sut(
     assert sum(len(client.requests) for client in clients) == 15
 
 
-def test_pipeline_policy_path_exercises_five_calls_for_each_sut(
+@pytest.mark.parametrize(
+    ("family", "claim", "counter_position", "evidence_id"),
+    (
+        (
+            "pipelines",
+            "Finch pipeline has no leakage",
+            "Finch pipeline has leakage",
+            "dag:Finch",
+        ),
+        (
+            "programs",
+            "Lark.step returns 5",
+            "Lark.step does not return 5",
+            "trace:Lark",
+        ),
+    ),
+)
+def test_completed_family_policy_path_exercises_five_calls_for_each_sut(
     monkeypatch: pytest.MonkeyPatch,
+    family: str,
+    claim: str,
+    counter_position: str,
+    evidence_id: str,
 ) -> None:
-    clients: list[ScriptedModelClient] = []
+    clients: list[EnvelopeScriptedModelClient] = []
 
-    def client_for(_manifest: object) -> ScriptedModelClient:
+    def client_for(_manifest: object) -> EnvelopeScriptedModelClient:
         results = [
             AnswerSuccess(
                 response=AnswerResponse(answer="yes"),
@@ -72,8 +99,8 @@ def test_pipeline_policy_path_exercises_five_calls_for_each_sut(
             )
             for count in (1, 3, 5, 5, 6)
         ]
-        client = ScriptedModelClient(results)
-        client.envelopes = [{} for _ in results]  # type: ignore[attr-defined]
+        client = EnvelopeScriptedModelClient(results)
+        client.envelopes = [{} for _ in results]
         clients.append(client)
         return client
 
@@ -86,17 +113,17 @@ def test_pipeline_policy_path_exercises_five_calls_for_each_sut(
     monkeypatch.setattr(cli.PydanticAIModelClient, "from_manifest", client_for)
 
     cli.run_live_policy_path(
-        list(cli.PRIMARY_LIVE_CONFIGS), 15, "pipelines"
+        list(cli.PRIMARY_LIVE_CONFIGS), 15, family
     )
 
     assert sum(len(client.requests) for client in clients) == 15
     for client in clients:
-        assert "Finch pipeline has no leakage" in client.requests[0][0].content
+        assert claim in client.requests[0][0].content
         assert any(
-            "Finch pipeline has leakage" in message.content
+            counter_position in message.content
             for message in client.requests[1]
         )
         assert sum(
-            any("dag:Finch" in message.content for message in request)
+            any(evidence_id in message.content for message in request)
             for request in client.requests
         ) == 1

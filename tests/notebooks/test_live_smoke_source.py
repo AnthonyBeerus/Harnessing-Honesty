@@ -12,7 +12,7 @@ def test_live_smoke_is_excluded_from_release_batch_and_defaults_off() -> None:
     assert "config/qualification.sonnet.anthropic.yaml" in text
     assert "config/qualification.gpt4o.openai.yaml" in text
     assert "config/qualification.gemma4.deepinfra.yaml" in text
-    assert 'FAMILY = "pipelines"' in text
+    assert 'FAMILY: str = "programs"' in text
     assert "15 paid model requests" in text
     assert "run-live-policy-path" in text
     assert '"--family"' in text

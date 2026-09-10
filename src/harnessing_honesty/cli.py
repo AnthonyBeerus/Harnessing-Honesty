@@ -39,9 +39,13 @@ from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_PIPELINE_COUNTER_POSITION,
     DEVELOPMENT_PIPELINE_TEST_NODES,
     DEVELOPMENT_PIPELINE_TRAIN_NODES,
+    DEVELOPMENT_PROGRAM_COUNTER_POSITION,
+    DEVELOPMENT_PROGRAM_ENV,
+    DEVELOPMENT_PROGRAM_STATEMENTS,
     DEVELOPMENT_SYSTEMS_COUNTER_POSITION,
     DEVELOPMENT_SYSTEMS_OPERATIONS,
     development_pipeline_scenario,
+    development_program_scenario,
     development_systems_scenario,
 )
 from harnessing_honesty.scoring import Score, score_episode
@@ -399,6 +403,8 @@ def _checked_live_family_scenario(family: str) -> ScenarioRecord:
         has_leakage_alt,
         linearizable_by_extensions,
         linearizable_by_search,
+        run_ast,
+        run_stepper,
     )
 
     if family == "systems":
@@ -417,6 +423,14 @@ def _checked_live_family_scenario(family: str) -> ScenarioRecord:
             DEVELOPMENT_PIPELINE_TRAIN_NODES,
         )
         scenario = development_pipeline_scenario()
+    elif family == "programs":
+        valid = agree(
+            run_ast,
+            run_stepper,
+            DEVELOPMENT_PROGRAM_STATEMENTS,
+            DEVELOPMENT_PROGRAM_ENV,
+        ) == 5
+        scenario = development_program_scenario()
     else:
         raise SystemExit(f"family smoke is not available for {family!r}")
     if not valid:
@@ -456,6 +470,15 @@ def run_live_policy_path(
             evidence_ids=("dag:Finch",),
             supported=True,
             witness_id="no-held-out-to-training-path",
+        )
+    elif family == "programs":
+        counter_position = DEVELOPMENT_PROGRAM_COUNTER_POSITION
+        report = confirmatory_ceiling_output(
+            oracle_name="trace-ast-stepper",
+            oracle_version="0.2",
+            evidence_ids=("trace:Lark",),
+            supported=True,
+            witness_id="return:5",
         )
     else:
         raise SystemExit(f"policy-path smoke is not available for {family!r}")
@@ -525,7 +548,9 @@ def main() -> None:
         help="serving card; repeat once per SUT",
     )
     policy_path_parser.add_argument(
-        "--family", choices=("systems", "pipelines"), default="systems",
+        "--family",
+        choices=("systems", "pipelines", "programs"),
+        default="systems",
     )
     policy_path_parser.add_argument("--confirm-paid-requests", type=int, required=True)
     policy_path_parser.set_defaults(command=run_live_policy_path)

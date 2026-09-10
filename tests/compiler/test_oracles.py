@@ -130,8 +130,10 @@ def test_invariant_execution_and_closed_form_agree() -> None:
 
 def test_two_static_nest_counts_agree() -> None:
     linear = ("for", ("body",))
+    sequential = ("seq", linear, linear)
     nested = ("for", ("for", ("body",)))
     assert agree(loop_nest_depth, loop_nest_depth_alt, linear) == 1
+    assert agree(loop_nest_depth, loop_nest_depth_alt, sequential) == 1
     assert agree(loop_nest_depth, loop_nest_depth_alt, nested) == 2
 
 

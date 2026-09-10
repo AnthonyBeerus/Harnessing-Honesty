@@ -33,6 +33,7 @@ import sys
 
 from harnessing_honesty.evaluation.fixtures.scenarios import (
     development_pipeline_scenario,
+    development_program_scenario,
     development_systems_scenario,
 )
 from harnessing_honesty.models.config import load_run_config
@@ -46,11 +47,13 @@ config_paths = [
     root / "config/qualification.gemma4.deepinfra.yaml",
 ]
 configs = [load_run_config(path) for path in config_paths]
-FAMILY = "pipelines"
+FAMILY: str = "programs"
 if FAMILY == "systems":
     scenario = development_systems_scenario()
 elif FAMILY == "pipelines":
     scenario = development_pipeline_scenario()
+elif FAMILY == "programs":
+    scenario = development_program_scenario()
 else:
     raise ValueError(f"No excluded live-smoke fixture is ready for {FAMILY!r}")
 
