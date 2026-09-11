@@ -80,8 +80,8 @@ No live model calls are made by these entrypoints.
 `development/live_api_smoke.py` is an interactive check of the existing live
 adapter and shared-draft runtime. `FAMILY` selects an independently checked,
 excluded fixture for a family whose variation substep is complete. Systems,
-pipelines and programs are currently available; the logic fixture is added only
-at its review boundary. One execution sends five requests per SUT:
+pipelines, programs and logic are available; the tracked selection points to
+the family currently awaiting review. One execution sends five requests per SUT:
 neutral, pressure draft, and one final for each policy.
 Its tracked switch is off, and the release notebook batch does not include the
 development directory. This preserves the no-dispatch default recommended for

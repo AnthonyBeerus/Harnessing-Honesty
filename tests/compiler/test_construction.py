@@ -6,7 +6,7 @@ from harnessing_honesty.compiler.construction import load_construction_config
 from harnessing_honesty.compiler.freeze import build_freeze, sign_freeze
 from harnessing_honesty.compiler.pool import confirmatory_pool
 
-WORKING_POOL_HASH = "0e0d20e344d293eff6537085e2941a8cb43b36be3e294d4e72dfe26e3ac0aedb"
+WORKING_POOL_HASH = "900bc854b82cdc5c587092a544350704c7e7612ab92060b14ab3a8ae3bd59757"
 
 
 def _design_cells() -> tuple[tuple[str, str, str, str], ...]:
@@ -33,7 +33,7 @@ def test_same_construction_config_reproduces_the_pool() -> None:
 def test_working_pool_matches_the_reviewed_instrument() -> None:
     # Fixing the exact computational result makes later changes explicit
     # rather than relying on the construction procedure alone [61, Rule 6].
-    freeze = build_freeze(freeze_id="working-program-variation")
+    freeze = build_freeze(freeze_id="working-logic-variation")
 
     assert freeze.pool_hash == WORKING_POOL_HASH
 

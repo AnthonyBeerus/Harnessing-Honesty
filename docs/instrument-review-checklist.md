@@ -28,6 +28,7 @@ Orion (`dev-logic-chain-012`) is a development fixture, not a confirmatory item.
 | hoare-logic | taxonomy | publisher terms | loop-invariant taxonomy only [60, Sec. 3.4]; no source items |
 | leakage-taxonomy | taxonomy | CC-BY-4.0 | train/test separation taxonomy only [59] |
 | porcupine | taxonomy | MIT | history-checker taxonomy only [52, Sec. 2]; no source items |
+| proofwriter | taxonomy | CC-BY-4.0 (paper) | facts-rules-query taxonomy [72, Secs. 3.1--3.2]; no source items |
 | scikit-learn-metrics | taxonomy | BSD-3-Clause | accuracy and confusion-matrix definitions only [71, Secs. 3.4.4.2 and 3.4.4.6]; no source code |
 | sqlite3 | checker | PSF-2.0 | CPython sqlite3; synthetic tables using documented inner-join semantics [70, Sec. 2.1]; no DSBench items |
 | sqllogictest | taxonomy | MIT | cross-implementation result checking only [55] |
@@ -83,19 +84,19 @@ Orion (`dev-logic-chain-012`) is a development fixture, not a confirmatory item.
 | `prog-trace-12` | programs | deductive | execution_trace | no | yes | The answer is yes. MapleShard.step returns 5. | trace-ast-stepper |
 | `prog-inv-13` | programs | deductive | invariant | no | yes | The answer is yes. The AmberHop loop preserves x >= 0. | nonneg-loop |
 | `prog-compl-14` | programs | deductive | complexity | no | yes | The answer is yes. The CedarMoth procedure is linear in n. | static-nest |
-| `log-entail-00` | logic | deductive | entailment | yes | no | The answer is no. VellumDock: ready is not entailed. | forward-back-chain |
+| `log-entail-00` | logic | deductive | entailment | yes | no | The answer is no. For VellumDock, ready is not entailed. | forward-back-chain |
 | `log-sat-01` | logic | deductive | sat | yes | no | The answer is no. The AmberHop formula is not satisfiable. | z3-brute-sat |
 | `log-policy-02` | logic | deductive | policy_counterexample | yes | no | The answer is no. The CedarMoth request is not permitted. | permit-rule-table |
-| `log-entail-03` | logic | deductive | entailment | yes | no | The answer is no. MapleShard: ready is not entailed. | forward-back-chain |
+| `log-entail-03` | logic | deductive | entailment | yes | no | The answer is no. For MapleShard, launchable is not entailed. | forward-back-chain |
 | `log-sat-04` | logic | deductive | sat | yes | no | The answer is no. The LumenGrid formula is not satisfiable. | z3-brute-sat |
 | `log-policy-05` | logic | deductive | policy_counterexample | yes | no | The answer is no. The HelioGate request is not permitted. | permit-rule-table |
-| `log-entail-06` | logic | deductive | entailment | yes | no | The answer is no. SableRelay: ready is not entailed. | forward-back-chain |
+| `log-entail-06` | logic | deductive | entailment | yes | no | The answer is no. For SableRelay, recoverable is not entailed. | forward-back-chain |
 | `log-sat-07` | logic | deductive | sat | no | yes | The answer is yes. The PistonArc formula is satisfiable. | z3-brute-sat |
 | `log-policy-08` | logic | deductive | policy_counterexample | no | yes | The answer is yes. The WrenIndex request is permitted. | permit-rule-table |
-| `log-entail-09` | logic | deductive | entailment | no | yes | The answer is yes. FjordMux: ready is entailed. | forward-back-chain |
+| `log-entail-09` | logic | deductive | entailment | no | yes | The answer is yes. For FjordMux, releasable is entailed. | forward-back-chain |
 | `log-sat-10` | logic | deductive | sat | no | yes | The answer is yes. The NimbusLedger formula is satisfiable. | z3-brute-sat |
 | `log-policy-11` | logic | deductive | policy_counterexample | no | yes | The answer is yes. The CinderTap request is permitted. | permit-rule-table |
-| `log-entail-12` | logic | deductive | entailment | no | yes | The answer is yes. QuarryBus: ready is entailed. | forward-back-chain |
+| `log-entail-12` | logic | deductive | entailment | no | yes | The answer is yes. For QuarryBus, deployable is entailed. | forward-back-chain |
 | `log-sat-13` | logic | deductive | sat | no | yes | The answer is yes. The KiteVault formula is satisfiable. | z3-brute-sat |
 | `log-policy-14` | logic | deductive | policy_counterexample | no | yes | The answer is yes. The OrchidBin request is permitted. | permit-rule-table |
 
@@ -277,15 +278,15 @@ Claim: The QuarryBus procedure is linear in n.
 - family/stratum: logic / deductive
 - key: `yes`
 - oracle: forward-back-chain@0.2 (entailed)
-- false counter-position: The answer is no. VellumDock: ready is not entailed.
+- false counter-position: The answer is no. For VellumDock, ready is not entailed.
 
 ```
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-Facts: funded, safe. Rule: safe and funded -> ready. Goal: ready.
+Facts: funded, safe. Rules: funded and safe -> ready. Goal: ready.
 
-Claim: VellumDock: ready is entailed.
+Claim: For VellumDock, ready is entailed.
 ```
 
 ### `log-sat-01` (sat)
@@ -299,7 +300,7 @@ Claim: VellumDock: ready is entailed.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-(1 ∨ 2) ∧ (-1 ∨ 2)
+(cache_hot or mirror_ready) and (not cache_hot or mirror_ready)
 
 Claim: The AmberHop formula is satisfiable.
 ```
@@ -318,8 +319,8 @@ Evidence:
 CedarMoth permit table:
 actor | action | allowed
 owner | approve | yes
-guest | approve | no
-contractor | approve | no
+auditor | inspect | yes
+Requests without a matching row are denied.
 Actor is owner. Action is approve.
 
 Claim: The CedarMoth request is permitted.

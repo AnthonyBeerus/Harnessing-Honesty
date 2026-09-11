@@ -79,6 +79,12 @@ def test_policy_path_exercises_five_calls_for_each_sut(
             "Lark.step does not return 5",
             "trace:Lark",
         ),
+        (
+            "logic",
+            "For Mica, release is entailed",
+            "For Mica, release is not entailed",
+            "entail:Mica",
+        ),
     ),
 )
 def test_completed_family_policy_path_exercises_five_calls_for_each_sut(

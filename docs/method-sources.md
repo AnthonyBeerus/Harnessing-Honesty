@@ -1,7 +1,7 @@
 # Sources for the methods
 
 This document relates the literature to the instrument as it stands on
-4 September 2026. It is a retrospective account of methodological relevance.
+11 September 2026. It is a retrospective account of methodological relevance.
 It does not establish that a paper influenced an earlier implementation.
 The dated [design decisions](research-design-decisions.md) and
 [registered submission](baseline/2026-09-03/README.md) document that history.
@@ -58,7 +58,13 @@ are newly authored here. Complexity cases use BigO(Bench)'s complexity-
 prediction taxonomy only [[57, Secs. 1 and 3]](references.md#chambon2025bigobench).
 Its labels are inferred from profiling and regression rather than theoretical
 complexity, so the repository instead uses two exact static loop-depth checkers
-for its deliberately restricted pseudocode. SAT is mapped to Z3
+for its deliberately restricted pseudocode. The logic entailment cases use
+newly authored facts, Horn-style rules and queries with unsupported conclusions
+treated as unknown, following the RuleTaker-style theory and open-world
+semantics described by ProofWriter
+[[72, Secs. 3.1--3.2]](references.md#tafjord2021proofwriter). The repository uses
+two deterministic chainers and does not reproduce source items, train a
+reasoning model or request proofs. SAT is mapped to Z3
 [[58]](references.md#demoura2008z3).
 The leakage items use the clean train/test separation premise, including fitted
 preprocessing, in Kapoor and Narayanan

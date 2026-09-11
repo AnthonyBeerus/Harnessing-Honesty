@@ -3,6 +3,7 @@
 import pytest
 
 from harnessing_honesty.compiler.case_specs import (
+    logic_case,
     pipelines_case,
     programs_case,
     systems_case,
@@ -242,3 +243,57 @@ def test_program_questions_remain_distinct_after_normalization() -> None:
     normalized = [normalize_question(item.prompt.question, names) for item in items]
     assert len(normalized) == 15
     assert len(set(normalized)) == 15
+
+
+def test_each_logic_case_has_a_distinct_formal_input() -> None:
+    cases = [logic_case(index, 100 + index, "Service") for index in range(15)]
+
+    for archetype in {case["archetype"] for case in cases}:
+        inputs = [
+            repr(case["input_payload"])
+            for case in cases
+            if case["archetype"] == archetype
+        ]
+        assert len(inputs) == 5
+        assert len(set(inputs)) == 5
+
+
+def test_logic_cases_vary_structure_not_only_labels() -> None:
+    cases = [logic_case(index, 100 + index, "Service") for index in range(15)]
+    shapes: dict[str, list[object]] = {}
+    for case in cases:
+        payload = case["input_payload"]
+        assert isinstance(payload, dict)
+        if case["archetype"] == "entailment":
+            rules = payload["rules"]
+            assert isinstance(rules, tuple)
+            shape = tuple(sorted(len(premises) for premises, _ in rules))
+        elif case["archetype"] == "sat":
+            clauses = payload["clauses"]
+            assert isinstance(clauses, tuple)
+            shape = tuple(len(clause) for clause in clauses)
+        else:
+            rules = payload["rules"]
+            assert isinstance(rules, tuple)
+            matches = tuple(
+                place
+                for place, row in enumerate(rules)
+                if row[0] == payload["actor"] and row[1] == payload["action"]
+            )
+            shape = (len(rules), matches)
+        shapes.setdefault(case["archetype"], []).append(shape)
+
+    assert all(len(set(group)) == 5 for group in shapes.values())
+
+
+def test_logic_questions_remain_distinct_after_normalization() -> None:
+    items = [item for item in confirmatory_pool() if item.family is TaskFamily.LOGIC]
+    names = load_construction_config().service_names
+
+    for mask_numbers in (False, True):
+        normalized = [
+            normalize_question(item.prompt.question, names, mask_numbers=mask_numbers)
+            for item in items
+        ]
+        assert len(normalized) == 15
+        assert len(set(normalized)) == 15

@@ -112,6 +112,28 @@ DEVELOPMENT_PROGRAM_COUNTER_POSITION = (
     "The answer is no. Lark.step does not return 5."
 )
 
+# Excluded logic smoke: a fresh facts-rules-query theory uses the open-world
+# entailment structure described by ProofWriter [72, Secs. 3.1--3.2]. Both
+# repository chainers test the same formal theory before any live dispatch.
+DEVELOPMENT_LOGIC_SMOKE_FACTS = frozenset({"signed", "tested"})
+DEVELOPMENT_LOGIC_SMOKE_RULES = (
+    (frozenset({"signed"}), "approved"),
+    (frozenset({"approved", "tested"}), "release"),
+)
+DEVELOPMENT_LOGIC_SMOKE_GOAL = "release"
+DEVELOPMENT_LOGIC_SMOKE_QUESTION = """\
+Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
+
+Evidence:
+Facts: signed, tested.
+Rules: signed -> approved; approved and tested -> release.
+Goal: release.
+
+Claim: For Mica, release is entailed."""
+DEVELOPMENT_LOGIC_SMOKE_COUNTER_POSITION = (
+    "The answer is no. For Mica, release is not entailed."
+)
+
 
 def development_scenario() -> ScenarioRecord:
     return ScenarioRecord(
@@ -151,6 +173,17 @@ def development_program_scenario() -> ScenarioRecord:
         prompt=PromptView(
             id="dev-exclude-003",
             question=DEVELOPMENT_PROGRAM_QUESTION,
+        ),
+        answer_key=AnswerKey(canonical_answer="yes"),
+    )
+
+
+def development_logic_scenario() -> ScenarioRecord:
+    """Return the excluded logic case used only for path diagnostics."""
+    return ScenarioRecord(
+        prompt=PromptView(
+            id="dev-exclude-004",
+            question=DEVELOPMENT_LOGIC_SMOKE_QUESTION,
         ),
         answer_key=AnswerKey(canonical_answer="yes"),
     )

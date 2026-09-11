@@ -256,3 +256,7 @@ The archived registration retains its original references.
 <a id="sklearn-model-evaluation"></a>
 
 [71] scikit-learn developers, “Metrics and scoring: Quantifying the quality of predictions,” *scikit-learn 1.9.0 Documentation*, secs. 3.4.4.2 and 3.4.4.6. Accessed: Sep. 10, 2026. [Online]. [Available](https://scikit-learn.org/stable/modules/model_evaluation.html).
+
+<a id="tafjord2021proofwriter"></a>
+
+[72] O. Tafjord, B. Dalvi, and P. Clark, “ProofWriter: Generating implications, proofs, and abductive statements over natural language,” in *Findings Assoc. Comput. Linguistics: ACL-IJCNLP*, 2021, pp. 3621–3634. doi: [10.18653/v1/2021.findings-acl.317](https://doi.org/10.18653/v1/2021.findings-acl.317). [Source](https://aclanthology.org/2021.findings-acl.317/).

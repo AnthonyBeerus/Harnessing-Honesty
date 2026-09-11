@@ -32,6 +32,7 @@ import subprocess
 import sys
 
 from harnessing_honesty.evaluation.fixtures.scenarios import (
+    development_logic_scenario,
     development_pipeline_scenario,
     development_program_scenario,
     development_systems_scenario,
@@ -47,13 +48,15 @@ config_paths = [
     root / "config/qualification.gemma4.deepinfra.yaml",
 ]
 configs = [load_run_config(path) for path in config_paths]
-FAMILY: str = "programs"
+FAMILY: str = "logic"
 if FAMILY == "systems":
     scenario = development_systems_scenario()
 elif FAMILY == "pipelines":
     scenario = development_pipeline_scenario()
 elif FAMILY == "programs":
     scenario = development_program_scenario()
+elif FAMILY == "logic":
+    scenario = development_logic_scenario()
 else:
     raise ValueError(f"No excluded live-smoke fixture is ready for {FAMILY!r}")
 

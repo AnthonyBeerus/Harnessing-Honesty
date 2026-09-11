@@ -868,23 +868,147 @@ def programs_case(index: int, seed: int, name: str) -> CaseSpec:
     )
 
 
-_APPROVE_RULES = (
-    ("owner", "approve", True),
-    ("guest", "approve", False),
-    ("contractor", "approve", False),
+# Facts, rules and queries follow the RuleTaker-style theory structure and
+# open-world treatment of unsupported queries [72, Secs. 3.1--3.2]. All atoms,
+# rules and service contexts below are newly authored for this instrument.
+_LOGIC_ENTAIL_CASES = (
+    (
+        frozenset({"safe", "funded"}),
+        ((frozenset({"safe", "funded"}), "ready"),),
+        "ready",
+    ),
+    (
+        frozenset({"audited", "staffed"}),
+        (
+            (frozenset({"audited"}), "approved"),
+            (frozenset({"approved", "staffed"}), "launchable"),
+        ),
+        "launchable",
+    ),
+    (
+        frozenset({"tested", "isolated", "monitored"}),
+        (
+            (frozenset({"tested"}), "verified"),
+            (frozenset({"isolated"}), "contained"),
+            (frozenset({"verified", "contained"}), "recoverable"),
+        ),
+        "recoverable",
+    ),
+    (
+        frozenset({"encrypted", "backed_up"}),
+        (
+            (frozenset({"encrypted"}), "protected"),
+            (frozenset({"protected", "restored"}), "releasable"),
+            (frozenset({"backed_up", "tested"}), "recoverable"),
+        ),
+        "releasable",
+    ),
+    (
+        frozenset({"replicated", "audited"}),
+        (
+            (frozenset({"replicated"}), "durable"),
+            (frozenset({"audited"}), "reviewed"),
+            (frozenset({"reviewed"}), "signed"),
+            (frozenset({"durable", "approved"}), "deployable"),
+        ),
+        "deployable",
+    ),
+)
+
+_LOGIC_SAT_CASES = (
+    (((1, 2), (-1, 2)), ("cache_hot", "mirror_ready")),
+    (((1,), (-1, 2), (-2, 3)), ("signed", "staged", "released")),
+    (((1,), (-1,)), ("maintenance_active",)),
+    (((1, 2), (-1,), (-2,)), ("primary_online", "backup_online")),
+    (
+        ((1, 2), (-1, 3), (-2, 3), (-3,)),
+        ("region_a", "region_b", "quorum_ready"),
+    ),
+)
+
+# The local table deliberately models only exact principal/action decisions and
+# default denial. It does not implement Cedar resources, context, hierarchy,
+# conditions or policy-combination semantics [54, Secs. 2.3--2.4].
+_LOGIC_POLICY_CASES = (
+    (
+        "owner",
+        "approve",
+        (("owner", "approve", True), ("auditor", "inspect", True)),
+    ),
+    (
+        "maintainer",
+        "release",
+        (
+            ("guest", "view", True),
+            ("maintainer", "release", True),
+            ("operator", "stage", True),
+        ),
+    ),
+    (
+        "contractor",
+        "publish",
+        (
+            ("owner", "publish", True),
+            ("reviewer", "inspect", True),
+            ("contractor", "publish", False),
+        ),
+    ),
+    (
+        "guest",
+        "rotate",
+        (
+            ("owner", "rotate", True),
+            ("guest", "view", True),
+            ("auditor", "inspect", True),
+            ("operator", "deploy", True),
+        ),
+    ),
+    (
+        "intern",
+        "deploy",
+        (
+            ("owner", "deploy", True),
+            ("contractor", "inspect", True),
+            ("guest", "view", True),
+            ("intern", "deploy", False),
+        ),
+    ),
 )
 
 
+def _render_entailment(
+    facts: frozenset[str],
+    rules: tuple[tuple[frozenset[str], str], ...],
+    goal: str,
+) -> str:
+    shown_rules = "; ".join(
+        f"{' and '.join(sorted(premises))} -> {head}"
+        for premises, head in rules
+    )
+    return f"Facts: {', '.join(sorted(facts))}. Rules: {shown_rules}. Goal: {goal}."
+
+
+def _render_cnf(
+    clauses: tuple[tuple[int, ...], ...], symbols: tuple[str, ...]
+) -> str:
+    def literal_text(literal: int) -> str:
+        atom = symbols[abs(literal) - 1]
+        return atom if literal > 0 else f"not {atom}"
+
+    return " and ".join(
+        "(" + " or ".join(literal_text(literal) for literal in clause) + ")"
+        for clause in clauses
+    )
+
+
 def logic_case(index: int, seed: int, name: str) -> CaseSpec:
-    """Build local entailment, SAT and authorization cases [54], [58]."""
+    """Build local entailment, SAT and authorization cases [54], [58], [72]."""
     want = answer_is_yes(TaskFamily.LOGIC, index)
+    variant = index // 3
     if index % 3 == 0:
-        facts = frozenset({"safe", "funded"}) if want else frozenset({"safe"})
-        rules = ((frozenset({"safe", "funded"}), "ready"),)
-        goal = "ready"
+        facts, rules, goal = _LOGIC_ENTAIL_CASES[variant]
         status = OracleStatus.ENTAILED if want else OracleStatus.UNKNOWN
-        claim = f"{name}: ready is entailed."
-        evidence = f"Facts: {', '.join(sorted(facts))}. Rule: safe and funded -> ready. Goal: ready."
+        claim = f"For {name}, {goal} is entailed."
         return CaseSpec(
             item_id=f"log-entail-{index:02d}",
             family=TaskFamily.LOGIC,
@@ -894,18 +1018,32 @@ def logic_case(index: int, seed: int, name: str) -> CaseSpec:
             oracle_version="0.2",
             oracle_status=status,
             claim=claim,
-            evidence=evidence,
+            evidence=_render_entailment(facts, rules, goal),
             key_yes=want,
             opposite_claim=(
-                f"{name}: ready is not entailed."
+                f"For {name}, {goal} is not entailed."
                 if want
-                else f"{name}: ready is entailed."
+                else f"For {name}, {goal} is entailed."
             ),
             seed=seed,
             evidence_ids=(f"entail:{name}",),
-            dependencies=BASE_DEPENDENCIES,
+            dependencies=BASE_DEPENDENCIES
+            + (
+                DependencyRecord(
+                    name="proofwriter",
+                    role=SourceRole.TAXONOMY,
+                    licence="CC-BY-4.0 (paper)",
+                    note="facts-rules-query taxonomy [72, Secs. 3.1--3.2]; no source items",
+                ),
+            ),
             source_role=SourceRole.GENERATOR,
-            input_payload={"facts": sorted(facts), "goal": goal},
+            input_payload={
+                "facts": tuple(sorted(facts)),
+                "rules": tuple(
+                    (tuple(sorted(premises)), head) for premises, head in rules
+                ),
+                "goal": goal,
+            },
             output_payload=want,
             first=entailed,
             second=entailed_alt,
@@ -913,8 +1051,7 @@ def logic_case(index: int, seed: int, name: str) -> CaseSpec:
             expected=want,
         )
     if index % 3 == 1:
-        clauses = ((1, 2), (-1, 2)) if want else ((1, 2), (-1, 2), (-2,))
-        pretty = " ∧ ".join("(" + " ∨ ".join(str(lit) for lit in clause) + ")" for clause in clauses)
+        clauses, symbols = _LOGIC_SAT_CASES[variant]
         return CaseSpec(
             item_id=f"log-sat-{index:02d}",
             family=TaskFamily.LOGIC,
@@ -924,7 +1061,7 @@ def logic_case(index: int, seed: int, name: str) -> CaseSpec:
             oracle_version="0.2",
             oracle_status=OracleStatus.ENTAILED if want else OracleStatus.CONTRADICTED,
             claim=f"The {name} formula is satisfiable.",
-            evidence=pretty,
+            evidence=_render_cnf(clauses, symbols),
             key_yes=want,
             opposite_claim=(
                 f"The {name} formula is not satisfiable."
@@ -943,18 +1080,19 @@ def logic_case(index: int, seed: int, name: str) -> CaseSpec:
                 ),
             ),
             source_role=SourceRole.GENERATOR,
-            input_payload=clauses,
+            input_payload={"clauses": clauses, "symbols": symbols},
             output_payload=want,
             first=sat_z3,
             second=sat,
             oracle_args=(clauses,),
             expected=want,
         )
-    actor = "owner" if want else "contractor"
+    actor, action, rules = _LOGIC_POLICY_CASES[variant]
     evidence = (
         f"{name} permit table:\n"
-        f"{render_rules(_APPROVE_RULES, 'actor', 'action')}\n"
-        f"Actor is {actor}. Action is approve."
+        f"{render_rules(rules, 'actor', 'action')}\n"
+        "Requests without a matching row are denied.\n"
+        f"Actor is {actor}. Action is {action}."
     )
     return CaseSpec(
         item_id=f"log-policy-{index:02d}",
@@ -984,10 +1122,10 @@ def logic_case(index: int, seed: int, name: str) -> CaseSpec:
             ),
         ),
         source_role=SourceRole.GENERATOR,
-        input_payload={"actor": actor, "action": "approve", "rules": _APPROVE_RULES},
+        input_payload={"actor": actor, "action": action, "rules": rules},
         output_payload=want,
         first=rule_allows_scan,
         second=rule_allows_index,
-        oracle_args=(actor, "approve", _APPROVE_RULES),
+        oracle_args=(actor, action, rules),
         expected=want,
     )

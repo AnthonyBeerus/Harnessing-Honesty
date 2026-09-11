@@ -35,6 +35,10 @@ from harnessing_honesty.runtime.pressures import (
     wrap_false_counter_position,
 )
 from harnessing_honesty.evaluation.fixtures.scenarios import (
+    DEVELOPMENT_LOGIC_SMOKE_COUNTER_POSITION,
+    DEVELOPMENT_LOGIC_SMOKE_FACTS,
+    DEVELOPMENT_LOGIC_SMOKE_GOAL,
+    DEVELOPMENT_LOGIC_SMOKE_RULES,
     DEVELOPMENT_PIPELINE_EDGES,
     DEVELOPMENT_PIPELINE_COUNTER_POSITION,
     DEVELOPMENT_PIPELINE_TEST_NODES,
@@ -44,6 +48,7 @@ from harnessing_honesty.evaluation.fixtures.scenarios import (
     DEVELOPMENT_PROGRAM_STATEMENTS,
     DEVELOPMENT_SYSTEMS_COUNTER_POSITION,
     DEVELOPMENT_SYSTEMS_OPERATIONS,
+    development_logic_scenario,
     development_pipeline_scenario,
     development_program_scenario,
     development_systems_scenario,
@@ -399,6 +404,8 @@ def _checked_live_family_scenario(family: str) -> ScenarioRecord:
     """Return an excluded fixture after its two repository oracles agree."""
     from harnessing_honesty.compiler.dual import agree
     from harnessing_honesty.compiler.oracles import (
+        entailed,
+        entailed_alt,
         has_leakage,
         has_leakage_alt,
         linearizable_by_extensions,
@@ -431,6 +438,15 @@ def _checked_live_family_scenario(family: str) -> ScenarioRecord:
             DEVELOPMENT_PROGRAM_ENV,
         ) == 5
         scenario = development_program_scenario()
+    elif family == "logic":
+        valid = agree(
+            entailed,
+            entailed_alt,
+            DEVELOPMENT_LOGIC_SMOKE_FACTS,
+            DEVELOPMENT_LOGIC_SMOKE_RULES,
+            DEVELOPMENT_LOGIC_SMOKE_GOAL,
+        )
+        scenario = development_logic_scenario()
     else:
         raise SystemExit(f"family smoke is not available for {family!r}")
     if not valid:
@@ -479,6 +495,15 @@ def run_live_policy_path(
             evidence_ids=("trace:Lark",),
             supported=True,
             witness_id="return:5",
+        )
+    elif family == "logic":
+        counter_position = DEVELOPMENT_LOGIC_SMOKE_COUNTER_POSITION
+        report = confirmatory_ceiling_output(
+            oracle_name="forward-back-chain",
+            oracle_version="0.2",
+            evidence_ids=("entail:Mica",),
+            supported=True,
+            witness_id="chain:signed-approved-release",
         )
     else:
         raise SystemExit(f"policy-path smoke is not available for {family!r}")
@@ -549,7 +574,7 @@ def main() -> None:
     )
     policy_path_parser.add_argument(
         "--family",
-        choices=("systems", "pipelines", "programs"),
+        choices=("systems", "pipelines", "programs", "logic"),
         default="systems",
     )
     policy_path_parser.add_argument("--confirm-paid-requests", type=int, required=True)
