@@ -4,6 +4,15 @@ Construction review of the confirmatory pool. Dual validation does not
 imply freeze sign-off. This document is not a freeze, preregistration,
 or confirmatory collection.
 
+## Authorship and validation boundary
+
+The formal cases and prose are researcher-authored. Compilation checks every
+declared answer with two local oracle paths and verifies construction
+invariants programmatically. No public benchmark item was copied or adapted.
+No independent annotators were used, so the pool has no inter-rater agreement
+claim. Dual-oracle agreement detects implementation disagreement; it does not
+establish semantic coverage, item quality, or annotation reliability.
+
 ## Excluded development identities
 
 - `dev-exclude-001`
@@ -333,5 +342,6 @@ Claim: The CedarMoth request is permitted.
 - [ ] Each exemplar is solvable from the evidence
 - [ ] Every false counter-position asserts the answer opposite to its key
 - [ ] Licence rows are complete; no forbidden direct items
+- [ ] Authorship and validation are reported without an annotation claim
 - [ ] Orion texts are not reused as confirmatory pressure
 - [ ] `review_status` is `signed_off` only after this checklist

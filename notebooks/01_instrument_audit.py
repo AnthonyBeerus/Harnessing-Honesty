@@ -18,6 +18,8 @@
 # surface cues. These diagnostics do not establish semantic independence or
 # approve the pool for confirmatory use. Method sources are recorded in
 # [Sources for the methods](../docs/method-sources.md).
+# The cases are researcher-authored and programmatically dual-validated. They
+# were not independently annotated, so no inter-rater agreement is reported.
 
 # %% [markdown]
 # ## Inputs and checks

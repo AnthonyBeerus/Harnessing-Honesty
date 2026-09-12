@@ -266,9 +266,65 @@ metric, validation and provider modules
 [[66]](references.md#sinha2026sycobench),
 [[67]](references.md#sinha2026sycobenchcode). This organization informs the
 case-specification/compiler boundary; no SycoBench items or code were reused.
-These sources support inspectable construction; they do not establish that the
-present cases are sufficiently varied. Those questions remain in substeps
-2.4.3.3--2.4.3.6.
+These sources support inspectable construction; they do not establish semantic
+coverage or item quality. The cases and wording are researcher-authored and the
+compiler validates them programmatically through two local oracle paths. No
+independent annotation was performed, so neither inter-rater agreement nor
+independent human validation is claimed. Complete semantic review remains the
+separate boundary in substep 2.4.4.
+
+### Construction-source roles
+
+| Source | Role in this repository | Explicit departure or limit |
+|---|---|---|
+| Horn and Kroening [52] | task structure: histories, real-time order and sequential register legality | exhaustive local search; no P-compositional algorithm |
+| Lamport [53] | task structure: old-state/new-state transition relations | local rule tables; no TLA+ language or TLC execution |
+| Cutler et al. [54] | task structure: authorization decisions | exact actor/action tables only; no Cedar resource, context, hierarchy or policy combination |
+| sqllogictest [55] | validation precedent: compare independently obtained query results | not used as a runner or source of cases |
+| Gu et al. [56] | task structure: short deterministic program input/output reasoning | all programs and inputs are locally authored |
+| Chambon et al. [57] | task taxonomy: time-complexity prediction | exact static nesting replaces profiling and regression labels |
+| de Moura and Bjørner [58] | checker implementation: Z3 satisfiability result | a local brute-force enumerator supplies the comparison path |
+| Kapoor and Narayanan [59] | task taxonomy: clean train/test separation, including fitted preprocessing | small dependency graphs instantiate only L1/L1.2 cases |
+| Hoare [60] | task structure: loop-invariant preservation | bounded subtraction loops and non-negativity claims are local |
+| SQLite [70] | software behaviour: inner-join row-pair and `ON` semantics | synthetic in-memory tables; no public query items |
+| scikit-learn [71] | software definition: exact-match accuracy and confusion-matrix accuracy | local implementations; no scikit-learn code or calls |
+| Tafjord et al. [72] | task structure: facts, rules, queries and open-world unknowns | local formal atoms and two deterministic chainers; no ProofWriter items or model |
+| Ribeiro et al. [63] | validation precedent: focused capability tests and controlled variation | no claim that surface variation proves semantic diversity |
+| Srivastava et al. [65] | validation precedent: declarative task data separated from evaluation code | no BIG-bench task or metric is implemented |
+| Sinha [66], [67] | validation and software-layout precedent: accepted questions separated from prompts, parsing and execution | no SycoBench item or source code is reused; no independent curation claim transfers |
+| Gururangan et al. [64] | background for answer-associated surface-cue screening | the notebook does not implement a hypothesis-only classifier |
+| Sandve et al. [61] | background for recording seeds, inputs and reconstruction provenance | reproducibility records do not establish instrument validity |
+
+### 2.4.3 file disposition
+
+- `compiler/case_specs.py`: point citations retained for every borrowed task
+  structure; the provenance boundary is explicit.
+- `compiler/oracles.py`: point citations are retained or added where checker
+  semantics derive from linearizability, leakage, SQL, metric, invariant,
+  complexity, SAT or entailment sources. Repository-specific control flow needs
+  no citation.
+- `compiler/generate.py`: citations are retained for the case-data/compiler
+  separation and external software layout; assembly, hashing and local
+  validation require no external citation.
+- `compiler/review.py` and `compiler/variation.py`: citations flow through
+  dependency records or support the descriptive screen. Markdown rendering,
+  masking and grouping are local review machinery.
+- `tests/compiler/test_construction.py`, `test_variation.py`, `test_oracles.py`,
+  `test_compiler.py` and `test_review_checklist.py`: no new point citations;
+  assertions mirror local construction, source-role and oracle contracts.
+- `cli.py`, `evaluation/fixtures/scenarios.py`, `tests/test_cli.py` and
+  `tests/notebooks/test_live_smoke_source.py`: no construction citation is
+  warranted for local dispatch and fixture assertions. Provider and response
+  behaviour remains mapped in the serving and finalization sections above.
+- `notebooks/01_instrument_audit.py`: citations are retained for coverage,
+  answer-associated surface cues and presentation sensitivity; the local
+  provenance boundary is explicit.
+- `notebooks/development/live_api_smoke.py` and `notebooks/README.md`: citations
+  are retained for provider, SDK, policy and notebook behaviour; the excluded
+  request-path diagnostic is explicitly separated from instrument validation.
+- `instrument-review-checklist.md`: generated from `compiler/review.py`; source
+  roles and locators remain attached to dependency rows, while the authorship
+  and programmatic-validation boundary is explicit.
 
 The [instrument audit notebook](../notebooks/01_instrument_audit.py) uses the
 local normalization and grouping functions in

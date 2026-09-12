@@ -1,9 +1,10 @@
-"""Researcher-authored case specifications using controlled templates [63].
+"""Researcher-authored, programmatically validated case specifications [63].
 
 Task content is kept separate from execution as in BIG-bench [65, Sec. 2.2].
 SycoBench-600's separation of ``data/questions.json`` from its prompt,
 validation, metric and provider modules informs this file boundary [66], [67].
-No SycoBench items or source code are used here.
+No source benchmark items or code are used here. The pool has no independent
+annotation or inter-rater agreement; dual-oracle agreement is a software check.
 """
 
 from collections.abc import Callable

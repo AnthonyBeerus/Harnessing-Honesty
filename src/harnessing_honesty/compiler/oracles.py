@@ -31,7 +31,7 @@ def _apply_register(state: dict[str, int], op: HistoryOp | BareOp) -> dict[str, 
 
 
 def sequential_register(ops: tuple[HistoryOp | BareOp, ...]) -> bool:
-    """Sequential witness: replay ops in the given order from initial 0."""
+    """Replay a sequential register witness from initial 0 [52, Sec. 2]."""
     state: dict[str, int] = {}
     for op in ops:
         nxt = _apply_register(state, op)
@@ -79,7 +79,7 @@ def linearizable_by_search(ops: tuple[HistoryOp, ...]) -> bool:
 
 
 def linearizable_by_extensions(ops: tuple[HistoryOp, ...]) -> bool:
-    """Independent witness: every happens-before linear extension."""
+    """Enumerate happens-before linear extensions [52, Sec. 2]."""
     if any(op[3] > op[4] for op in ops):
         return False
     n = len(ops)
@@ -332,7 +332,7 @@ def loop_nonneg_trace(start: int, step: int, guard_gt: int) -> bool:
 
 
 def loop_nonneg_closed(start: int, step: int, guard_gt: int) -> bool:
-    """Independent assertion: arithmetic sequence stays non-negative."""
+    """Check the same loop assertion by its arithmetic sequence [60, Sec. 3.4]."""
     if start < 0:
         return False
     if step <= 0:
@@ -364,7 +364,7 @@ def loop_nest_depth(tree: LoopTree) -> int:
 
 
 def loop_nest_depth_alt(tree: LoopTree) -> int:
-    """Independent static count via an explicit stack."""
+    """Count the same static nesting taxonomy by an explicit stack [57, Sec. 3]."""
     best = 0
     stack: list[tuple[LoopTree, int]] = [(tree, 0)]
     while stack:
@@ -434,7 +434,7 @@ def entailed(
     rules: tuple[tuple[frozenset[str], str], ...],
     goal: str,
 ) -> bool:
-    """Forward chaining. Unknown goals are not entailed."""
+    """Forward-chain a local open-world theory [72, Secs. 3.1--3.2]."""
     known = set(facts)
     changed = True
     while changed:
@@ -451,7 +451,7 @@ def entailed_alt(
     rules: tuple[tuple[frozenset[str], str], ...],
     goal: str,
 ) -> bool:
-    """Backward chaining, independent of the forward walk."""
+    """Backward-chain the same local theory [72, Secs. 3.1--3.2]."""
 
     def prove(target: str, seen: frozenset[str]) -> bool:
         if target in facts:
