@@ -38,12 +38,15 @@ from IPython.display import Markdown, display
 
 from harnessing_honesty.compiler.audit import audit_pool
 from harnessing_honesty.compiler.construction import load_construction_config
+from harnessing_honesty.compiler.generate import generate_family_specs
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.compiler.variation import (
+    formal_structure_signature,
     normalize_question,
     question_groups,
     service_name_key_counts,
 )
+from harnessing_honesty.domain.enums import TaskFamily
 
 root = next(
     path
@@ -56,6 +59,16 @@ manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 construction = load_construction_config(root / "config/construction.json")
 items = confirmatory_pool(construction)
 audit_pool(items)
+specs = tuple(
+    spec
+    for family in TaskFamily
+    for spec in generate_family_specs(
+        family,
+        construction.family_seed(family),
+        construction.service_names_for(family),
+    )
+)
+assert tuple(spec["item_id"] for spec in specs) == tuple(item.item_id for item in items)
 
 
 def show_table(headers: tuple[str, ...], rows: list[tuple[object, ...]]) -> None:
@@ -146,6 +159,73 @@ show_table(
 show_table(("Archetype", "Screen", "Item IDs"), repeated_rows)
 
 # %% [markdown]
+# ## Formal structure review
+#
+# Text screens cannot identify formally equivalent cases. The table below
+# therefore exposes every authoritative compiler input and an archetype-specific
+# structural signature for human review. The signatures describe relations,
+# rule matches, graph degrees, join multiplicities, mismatches, program shapes,
+# or logical arities as appropriate. They are descriptive screens motivated by
+# controlled capability testing [[63, Secs. 2.2--2.3]](../docs/references.md#ribeiro2020checklist),
+# not proofs of semantic independence.
+
+# %%
+specs_by_archetype = defaultdict(list)
+for spec in specs:
+    specs_by_archetype[spec["archetype"]].append(spec)
+
+formal_summary_rows = []
+formal_case_rows = []
+repeated_formal_rows = []
+for archetype, group in sorted(specs_by_archetype.items()):
+    input_count = len({repr(spec["input_payload"]) for spec in group})
+    signature_groups = defaultdict(list)
+    for spec in group:
+        signature = formal_structure_signature(spec)
+        signature_groups[signature].append(spec["item_id"])
+        formal_case_rows.append(
+            (
+                spec["item_id"],
+                spec["family"].value,
+                archetype,
+                "yes" if spec["key_yes"] else "no",
+                repr(spec["input_payload"]),
+                repr(signature),
+            )
+        )
+    formal_summary_rows.append(
+        (archetype, len(group), input_count, len(signature_groups))
+    )
+    repeated_formal_rows.extend(
+        (archetype, repr(signature), ", ".join(item_ids))
+        for signature, item_ids in signature_groups.items()
+        if len(item_ids) > 1
+    )
+
+show_table(
+    ("Archetype", "Items", "Distinct inputs", "Distinct signatures"),
+    formal_summary_rows,
+)
+
+# %% [markdown]
+# ### All formal cases
+
+# %%
+show_table(
+    ("Item", "Family", "Archetype", "Key", "Formal input", "Signature"),
+    formal_case_rows,
+)
+
+# %% [markdown]
+# ### Repeated formal signatures within an archetype
+
+# %%
+if repeated_formal_rows:
+    show_table(("Archetype", "Signature", "Item IDs"), repeated_formal_rows)
+else:
+    display(Markdown("No within-archetype signature repetitions were found."))
+
+# %% [markdown]
 # ## Service names and answer keys
 #
 # Each item contributes once. Counts are pooled across task families and expose
@@ -228,6 +308,8 @@ show_table(
 exact_total = sum(row[2] for row in variation_rows)
 name_masked_total = sum(row[3] for row in variation_rows)
 number_masked_total = sum(row[4] for row in variation_rows)
+formal_input_total = sum(row[2] for row in formal_summary_rows)
+formal_signature_total = sum(row[3] for row in formal_summary_rows)
 imbalanced_names = [name for name, (yes, no, _) in name_counts.items() if yes != no]
 display(
     Markdown(
@@ -236,14 +318,22 @@ display(
         f"**{len(imbalanced_names)} of {len(name_counts)}** service names have unequal "
         "yes/no counts. The exact-question count is "
         f"**{exact_total}**. These results identify cases for review; they do not "
-        "measure contamination, semantic diversity, graph isomorphism, or effective "
-        "sample size. Different text can encode the same formal case, and number "
+        "approve the pool. The formal review exposes all "
+        f"**{len(specs)}** inputs: **{formal_input_total}** "
+        "are exact-input-distinct and **"
+        f"{formal_signature_total}** are distinct within their archetype under the "
+        "recorded structural screens. These counts do not measure contamination, "
+        "semantic diversity, graph isomorphism, or effective sample size. Different "
+        "text can encode the same formal case, and number "
         "masking can group cases with different answers. Presentation sensitivity "
         "requires a separate outcome study [14]. Name-masked yes/no length ranges "
         f"do not overlap in **{len(separated_length_archetypes)}** archetypes: "
         f"{', '.join(separated_length_archetypes)}. Those differences arise from "
         "the current case wording and evidence, but this screen cannot determine "
-        "whether they are necessary evidence or usable shortcuts. No item is "
-        "selected or rejected by this notebook."
+        "whether they are necessary evidence or usable shortcuts. Five cases still "
+        "share each archetype, constructor, prompt template, and oracle pair; that "
+        "planned dependence must not be reported as 60 independent task designs. "
+        "The signatures are deliberately coarse and archetype-specific. No item is "
+        "selected or rejected, and the pool is not signed off, by this notebook."
     )
 )

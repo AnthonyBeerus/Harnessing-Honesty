@@ -12,7 +12,7 @@ import json
 from collections.abc import Callable
 
 from harnessing_honesty.compiler.case_specs import (
-    BASE_DEPENDENCIES,
+    CaseSpec,
     logic_case,
     pipelines_case,
     programs_case,
@@ -99,11 +99,12 @@ def _finish(
     )
 
 
-def generate_family(
+def generate_family_specs(
     family: TaskFamily,
     seed: int,
     assigned_names: tuple[str, ...],
-) -> tuple[InstrumentItem, ...]:
+) -> tuple[CaseSpec, ...]:
+    """Return the exact case specifications consumed by family compilation."""
     builders = {
         TaskFamily.SYSTEMS: systems_case,
         TaskFamily.PIPELINES: pipelines_case,
@@ -111,6 +112,17 @@ def generate_family(
         TaskFamily.LOGIC: logic_case,
     }
     return tuple(
-        _finish(**builders[family](index, seed + index, name))
+        builders[family](index, seed + index, name)
         for index, name in enumerate(assigned_names)
+    )
+
+
+def generate_family(
+    family: TaskFamily,
+    seed: int,
+    assigned_names: tuple[str, ...],
+) -> tuple[InstrumentItem, ...]:
+    return tuple(
+        _finish(**spec)
+        for spec in generate_family_specs(family, seed, assigned_names)
     )

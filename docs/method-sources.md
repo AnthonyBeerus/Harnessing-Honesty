@@ -339,13 +339,21 @@ prompt-format robustness. Numeric masking is a coarse local screen, not a
 published equivalence method. It cannot establish semantic diversity, graph
 isomorphism, contamination, or effective sample size.
 
+The notebook also reads the exact `CaseSpec` sequence consumed by compilation
+and displays all 60 formal inputs beside archetype-specific structural
+signatures. CheckList supports the adjacent rationale for focused, controlled
+variation [[63, Secs. 2.2--2.3]](references.md#ribeiro2020checklist). The
+signature definitions are local review aids, not published equivalence metrics;
+distinct signatures do not establish independent task designs or effective
+sample size.
+
 Notebook guidance addresses readable, reproducible computational analyses
 [[26]](references.md#rule2019notebooks). Jupytext provides text representations
 for review, and nbclient executes notebooks
 [[38]](references.md#jupytext), [[39]](references.md#nbclient).
 The [notebook workflow](../notebooks/README.md) uses percent-format Python
 sources and fresh-kernel execution. Its initial entrypoints do not implement
-the remaining instrument audits, power simulations or statistical estimators.
+the later power simulations or statistical estimators.
 
 For the planned experiment-control notebook, Bluesky's "The RunEngine" section
 supports separating interactive operation from execution, and Pydantic Evals'

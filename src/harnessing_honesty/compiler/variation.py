@@ -5,9 +5,99 @@ CheckList motivates examining coverage beyond item count [63, Sec. 2.3].
 """
 
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
+from collections.abc import Hashable
 
+from harnessing_honesty.compiler.case_specs import CaseSpec
 from harnessing_honesty.domain.instrument import InstrumentItem
+
+
+def formal_structure_signature(case: CaseSpec) -> Hashable:
+    """Summarize one case's formal structure for descriptive human review."""
+    archetype = case["archetype"]
+    payload = case["input_payload"]
+    if archetype == "register_history" and isinstance(payload, tuple):
+        precedence = tuple(
+            (left, right)
+            for left, first in enumerate(payload)
+            for right, second in enumerate(payload)
+            if first[4] < second[3]
+        )
+        return tuple((operation[0], operation[1]) for operation in payload), precedence
+    if archetype in {"state_machine", "config_policy", "policy_counterexample"}:
+        if not isinstance(payload, dict):
+            raise ValueError(f"{archetype}: expected a mapping payload")
+        left = payload.get("request", payload.get("actor"))
+        right = payload.get("condition", payload.get("action"))
+        rules = payload["rules"]
+        if not isinstance(rules, tuple):
+            raise ValueError(f"{archetype}: expected tuple rules")
+        matches = tuple(
+            place
+            for place, row in enumerate(rules)
+            if row[0] == left and row[1] == right
+        )
+        return len(rules), matches
+    if archetype == "split_leakage" and isinstance(payload, dict):
+        edges = payload["edges"]
+        test_nodes = payload["test_nodes"]
+        train_nodes = payload["train_nodes"]
+        if not all(isinstance(value, tuple) for value in (edges, test_nodes, train_nodes)):
+            raise ValueError("split_leakage: expected tuple graph fields")
+        degrees = Counter(part for edge in edges for part in edge)
+        directed_degrees = tuple(
+            sorted(
+                (
+                    sum(source == node for source, _ in edges),
+                    sum(target == node for _, target in edges),
+                )
+                for node in degrees
+            )
+        )
+        return len(edges), len(test_nodes), len(train_nodes), directed_degrees
+    if archetype == "join_schema" and isinstance(payload, dict):
+        left = payload["left"]
+        right = payload["right"]
+        if not isinstance(left, tuple) or not isinstance(right, tuple):
+            raise ValueError("join_schema: expected tuple relations")
+        left_counts = Counter(row[0] for row in left)
+        right_counts = Counter(row[0] for row in right)
+        joined = sum(left_id == right_id for left_id, _ in left for right_id, _ in right)
+        return (
+            len(left),
+            len(right),
+            tuple(sorted(left_counts.values())),
+            tuple(sorted(right_counts.values())),
+            joined,
+        )
+    if archetype == "metric" and isinstance(payload, dict):
+        predictions = payload["preds"]
+        labels = payload["labels"]
+        if not isinstance(predictions, tuple) or not isinstance(labels, tuple):
+            raise ValueError("metric: expected tuple vectors")
+        mismatches = tuple(
+            place
+            for place, pair in enumerate(zip(predictions, labels, strict=True))
+            if pair[0] != pair[1]
+        )
+        return len(labels), len(set(predictions) | set(labels)), mismatches
+    if archetype == "execution_trace" and isinstance(payload, dict):
+        return repr(payload["stmts"])
+    if archetype == "invariant" and isinstance(payload, dict):
+        return payload["start"], payload["step"], payload["guard"]
+    if archetype == "complexity" and isinstance(payload, tuple):
+        return payload
+    if archetype == "entailment" and isinstance(payload, dict):
+        rules = payload["rules"]
+        if not isinstance(rules, tuple):
+            raise ValueError("entailment: expected tuple rules")
+        return tuple(sorted(len(premises) for premises, _ in rules))
+    if archetype == "sat" and isinstance(payload, dict):
+        clauses = payload["clauses"]
+        if not isinstance(clauses, tuple):
+            raise ValueError("sat: expected tuple clauses")
+        return tuple(len(clause) for clause in clauses)
+    raise ValueError(f"{archetype}: unsupported formal payload")
 
 
 def _name_pattern(names: tuple[str, ...]) -> re.Pattern[str]:

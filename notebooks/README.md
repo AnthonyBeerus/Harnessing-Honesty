@@ -2,13 +2,13 @@
 
 | Source | Current scope |
 |---|---|
-| `01_instrument_audit.py` | Construction checks, repetition, and surface cues |
+| `01_instrument_audit.py` | Complete 60-case formal-structure, repetition, cue, and construction review |
 | `02_run_audit.py` | Existing event reconstruction for a selected local run |
 | `03_power.py` | Design reference; no power simulation |
 | `04_results.py` | Analysis-row contract; no empirical estimates |
 
-These are initial entrypoints. The remaining scientific checks and estimators
-are not implemented by these notebooks. Calculations belong in the package;
+These are initial entrypoints. The instrument review is implemented; later
+scientific checks and estimators are not. Calculations belong in the package;
 notebooks supply inputs and present outputs.
 
 ## Planned experiment-control notebook
