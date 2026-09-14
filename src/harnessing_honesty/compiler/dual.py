@@ -1,8 +1,11 @@
-"""Independent dual-oracle contract for construction.
+"""Distinct dual-oracle contract for construction.
 
 Every confirmatory item must be labelled by two implementations that can
 disagree. The same callable, or two functions with the same bytecode, is
-refused. Disagreement is a defect, not a majority vote.
+refused. This mechanical gate cannot establish independent derivation or
+correctness; correlated failures remain possible [73]. Reference cases and
+source review supply separate evidence.
+Disagreement is a defect, not a majority vote.
 """
 
 from collections.abc import Callable
@@ -12,10 +15,11 @@ T = TypeVar("T")
 
 
 class DualOracleError(ValueError):
-    """The pair is not two independent checkers, or they did not agree."""
+    """The pair is not mechanically distinct, or its results did not agree."""
 
 
 def require_independent(first: Callable[..., object], second: Callable[..., object]) -> None:
+    """Reject identical functions; do not infer semantic independence."""
     if first is second:
         raise DualOracleError("oracle pair is the same callable")
     first_code = getattr(first, "__code__", None)

@@ -556,7 +556,7 @@ establish a minimum effect. Family is nested in stratum, so a
 
 **Decision.** The confirmatory instrument is 60 compiler-instantiated items in
 two nested strata, four families of 15. Python templates produce a formal
-core; two independent checkers label it; a wrapper renders the public
+core; two mechanically distinct checker paths label it; a wrapper renders the public
 yes/no prompt.
 
 - Document-grounded: system specifications, configuration, and reliability;
@@ -1086,3 +1086,43 @@ provider envelopes. All three produced the sequence `yes`, `no`, `no`, `yes`,
 This excluded diagnostic establishes acceptance of the 15-call message path
 only. It is not confirmatory evidence, was not used to select or revise a case,
 and does not establish durable recording, reconstruction or outcome validity.
+
+---
+
+## 2026-09-13 — Oracle independence is a bounded implementation claim
+
+**Decision.** Remove consequential semantic helpers shared by the two register
+checkers and by the two program-execution checkers. The register DFS now applies
+register transitions and real-time precedence within its own search, while the
+linear-extension path separately replays each sequential witness. The recursive
+program interpreter retains recursive expression evaluation; the instruction
+stepper uses an explicit post-order value stack. Fixed researcher-derived cases
+test each path against an expected result, and failure-isolation tests alter one
+path while requiring its partner to retain the reference result.
+
+Horn and Kroening define linearizability through a legal sequential history
+that preserves happens-before order [[52, Sec. 2]](references.md#horn2015linearizability).
+CRUXEval supplies the short deterministic program input-output task structure
+[[56, Sec. 3]](references.md#gu2024cruxeval). Neither source supplies the local
+reference cases or establishes the correctness of these implementations.
+
+**Remaining shared assumptions.** Each pair still shares its formal input
+encoding, the repository's interpretation of the task, Python runtime, test
+process and expected reference labels. The mechanical dual-oracle gate rejects
+the same callable and identical bytecode; it cannot establish independent
+derivation. Agreement can reveal disagreements on exercised inputs but cannot
+exclude correlated defects, prove semantic completeness, or substitute for
+independent human annotation. The other oracle pairs already use separate
+reasoning paths and were retained rather than abstracted into common helpers.
+Knight and Leveson's multiversion-programming experiment found coincident
+failures more often than an independence assumption predicted
+[[73]](references.md#knight1986multiversion). That result supports caution about
+correlated defects; it does not validate the present checkers.
+
+**Alternatives considered.** A verifier registry, plugin interface and a second
+case representation were rejected as unrelated to the observed dependence.
+External solvers were not added: this boundary separates the existing local
+algorithms and strengthens their fixed reference tests.
+
+**Outcome data inspected.** None. Only compiler tests and the frozen working
+pool are used at this boundary.

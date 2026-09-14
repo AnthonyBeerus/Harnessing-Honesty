@@ -24,6 +24,7 @@ def test_checklist_lists_ids_keys_strata_licences_and_exclusions() -> None:
     assert "dev-logic-chain-012" in checklist
     assert "researcher-authored" in checklist
     assert "No independent annotators were used" in checklist
+    assert "does not establish independent derivation or correctness [73]" in checklist
     for family in TaskFamily:
         assert family.value in checklist
 

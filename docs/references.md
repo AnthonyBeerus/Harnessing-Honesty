@@ -260,3 +260,7 @@ The archived registration retains its original references.
 <a id="tafjord2021proofwriter"></a>
 
 [72] O. Tafjord, B. Dalvi, and P. Clark, “ProofWriter: Generating implications, proofs, and abductive statements over natural language,” in *Findings Assoc. Comput. Linguistics: ACL-IJCNLP*, 2021, pp. 3621–3634. doi: [10.18653/v1/2021.findings-acl.317](https://doi.org/10.18653/v1/2021.findings-acl.317). [Source](https://aclanthology.org/2021.findings-acl.317/).
+
+<a id="knight1986multiversion"></a>
+
+[73] J. C. Knight and N. G. Leveson, “An experimental evaluation of the assumption of independence in multiversion programming,” *IEEE Trans. Softw. Eng.*, vol. SE-12, no. 1, pp. 96–109, 1986. doi: [10.1109/TSE.1986.6312924](https://doi.org/10.1109/TSE.1986.6312924).

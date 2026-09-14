@@ -10,8 +10,9 @@ The formal cases and prose are researcher-authored. Compilation checks every
 declared answer with two local oracle paths and verifies construction
 invariants programmatically. No public benchmark item was copied or adapted.
 No independent annotators were used, so the pool has no inter-rater agreement
-claim. Dual-oracle agreement detects implementation disagreement; it does not
-establish semantic coverage, item quality, or annotation reliability.
+claim. Dual-oracle agreement detects disagreement between exercised paths.
+It does not establish independent derivation or correctness [73], semantic
+coverage, item quality, or annotation reliability.
 
 ## Excluded development identities
 

@@ -1,4 +1,9 @@
-"""Deterministic construction oracles. Two implementations per check."""
+"""Deterministic construction oracles. Two distinct paths per check.
+
+The paths share formal input encodings and task semantics. Agreement can expose
+implementation disagreement; it is not a proof of correctness or independence
+[73].
+"""
 
 from collections import deque
 from itertools import permutations
@@ -17,36 +22,20 @@ Stmt: TypeAlias = tuple[object, ...]
 LoopTree: TypeAlias = tuple[object, ...]
 
 
-def _apply_register(state: dict[str, int], op: HistoryOp | BareOp) -> dict[str, int] | None:
-    kind, key, value = op[0], op[1], op[2]
-    if kind == "W":
-        nxt = dict(state)
-        nxt[key] = value
-        return nxt
-    if kind == "R":
-        if state.get(key, 0) != value:
-            return None
-        return state
-    return None
-
-
 def sequential_register(ops: tuple[HistoryOp | BareOp, ...]) -> bool:
     """Replay a sequential register witness from initial 0 [52, Sec. 2]."""
     state: dict[str, int] = {}
-    for op in ops:
-        nxt = _apply_register(state, op)
-        if nxt is None:
+    for kind, key, value, *_ in ops:
+        if kind == "W":
+            state[key] = value
+            continue
+        if kind != "R" or state.get(key, 0) != value:
             return False
-        state = nxt
     return True
 
 
-def _happens_before(first: HistoryOp, second: HistoryOp) -> bool:
-    return first[4] < second[3]
-
-
 def linearizable_by_search(ops: tuple[HistoryOp, ...]) -> bool:
-    """Spec-guided DFS over a history's happens-before order [52, Sec. 2]."""
+    """DFS with its own register transition and real-time order [52, Sec. 2]."""
     if any(op[3] > op[4] for op in ops):
         return False
     n = len(ops)
@@ -63,14 +52,19 @@ def linearizable_by_search(ops: tuple[HistoryOp, ...]) -> bool:
             for j, other in enumerate(ops):
                 if used & (1 << j):
                     continue
-                if _happens_before(other, op):
+                if other[4] < op[3]:
                     blocked = True
                     break
             if blocked:
                 continue
-            nxt = _apply_register(state, op)
-            if nxt is None:
+            kind, key, value = op[:3]
+            if kind == "R" and state.get(key, 0) != value:
                 continue
+            if kind not in {"W", "R"}:
+                continue
+            nxt = dict(state)
+            if kind == "W":
+                nxt[key] = value
             if dfs(used | (1 << i), nxt):
                 return True
         return False
@@ -90,7 +84,7 @@ def linearizable_by_extensions(ops: tuple[HistoryOp, ...]) -> bool:
         illegal = False
         for i, first in enumerate(ops):
             for j, second in enumerate(ops):
-                if _happens_before(first, second) and position[i] > position[j]:
+                if first[4] < second[3] and position[i] > position[j]:
                     illegal = True
                     break
             if illegal:
@@ -217,17 +211,49 @@ def accuracy_from_confusion(preds: tuple[int, ...], labels: tuple[int, ...]) -> 
     return diagonal / len(preds)
 
 
-def _eval_expr(expr: Expr, env: dict[str, int]) -> int:
+def _eval_expr_recursive(expr: Expr, env: dict[str, int]) -> int:
     tag = expr[0]
     if tag == "const":
         return int(cast(int, expr[1]))
     if tag == "var":
         return env[str(expr[1])]
     if tag == "add":
-        return _eval_expr(cast(Expr, expr[1]), env) + _eval_expr(cast(Expr, expr[2]), env)
+        return _eval_expr_recursive(cast(Expr, expr[1]), env) + _eval_expr_recursive(
+            cast(Expr, expr[2]), env
+        )
     if tag == "sub":
-        return _eval_expr(cast(Expr, expr[1]), env) - _eval_expr(cast(Expr, expr[2]), env)
+        return _eval_expr_recursive(cast(Expr, expr[1]), env) - _eval_expr_recursive(
+            cast(Expr, expr[2]), env
+        )
     raise DualOracleError(f"unknown expression {tag!r}")
+
+
+def _eval_expr_stack(expr: Expr, env: dict[str, int]) -> int:
+    """Evaluate an expression by post-order stack reduction, without recursion."""
+    pending: list[tuple[Expr, bool]] = [(expr, False)]
+    values: list[int] = []
+    while pending:
+        node, reduce = pending.pop()
+        tag = node[0]
+        if tag == "const":
+            values.append(int(cast(int, node[1])))
+            continue
+        if tag == "var":
+            values.append(env[str(node[1])])
+            continue
+        if tag not in {"add", "sub"}:
+            raise DualOracleError(f"unknown expression {tag!r}")
+        if not reduce:
+            pending.append((node, True))
+            pending.append((cast(Expr, node[2]), False))
+            pending.append((cast(Expr, node[1]), False))
+            continue
+        right = values.pop()
+        left = values.pop()
+        values.append(left + right if tag == "add" else left - right)
+    if len(values) != 1:
+        raise DualOracleError("expression did not reduce to one value")
+    return values[0]
 
 
 def run_ast(stmts: tuple[Stmt, ...], env0: dict[str, int]) -> int:
@@ -238,10 +264,10 @@ def run_ast(stmts: tuple[Stmt, ...], env0: dict[str, int]) -> int:
         for stmt in block:
             tag = stmt[0]
             if tag == "assign":
-                env[str(stmt[1])] = _eval_expr(cast(Expr, stmt[2]), env)
+                env[str(stmt[1])] = _eval_expr_recursive(cast(Expr, stmt[2]), env)
                 continue
             if tag == "return":
-                return _eval_expr(cast(Expr, stmt[1]), env)
+                return _eval_expr_recursive(cast(Expr, stmt[1]), env)
             if tag == "while_gt":
                 guard_steps = 0
                 while env[str(stmt[1])] > int(cast(int, stmt[2])):
@@ -294,11 +320,11 @@ def run_stepper(stmts: tuple[Stmt, ...], env0: dict[str, int]) -> int:
         op = ops[ip]
         tag = op[0]
         if tag == "assign":
-            env[str(op[1])] = _eval_expr(cast(Expr, op[2]), env)
+            env[str(op[1])] = _eval_expr_stack(cast(Expr, op[2]), env)
             ip += 1
             continue
         if tag == "return":
-            return _eval_expr(cast(Expr, op[1]), env)
+            return _eval_expr_stack(cast(Expr, op[1]), env)
         if tag == "loop_head":
             if env[str(op[1])] > int(cast(int, op[2])):
                 ip += 1

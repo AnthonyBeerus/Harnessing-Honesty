@@ -326,6 +326,30 @@ separate boundary in substep 2.4.4.
   roles and locators remain attached to dependency rows, while the authorship
   and programmatic-validation boundary is explicit.
 
+### 2.5 oracle-independence disposition
+
+- `compiler/oracles.py`: Horn and Kroening [52, Sec. 2] remains the point source
+  for histories, sequential replay, happens-before and linearizability. Gu et
+  al. [56, Sec. 3] remains taxonomy support for deterministic short-program
+  input-output execution. The separate DFS transition logic and iterative
+  expression evaluator are local implementations; neither paper establishes
+  their correctness or independence.
+- `compiler/dual.py`: no external algorithm is implemented. Callable identity
+  and bytecode inequality are explicitly documented as mechanical distinction
+  checks, not evidence of independent derivation.
+- `tests/compiler/test_oracles.py`: [52, Sec. 2] and [56, Sec. 3] support the
+  adjacent task semantics. Expected reference results and failure-isolation
+  mutations are researcher-derived test fixtures.
+- `compiler/review.py`, `tests/compiler/test_review_checklist.py` and
+  `instrument-review-checklist.md`: no external method is implemented. These
+  files propagate the bounded interpretation of oracle agreement into the
+  human-review artifact.
+- `research-design-decisions.md`: [52, Sec. 2] and [56, Sec. 3] support only the
+  register and program task semantics. The independence boundary and its
+  limitations are study-specific engineering decisions. Knight and Leveson
+  [73] supports caution about correlated failures in separately implemented
+  software; it does not validate the local checker pairs.
+
 The [instrument audit notebook](../notebooks/01_instrument_audit.py) uses the
 local normalization and grouping functions in
 [variation.py](../src/harnessing_honesty/compiler/variation.py). CheckList's

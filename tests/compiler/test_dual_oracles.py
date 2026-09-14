@@ -1,4 +1,4 @@
-"""Two checkers must be independent and must agree."""
+"""Two checkers must be mechanically distinct and must agree."""
 
 from harnessing_honesty.compiler.dual import DualOracleError, agree
 
@@ -45,7 +45,7 @@ def test_disagreeing_oracles_are_refused() -> None:
         raise AssertionError("disagreement must be refused")
 
 
-def test_independent_oracles_that_agree_return_the_value() -> None:
+def test_distinct_oracles_that_agree_return_the_value() -> None:
     def by_int(value: int) -> bool:
         return value > 0
 

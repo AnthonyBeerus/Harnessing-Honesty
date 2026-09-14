@@ -1,5 +1,16 @@
-"""Independent checkers for each confirmatory archetype."""
+"""Distinct checkers and researcher-derived reference results.
 
+Register expectations follow the history and linearizability definitions
+[52, Sec. 2]. Program expectations exercise the deterministic input-output task
+structure used locally; CRUXEval supplies that taxonomy, not these cases [56,
+Sec. 3]. Agreement does not exclude correlated failures [73].
+"""
+
+import inspect
+
+import pytest
+
+from harnessing_honesty.compiler import oracles
 from harnessing_honesty.compiler.dual import DualOracleError, agree
 from harnessing_honesty.compiler.oracles import (
     accuracy,
@@ -24,6 +35,74 @@ from harnessing_honesty.compiler.oracles import (
     sequential_register,
     sqlite_inner_join,
 )
+
+
+@pytest.mark.parametrize(
+    ("history", "expected"),
+    (
+        ((("R", "x", 0, 0, 1),), True),
+        ((("W", "x", 1, 0, 3), ("R", "x", 0, 1, 2)), True),
+        ((("W", "x", 1, 0, 1), ("R", "x", 0, 2, 3)), False),
+    ),
+)
+def test_each_register_oracle_matches_hand_derived_references(
+    history: tuple[tuple[str, str, int, int, int], ...],
+    expected: bool,
+) -> None:
+    assert linearizable_by_search(history) is expected
+    assert linearizable_by_extensions(history) is expected
+
+
+def test_register_oracles_do_not_share_state_or_order_helpers() -> None:
+    for checker in (linearizable_by_search, linearizable_by_extensions):
+        source = inspect.getsource(checker)
+        assert "_apply_register" not in source
+        assert "_happens_before" not in source
+
+
+def test_register_search_survives_a_broken_sequential_replay(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    history = (("W", "x", 1, 0, 1), ("R", "x", 1, 2, 3))
+
+    def broken_replay(_ops: tuple[tuple[str, str, int, int, int], ...]) -> bool:
+        return False
+
+    monkeypatch.setattr(oracles, "sequential_register", broken_replay)
+
+    assert linearizable_by_search(history) is True
+    assert linearizable_by_extensions(history) is False
+
+
+def test_each_program_oracle_matches_a_hand_derived_nested_expression() -> None:
+    statements = (
+        (
+            "assign",
+            "n",
+            ("sub", ("add", ("var", "n"), ("const", 3)), ("const", 1)),
+        ),
+        ("return", ("var", "n")),
+    )
+
+    assert run_ast(statements, {"n": 2}) == 4
+    assert run_stepper(statements, {"n": 2}) == 4
+
+
+def test_stepper_does_not_use_the_recursive_expression_evaluator(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    statement = (("return", ("add", ("const", 2), ("const", 3))),)
+
+    def broken_evaluator(
+        _expr: tuple[object, ...],
+        _env: dict[str, int],
+    ) -> int:
+        return -1
+
+    monkeypatch.setattr(oracles, "_eval_expr_recursive", broken_evaluator)
+
+    assert run_ast(statement, {}) == -1
+    assert run_stepper(statement, {}) == 5
 
 
 def test_sequential_register_rejects_a_stale_read() -> None:
