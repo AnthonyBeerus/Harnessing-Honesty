@@ -350,6 +350,27 @@ separate boundary in substep 2.4.4.
   [73] supports caution about correlated failures in separately implemented
   software; it does not validate the local checker pairs.
 
+### 2.6 instrument-audit disposition
+
+- `notebooks/01_instrument_audit.py`: citations are retained at the checks they
+  support. The working protocol defines family, stratum, answer and pressure
+  constraints. CheckList [63, Secs. 2.2--2.3] supports displaying focused
+  capability coverage and structural variation; it does not validate the local
+  signatures. Gururangan et al. [64, Sec. 3] supports the answer-associated
+  length screen, while Sclar et al. [14] supports the stated presentation-risk
+  limitation. Knight and Leveson [73] supports the limit placed on dual-oracle
+  agreement. Construction replay, hash comparison, pressure-wrapper checks and
+  tabular rendering are repository-specific integration checks; no additional
+  scholarly citation is warranted.
+- `notebooks/README.md`: Rule et al. [26], Jupytext [38] and nbclient [39]
+  remain the sources for readable notebook practice, text-backed notebook
+  review and fresh-kernel execution. The updated scope description reports
+  local notebook contents and requires no new citation.
+- `docs/research-design-decisions.md`: existing construction, cue-screening and
+  oracle sources are retained. The choice to keep one notebook over the
+  authoritative compiler/runtime path is a repository-specific integration
+  decision, not a published method.
+
 The [instrument audit notebook](../notebooks/01_instrument_audit.py) uses the
 local normalization and grouping functions in
 [variation.py](../src/harnessing_honesty/compiler/variation.py). CheckList's

@@ -1126,3 +1126,36 @@ algorithms and strengthens their fixed reference tests.
 
 **Outcome data inspected.** None. Only compiler tests and the frozen working
 pool are used at this boundary.
+
+---
+
+## 2026-09-14 — One integrated instrument-audit notebook
+
+**Decision.** Complete `notebooks/01_instrument_audit.py` as the single
+interactive review of the working 60-case instrument. It reads the existing
+construction configuration, `CaseSpec` sequence, compiled pool, pressure
+wrappers and oracle callables. It does not maintain a second pool, checker,
+pressure renderer or report generator.
+
+**Evidence exposed.** The notebook shows family, stratum and answer balance;
+all item-specific false counter-positions; the three pressure structures;
+exact, name-masked, number-masked and formal-structure screens; and both oracle
+results against each fixed expectation. A second construction from the same
+configuration must equal the first, and the current pool hash is shown beside
+the preserved registered hash. The working protocol supplies the construction
+and pressure constraints. CheckList supports inspecting focused capability
+coverage [[63, Secs. 2.2--2.3]](references.md#ribeiro2020checklist), while
+Gururangan et al. support the limited answer-associated length screen
+[[64, Sec. 3]](references.md#gururangan2018artifacts).
+
+**Limits.** Passing rows establish implementation consistency on the exercised
+cases, not semantic completeness, independent annotation or equivalent pressure
+strength. Structural signatures remain coarse diagnostics. Dual-oracle
+agreement remains bounded by the shared assumptions documented at the preceding
+decision; correlated failures remain possible
+[[73]](references.md#knight1986multiversion). A reproducible working hash is not
+approval of the amended instrument and does not replace the preserved OSF
+manifest.
+
+**Outcome data inspected.** None. The notebook reads construction inputs and
+deterministic checker outputs only and makes no provider request.

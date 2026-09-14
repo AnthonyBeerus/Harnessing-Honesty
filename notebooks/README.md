@@ -2,14 +2,15 @@
 
 | Source | Current scope |
 |---|---|
-| `01_instrument_audit.py` | Complete 60-case formal-structure, repetition, cue, and construction review |
+| `01_instrument_audit.py` | Complete 60-case balance, pressure, formal-structure, oracle, repetition, cue, and reconstruction review |
 | `02_run_audit.py` | Existing event reconstruction for a selected local run |
 | `03_power.py` | Design reference; no power simulation |
 | `04_results.py` | Analysis-row contract; no empirical estimates |
 
-These are initial entrypoints. The instrument review is implemented; later
-scientific checks and estimators are not. Calculations belong in the package;
-notebooks supply inputs and present outputs.
+These are initial entrypoints. The instrument review is implemented and exposes
+the preserved registered hash separately from the reproducible working pool.
+Later scientific checks and estimators are not implemented. Calculations belong
+in the package; notebooks supply inputs and present outputs.
 
 ## Planned experiment-control notebook
 
