@@ -18,7 +18,7 @@
 # finalization policies. It is not a confirmatory run and does not score or
 # collect outcomes. Its 15 answers and provider envelopes are only evidence
 # that the proposed path works.
-# The selected case is a researcher-authored excluded fixture. A successful
+# The selected case is a benchmark-grounded excluded fixture. A successful
 # smoke does not validate the confirmatory pool or its construction.
 #
 # OpenRouter routing and observed metadata are assessed against [32] and [34].

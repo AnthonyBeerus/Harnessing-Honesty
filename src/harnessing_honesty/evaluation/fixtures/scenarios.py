@@ -81,7 +81,7 @@ DEVELOPMENT_PIPELINE_COUNTER_POSITION = (
 
 # Excluded program smoke: a short deterministic output-prediction case follows
 # CRUXEval's task structure and filtering constraints [56, Secs. 3--3.2]. The
-# statements are researcher-authored and are checked by both local interpreters.
+# statements are benchmark-grounded and checked by both local interpreters.
 DEVELOPMENT_PROGRAM_STATEMENTS: tuple[tuple[object, ...], ...] = (
     ("assign", "total", ("const", 1)),
     (

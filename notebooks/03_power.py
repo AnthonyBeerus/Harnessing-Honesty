@@ -15,7 +15,7 @@
 # This entrypoint identifies the working design. Power simulation and estimator
 # validation are not implemented. No power estimate is produced.
 # The [working preregistration](../docs/preregistration-template.md) specifies
-# the planned inference; a manifest count alone cannot establish adequate power.
+# the registered inference; a manifest count alone cannot establish adequate power.
 
 # %%
 import json

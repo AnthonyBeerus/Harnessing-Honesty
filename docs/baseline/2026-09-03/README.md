@@ -2,7 +2,7 @@
 
 This directory preserves the protocol and freeze manifest submitted to
 OSF on 3 September 2026 [1]. These copies provide a fixed reference for
-comparing subsequent changes to the study.
+comparing changes made after the snapshot.
 
 ## Contents
 
@@ -26,7 +26,7 @@ registration-status edits and one change to the collection requirement:
    await registration.
 
 All other protocol text is unchanged between the registered copy and
-that commit. Later changes should be documented in the working protocol
+that commit. Changes after the snapshot belong in the working protocol
 and the corresponding OSF amendment.
 
 ## Checking the copies

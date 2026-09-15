@@ -14,7 +14,7 @@
 # # Results
 # This entrypoint exposes the current analysis-row contract. No empirical
 # dataset is loaded. The analysis package currently supplies descriptive rates
-# and point contrasts, without the planned model fitting or confidence intervals.
+# and point contrasts; model fitting and confidence intervals are absent.
 # These limits are described in [Sources for the methods](../docs/method-sources.md#scoring-inference-and-records).
 
 # %%

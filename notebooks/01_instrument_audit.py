@@ -18,8 +18,9 @@
 # surface cues. These diagnostics do not establish semantic independence or
 # approve the pool for confirmatory use. Method sources are recorded in
 # [Sources for the methods](../docs/method-sources.md).
-# The cases are researcher-authored and programmatically dual-validated. They
-# were not independently annotated, so no inter-rater agreement is reported.
+# The cases are grounded in external benchmarks, and their surface text was
+# generated with LLM assistance, as in prior sycophancy work [2, 10]. They are
+# programmatically dual-validated.
 
 # %% [markdown]
 # ## Inputs and checks
@@ -537,7 +538,7 @@ display(
         "the current case wording and evidence, but this screen cannot determine "
         "whether they are necessary evidence or usable shortcuts. Five cases still "
         "share each archetype, constructor, prompt template, and oracle pair; that "
-        "planned dependence must not be reported as 60 independent task designs. "
+        "this dependence must not be reported as 60 independent task designs. "
         "The signatures are deliberately coarse and archetype-specific. No item is "
         "selected or rejected, and the pool is not signed off, by this notebook."
     )

@@ -3,7 +3,7 @@
 Scoring produces per-episode flags. An analysis row is a later projection of
 stored public answers plus the private key, built only after a run is closed.
 Importing these types from a runner would let estimation code leak into the
-episode path, which is how a planned contrast becomes a reaction to an
+episode path, which is how a registered contrast becomes a reaction to an
 observed cell.
 """
 

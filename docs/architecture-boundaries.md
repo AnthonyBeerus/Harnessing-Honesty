@@ -72,7 +72,7 @@ version; current documentation may describe a different interface.
 | Scoring | Classify validity and correctness | Recorded responses and private keys; no authority to modify the conversation or request another answer. |
 | Observability | Persist execution evidence | Events, transmitted requests, responses and integrity metadata; no authority to choose conditions. |
 | Analysis | Reconstruct and estimate offline | Completed records and scoring inputs; no dependency from collection on estimates. |
-| Notebooks | Operate collection and present offline analyses | Planned controls call the collection interface; analysis notebooks call analysis functions. Neither defines a separate experimental procedure. |
+| Notebooks | Present offline analyses | Analysis notebooks call shared analysis functions and define no separate experimental procedure. |
 | CLI | Assemble and invoke operations | Constructs dependencies for the selected command and delegates execution. |
 
 The evaluation layer owns which branches are compared and their trial order.
@@ -95,7 +95,7 @@ answer key and final outcome scorer remain outside that channel.
 
 ## Notebook operation
 
-The planned notebook and CLI share a collection interface owned by `evaluation`.
+Any notebook or CLI collection control uses the interface owned by `evaluation`.
 Bluesky separates interactive use from its RunEngine's execution and recording
 responsibilities [[47, Sec. "The RunEngine"]](references.md#blueskytutorial).
 Pydantic Evals supplies a Python interface returning evaluation reports
@@ -127,7 +127,7 @@ same deterministic fixture, with identifiers and timestamps accounted for.
 The current synchronous client also requires execution outside Jupyter's active
 event loop (`Agent.run_sync`, versioned source [[43]](references.md#pydanticai11071)).
 The worker and interface contract remain unimplemented. Release execution of
-the operational notebook will use offline fixtures and cannot launch paid runs.
+notebook checks use offline fixtures and cannot launch paid runs.
 
 ## Organization and alternatives
 

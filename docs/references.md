@@ -264,3 +264,59 @@ The archived registration retains its original references.
 <a id="knight1986multiversion"></a>
 
 [73] J. C. Knight and N. G. Leveson, “An experimental evaluation of the assumption of independence in multiversion programming,” *IEEE Trans. Softw. Eng.*, vol. SE-12, no. 1, pp. 96–109, 1986. doi: [10.1109/TSE.1986.6312924](https://doi.org/10.1109/TSE.1986.6312924).
+
+<a id="petrov2025brokenmath"></a>
+
+[74] I. Petrov, J. Dekoninck, and M. Vechev, “BrokenMath: A benchmark for sycophancy in theorem proving with LLMs,” arXiv:2510.04721v1, 2025, secs. 1 and 3.1. [Source](https://arxiv.org/html/2510.04721v1).
+
+<a id="mirzadeh2025gsmsymbolic"></a>
+
+[75] I. Mirzadeh, K. Alizadeh, H. Shahrokhi, O. Tuzel, S. Bengio, and M. Farajtabar, “GSM-Symbolic: Understanding the limitations of mathematical reasoning in large language models,” in *Proc. ICLR*, 2025, arXiv:2410.05229v2, sec. 3. [Source](https://arxiv.org/html/2410.05229v2).
+
+<a id="apple2026gsmsymboliccode"></a>
+
+[76] Apple AIML Research, “ml-gsm-symbolic,” source rev. 3b645c25d200bf950fb84e8cdcbfeccd91d6a8af, files `README.md`, `LICENSE`, `templates/`, and `generated_data/README.md`. Accessed: Sep. 14, 2026. [Source](https://github.com/apple/ml-gsm-symbolic/tree/3b645c25d200bf950fb84e8cdcbfeccd91d6a8af).
+
+<a id="wei2025satbench"></a>
+
+[77] A. Wei *et al.*, “SATBench: Benchmarking LLMs' logical reasoning via automated puzzle generation from SAT formulas,” in *Proc. EMNLP*, 2025, arXiv:2505.14615v2, secs. 3.1, 3.3, and 3.4. [Source](https://arxiv.org/html/2505.14615v2).
+
+<a id="wei2026satbenchcode"></a>
+
+[78] A. Wei *et al.*, “SATBench,” software, ver. 1.0.0, source rev. 3c93c5b6ee89c563fff279bdf286845d8b7cbe36, files `README.md` and `step1.1_sat_problem_generation.py`. Accessed: Sep. 14, 2026. [Source](https://github.com/Anjiang-Wei/SATBench/tree/3c93c5b6ee89c563fff279bdf286845d8b7cbe36).
+
+<a id="herlihy1990linearizability"></a>
+
+[79] M. P. Herlihy and J. M. Wing, “Linearizability: A correctness condition for concurrent objects,” *ACM Trans. Program. Lang. Syst.*, vol. 12, no. 3, pp. 463–492, 1990, sec. 2. doi: [10.1145/78969.78972](https://doi.org/10.1145/78969.78972). [Author copy](https://www.cs.columbia.edu/~wing/publications/HerlihyWing90.pdf).
+
+<a id="lamport1994tla"></a>
+
+[80] L. Lamport, “The temporal logic of actions,” *ACM Trans. Program. Lang. Syst.*, vol. 16, no. 3, pp. 872–923, 1994. doi: [10.1145/177492.177726](https://doi.org/10.1145/177492.177726). [Source](https://www.microsoft.com/en-us/research/publication/the-temporal-logic-of-actions/).
+
+<a id="oses2024databench"></a>
+
+[81] J. Osés Grijalba, L. A. Ureña-López, E. Martínez Cámara, and J. Camacho-Collados, “Question answering over tabular data with DataBench: A large-scale empirical evaluation of LLMs,” in *Proc. LREC-COLING*, 2024, pp. 13471–13488, secs. 3.1–4.1. [Source](https://aclanthology.org/2024.lrec-main.1179/).
+
+<a id="cardiff2026databenchdata"></a>
+
+[82] Cardiff NLP, “DataBench,” dataset rev. e75d53add267d2f9cfa32efd65ad77f0807adfad, files `README.md` and `data/*/qa.parquet`. Accessed: Sep. 14, 2026. [Source](https://huggingface.co/datasets/cardiffnlp/databench/tree/e75d53add267d2f9cfa32efd65ad77f0807adfad).
+
+<a id="meta2026cruxevalcode"></a>
+
+[83] Meta Research, “CRUXEval,” source rev. 190faf16d175b5847b0af05d937872b1fb395942, files `README.md`, `LICENSE`, `data/cruxeval.jsonl`, and `evaluation/evaluate_generations.py`. Accessed: Sep. 14, 2026. [Source](https://github.com/facebookresearch/cruxeval/tree/190faf16d175b5847b0af05d937872b1fb395942).
+
+<a id="meta2026bigobenchcode"></a>
+
+[84] Meta Research, “BigO(Bench),” source rev. bf7fc2c1e03bd1bb25cc85d15efc734f09e474b9, files `README.md`, `LICENSE.md`, `data/README.md`, and `src/complexity/`. Accessed: Sep. 14, 2026. [Source](https://github.com/facebookresearch/BigOBench/tree/bf7fc2c1e03bd1bb25cc85d15efc734f09e474b9).
+
+<a id="valmeekam2023planbench"></a>
+
+[85] K. Valmeekam, M. Marquez, A. Olmo, S. Sreedharan, and S. Kambhampati, “PlanBench: An extensible benchmark for evaluating large language models on planning and reasoning about change,” in *Advances in Neural Information Processing Systems 36, Datasets and Benchmarks Track*, 2023, secs. 4–5. [Source](https://arxiv.org/abs/2206.10498).
+
+<a id="yao2024taubench"></a>
+
+[86] S. Yao, N. Shinn, P. Razavi, and K. Narasimhan, “Tau-bench: A benchmark for tool-agent-user interaction in real-world domains,” arXiv:2406.12045v1, 2024, secs. 3–4. [Source](https://arxiv.org/html/2406.12045v1).
+
+<a id="li2025autobencher"></a>
+
+[87] X. L. Li, F. Kaiyom, E. Z. Liu, Y. Mai, P. Liang, and T. Hashimoto, “AutoBencher: Towards declarative benchmark construction,” in *Proc. ICLR*, 2025, arXiv:2407.08351v2, secs. 4.1, 5.2, and 6.4. [Source](https://arxiv.org/html/2407.08351v2).
