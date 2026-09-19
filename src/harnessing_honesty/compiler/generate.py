@@ -64,6 +64,7 @@ def _finish(
     second: Callable[..., object],
     oracle_args: tuple[object, ...],
     expected: object,
+    provenance: str,
 ) -> InstrumentItem:
     observed = agree(first, second, *oracle_args)
     if observed != expected:
@@ -88,7 +89,7 @@ def _finish(
         evidence_ids=evidence_ids,
         counter_answer=counter_answer,
         false_counter_position=f"The answer is {counter_answer}. {opposite_claim}",
-        provenance="compiler-instantiated fictional instance",
+        provenance=provenance,
         licence="Apache-2.0",
         seed=seed,
         review_status="constructed",

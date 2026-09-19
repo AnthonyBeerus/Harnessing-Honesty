@@ -18,6 +18,8 @@ from harnessing_honesty.compiler.freeze import (
 )
 from harnessing_honesty.compiler.manifests import licence_rows, overlap_rows
 from harnessing_honesty.compiler.oracles import (
+    arithmetic_progression_sum_closed,
+    arithmetic_progression_sum_iterative,
     has_leakage,
     sat,
     sequential_register,
@@ -80,6 +82,49 @@ def test_every_item_is_dual_validated_and_wrapped() -> None:
         assert item.licence
 
 
+def test_every_item_records_its_formal_generator_and_versioned_source() -> None:
+    expected_sources = {
+        "register_history": "herlihy-wing-1990",
+        "state_machine": "lamport-tla-1994",
+        "config_policy": "cedar-arxiv-2403.04651v2",
+        "split_leakage": "kapoor-narayanan-2023",
+        "join_schema": "databench-e75d53a",
+        "metric": "databench-e75d53a",
+        "execution_trace": "cruxeval-190faf1",
+        "invariant": "hoare-1969",
+        "complexity": "bigobench-bf7fc2c",
+        "entailment": "proofwriter-V2020.12.3",
+        "sat": "satbench-1.0.0-3c93c5b",
+        "math_claim": "gsm-symbolic-3b645c2",
+    }
+
+    for item in confirmatory_pool():
+        dependency_names = {dependency.name for dependency in item.dependencies}
+        assert "harnessing-honesty-formal-cases-v1" in dependency_names
+        assert expected_sources[item.archetype] in dependency_names
+        assert item.item_id in item.provenance
+        assert "no source item copied" in item.provenance
+
+
+def test_logic_replaces_authorization_with_bounded_mathematical_claims() -> None:
+    logic_items = [
+        item for item in confirmatory_pool() if item.family is TaskFamily.LOGIC
+    ]
+    mathematical = [item for item in logic_items if item.archetype == "math_claim"]
+
+    assert len(mathematical) == 5
+    assert not any(item.archetype == "policy_counterexample" for item in logic_items)
+    assert {item.answer_key.canonical_answer for item in mathematical} == {"yes", "no"}
+    assert all(item.oracle_name == "arithmetic-progression-sum" for item in mathematical)
+
+
+def test_arithmetic_progression_oracles_are_independently_checkable() -> None:
+    assert arithmetic_progression_sum_iterative(3, 4, 7) == 105
+    assert arithmetic_progression_sum_closed(3, 4, 7) == 105
+    assert arithmetic_progression_sum_iterative(12, -2, 5) == 40
+    assert arithmetic_progression_sum_closed(12, -2, 5) == 40
+
+
 def test_sign_off_pool_marks_every_item() -> None:
     signed = sign_off_pool(confirmatory_pool())
     assert all(item.review_status == "signed_off" for item in signed)
@@ -114,7 +159,7 @@ def test_licence_manifest_has_no_forbidden_direct_items() -> None:
 
     assert overlap_rows(items) == ()
     names = {dep.name for dep in licence_rows(items)}
-    assert "harness-compiler" in names
+    assert "harnessing-honesty-formal-cases-v1" in names
     assert "z3" in names
     assert "sqlite3" in names
     assert "SAKE" not in names
@@ -255,12 +300,12 @@ def test_freeze_templates_hash_stems_not_orion_pressures() -> None:
     assert "backup assay" not in blob
 
 
-def test_z3_is_a_checker_and_tla_is_taxonomy() -> None:
+def test_external_checkers_and_formal_sources_have_their_declared_roles() -> None:
     rows = licence_rows(confirmatory_pool())
     by_name = {dep.name: dep for dep in rows}
     assert by_name["z3"].role is SourceRole.CHECKER
     assert by_name["sqlite3"].role is SourceRole.CHECKER
-    assert by_name["tla+"].role is SourceRole.TAXONOMY
-    assert by_name["porcupine"].role is SourceRole.TAXONOMY
-    assert by_name["bigobench"].role is SourceRole.TAXONOMY
-    assert by_name["cruxeval-recipe"].role is SourceRole.TAXONOMY
+    assert by_name["lamport-tla-1994"].role is SourceRole.TAXONOMY
+    assert by_name["herlihy-wing-1990"].role is SourceRole.TAXONOMY
+    assert by_name["bigobench-bf7fc2c"].role is SourceRole.TAXONOMY
+    assert by_name["cruxeval-190faf1"].role is SourceRole.TAXONOMY

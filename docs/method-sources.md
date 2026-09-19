@@ -53,10 +53,13 @@ interfaces use the shared implementation.
 
 ## Benchmark-source and coverage disposition
 
-The disposition below leaves all 60 current questions and the working-pool hash
-`900bc854b82cdc5c587092a544350704c7e7612ab92060b14ab3a8ae3bd59757`
-unchanged. “Accept” means that the archetype has a defensible external basis;
-it does not validate the five current cases. Source roles are formal semantics
+The reconstruction preserves the 60-item structure while replacing the five
+duplicative logic authorization cases. The pre-reconstruction working-pool hash
+was `900bc854b82cdc5c587092a544350704c7e7612ab92060b14ab3a8ae3bd59757`;
+the reconstructed pool hash is
+`8e80204357116fb874b199a31f3506aac79cfa1ade549b7b21311fcf5393014d`.
+“Accept” means that an archetype has a defensible external basis; it does not
+validate the five local cases. Source roles are formal semantics
 (FS), task structure (TS), executable validation (EV), workflow relevance (WR),
 construction precedent (CP), and background only (BG).
 
@@ -93,7 +96,7 @@ construction precedent (CP), and background only (BG).
 | program / `complexity` | BigO(Bench) complexity prediction [57, sec. 5.1] (TS, BG) | Free-form complexity class; source validation uses noisy dynamic measurement and curve fitting. | Ask whether a worst-case class follows; independent static derivations set `yes`/`no`. Exclude public and non-commercial items. **Accept: formal-preserving adaptation.** |
 | logic / `entailment` | ProofWriter closed-world facts/rules/query generation [72, secs. 3.1–4] (TS, CP) | `True`/`False` plus proof, validated by exhaustive inference. | Generate bounded Horn theories; `yes` iff entailed, checked by two chainers. Exclude public release items. **Accept: new instances from the formal recipe.** |
 | logic / `sat` | SATBench CNF sampling and solver labels [77, secs. 3.1 and 3.3] (TS, EV, CP) | `SAT`/`UNSAT` plus reasoning; solver labels and equivalence checks. | Generate bounded CNF locally; `yes` for SAT, checked by Z3 and brute force. Copy no story, code, or item. **Accept: published generator concept.** |
-| logic / `policy_counterexample` | Bounded mathematical claim verification; GSM-Symbolic supplies controllable-instantiation precedent [75, sec. 3], and BrokenMath supplies well-posed-false-claim precedent [74, secs. 1 and 3.1] (CP, BG). | GSM-Symbolic has numeric keys; BrokenMath expects proofs with expert review and an LLM judge. | Fix an arithmetic claim and exact key; `yes` iff independent arithmetic checks prove it. Copy no public template or item. **Replace: the current archetype duplicates authorization.** |
+| logic / `math_claim` | Bounded mathematical claim verification; GSM-Symbolic supplies controllable-instantiation precedent [75, sec. 3], and BrokenMath supplies a warning that naive perturbations can create ill-posed false questions [74, secs. 1 and 3.1] (CP, BG). | Each local input fixes an arithmetic progression's first term, step, length, and claimed sum. | `yes` iff iterative addition and the closed-form sum agree with the claim. Five new local instances replace the duplicative authorization cases; no public template or item is copied. **Accept: new instances from the published generator concept.** |
 
 ### Screened alternatives
 
@@ -108,13 +111,14 @@ workflow background only.
 
 ## LLM-assisted surface writing
 
-The formal cases are grounded in external benchmarks. Surface text may be
-generated with LLM assistance, consistent with reported construction practice
+The formal cases are grounded in external benchmarks. Recorded LLM assistance
+is reserved for later surface realization after each formal task and key are
+fixed, consistent with reported construction practice
 in sycophancy research [2, 10]. AutoBencher supports grounding generation in
 privileged evidence and executable checks instead of parametric memory [87,
 secs. 4.1 and 6.4]. None of these sources supplies or adjudicates an answer key.
 
-One high-capability general-purpose model outside the registered test set writes
+One high-capability general-purpose model outside the registered test set will write
 surface candidates after the formal inputs and key are fixed. Record the
 provider, exact model identifier and exposed version, selection date, decoding
 parameters, fixed prompt, raw output, selection decision, and every accepted

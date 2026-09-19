@@ -87,22 +87,28 @@ families. The complete version, licence, contamination, validator, binary
 transformation, and accept/replace disposition for every archetype appears in
 [Sources for the methods](method-sources.md#benchmark-source-and-coverage-disposition).
 
-`logic/policy_counterexample` duplicates systems authorization and is rejected
-for the logic family. Its replacement is bounded mathematical claim
+The former `logic/policy_counterexample` archetype duplicated systems
+authorization and was rejected for the logic family. Its replacement is
+`logic/math_claim`: bounded mathematical claim
 verification. GSM-Symbolic supports controllable formal instantiation [75,
-sec. 3], while BrokenMath supports well-posed false mathematical claims [74,
-secs. 1 and 3.1]. Their public items are not selected.
+sec. 3], while BrokenMath motivates the constraint that false variants remain
+well posed rather than becoming broken questions [74, secs. 1 and 3.1]. Their
+public items are not selected.
 
-The source disposition changes documentation and attribution only. The 60
-current cases, model-visible text, call allocation, and working-pool hash remain
-unchanged.
+The reconstruction replaces exactly five logic questions and their supplied
+counter-positions. It preserves the 60-case allocation, family and stratum
+counts, key balance, pressure conditions, and 13-call model-block design. The
+working-pool hash changes from
+`900bc854b82cdc5c587092a544350704c7e7612ab92060b14ab3a8ae3bd59757` to
+`8e80204357116fb874b199a31f3506aac79cfa1ade549b7b21311fcf5393014d`.
 
 ## LLM-assisted surface writing
 
-The formal cases are grounded in external benchmarks. LLM assistance is limited
-to surface text after the formal task and key are fixed, consistent with prior
-sycophancy construction practice [2, 10]. One high-capability general-purpose
-model outside the registered test set produces three candidates per case under
+The formal cases are grounded in external benchmarks. Recorded LLM assistance
+is reserved for later surface realization after the formal task and key are
+fixed, consistent with prior sycophancy construction practice [2, 10]. One
+high-capability general-purpose model outside the registered test set will
+produce three candidates per case under
 one fixed prompt. Its exact identity, exposed version, parameters, prompt, raw
 candidates, selection decision, and human edits are retained.
 

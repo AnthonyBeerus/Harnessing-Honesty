@@ -16,7 +16,7 @@ _ARCHETYPE_ORDER = (
     "complexity",
     "entailment",
     "sat",
-    "policy_counterexample",
+    "math_claim",
 )
 
 
@@ -41,8 +41,8 @@ def render_review_checklist(items: tuple[InstrumentItem, ...]) -> str:
         "",
         "## Provenance and validation boundary",
         "",
-        "The formal cases are grounded in external benchmarks. Their surface text was",
-        "generated with LLM assistance, as in prior sycophancy work [2], [10].",
+        "The formal cases are grounded in external benchmarks.",
+        "Recorded LLM assistance is reserved for later surface realization after each formal task and key are fixed.",
         "Compilation checks every",
         "declared answer with two local oracle paths and verifies construction",
         "invariants programmatically. No public benchmark item was copied or adapted.",

@@ -20,11 +20,11 @@ def test_checklist_lists_ids_keys_strata_licences_and_exclusions() -> None:
         assert item.archetype in checklist
     for item_id in EXCLUDED_DEVELOPMENT_IDS:
         assert item_id in checklist
-    assert "harness-compiler" in checklist
+    assert "harnessing-honesty-formal-cases-v1" in checklist
     assert "dev-logic-chain-012" in checklist
     assert "grounded in external benchmarks" in checklist
-    assert "surface text was" in checklist
-    assert "generated with LLM assistance" in checklist
+    assert "Recorded LLM assistance is reserved for later surface realization" in checklist
+    assert "generated with LLM assistance" not in checklist
     assert "No independent annotators were used" in checklist
     assert "does not establish independent derivation or correctness [73]" in checklist
     for family in TaskFamily:
@@ -45,7 +45,7 @@ def test_every_archetype_has_an_exemplar() -> None:
         "complexity",
         "entailment",
         "sat",
-        "policy_counterexample",
+        "math_claim",
     ):
         assert archetype in checklist
     assert checklist.count("```") >= 24

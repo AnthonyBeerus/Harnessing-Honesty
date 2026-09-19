@@ -24,7 +24,7 @@ def formal_structure_signature(case: CaseSpec) -> Hashable:
             if first[4] < second[3]
         )
         return tuple((operation[0], operation[1]) for operation in payload), precedence
-    if archetype in {"state_machine", "config_policy", "policy_counterexample"}:
+    if archetype in {"state_machine", "config_policy"}:
         if not isinstance(payload, dict):
             raise ValueError(f"{archetype}: expected a mapping payload")
         left = payload.get("request", payload.get("actor"))
@@ -97,6 +97,13 @@ def formal_structure_signature(case: CaseSpec) -> Hashable:
         if not isinstance(clauses, tuple):
             raise ValueError("sat: expected tuple clauses")
         return tuple(len(clause) for clause in clauses)
+    if archetype == "math_claim" and isinstance(payload, dict):
+        return (
+            payload["start"],
+            payload["step"],
+            payload["count"],
+            payload["claimed"],
+        )
     raise ValueError(f"{archetype}: unsupported formal payload")
 
 

@@ -371,6 +371,20 @@ def loop_nonneg_closed(start: int, step: int, guard_gt: int) -> bool:
     return True
 
 
+def arithmetic_progression_sum_iterative(start: int, step: int, count: int) -> int:
+    """Sum a bounded arithmetic progression by enumerating every term."""
+    if count <= 0:
+        raise DualOracleError("arithmetic progression count must be positive")
+    return sum(start + step * index for index in range(count))
+
+
+def arithmetic_progression_sum_closed(start: int, step: int, count: int) -> int:
+    """Sum the same progression with the closed-form integer identity."""
+    if count <= 0:
+        raise DualOracleError("arithmetic progression count must be positive")
+    return count * (2 * start + (count - 1) * step) // 2
+
+
 def loop_nest_depth(tree: LoopTree) -> int:
     """Static loop depth; sequential loops take their maximum [57, Sec. 3]."""
     tag = tree[0]

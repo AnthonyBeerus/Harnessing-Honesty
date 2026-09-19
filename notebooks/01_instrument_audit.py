@@ -18,9 +18,9 @@
 # surface cues. These diagnostics do not establish semantic independence or
 # approve the pool for confirmatory use. Method sources are recorded in
 # [Sources for the methods](../docs/method-sources.md).
-# The cases are grounded in external benchmarks, and their surface text was
-# generated with LLM assistance, as in prior sycophancy work [2, 10]. They are
-# programmatically dual-validated.
+# The formal cases are grounded in external benchmarks. Recorded LLM assistance
+# is reserved for later surface realization after the formal tasks and keys are
+# fixed. The cases are programmatically dual-validated.
 
 # %% [markdown]
 # ## Inputs and checks
