@@ -320,3 +320,15 @@ The archived registration retains its original references.
 <a id="li2025autobencher"></a>
 
 [87] X. L. Li, F. Kaiyom, E. Z. Liu, Y. Mai, P. Liang, and T. Hashimoto, “AutoBencher: Towards declarative benchmark construction,” in *Proc. ICLR*, 2025, arXiv:2407.08351v2, secs. 4.1, 5.2, and 6.4. [Source](https://arxiv.org/html/2407.08351v2).
+
+<a id="anthropic2026fable51"></a>
+
+[88] Anthropic, “Claude Fable 5.1,” *Claude Platform Docs*, model ID, availability and pricing. Accessed: Sep. 19, 2026. [Source](https://platform.claude.com/docs/en/models/fable-5-1/overview).
+
+<a id="anthropic2026modelsnapshots"></a>
+
+[89] Anthropic, “System prompts,” *Claude Platform Docs*, model-snapshot statement. Accessed: Sep. 19, 2026. [Source](https://platform.claude.com/docs/en/release-notes/system-prompts/overview).
+
+<a id="openrouter2026fable51"></a>
+
+[90] OpenRouter, “Anthropic: Claude Fable 5.1,” model slug, provider availability, price and data-retention notice. Accessed: Sep. 19, 2026. [Source](https://openrouter.ai/anthropic/claude-fable-5.1).

@@ -27,6 +27,10 @@ See [Sources for the methods](docs/method-sources.md) for the literature behind
 the methodological comparisons, and [References](docs/references.md) for the
 IEEE reference list and BibTeX metadata.
 
+The [surface-model pilot audit](docs/surface-model-pilot-audit.md) points to the
+local blinded review CSV and records a provisional, non-adjudicating quality
+check. Pilot candidates are not part of the accepted instrument.
+
 ## Repository structure
 
 The [harness architecture](docs/architecture-boundaries.md) explains the

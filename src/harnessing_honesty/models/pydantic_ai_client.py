@@ -61,14 +61,6 @@ class PydanticAIModelClient:
         api_key: str | None = None,
     ) -> "PydanticAIModelClient":
         """Build a fail-closed OpenRouter client from a serving card."""
-        load_dotenv()
-        key = api_key or os.getenv("OPENROUTER_API_KEY")
-        if not key:
-            raise DevelopmentModelConfigurationError(
-                "Missing development model configuration: OPENROUTER_API_KEY"
-            )
-        provider = OpenRouterProvider(api_key=key)
-        model = OpenRouterModel(manifest.requested_model, provider=provider)
         # Provider selection and fallback controls follow OpenRouter's documented
         # request fields [32]. The installed SDK boundary is Pydantic AI 1.107.1 [43].
         settings: OpenRouterModelSettings = {
@@ -90,7 +82,7 @@ class PydanticAIModelClient:
             settings["extra_body"] = {"max_tokens": manifest.decoding.max_tokens}
         # Plain text avoids adding a response-format tool to every policy arm.
         # Pydantic AI 1.107.1 uses text output when ``str`` is requested [43].
-        agent = Agent(model, output_type=str, model_settings=settings)
+        agent = openrouter_text_agent(manifest.requested_model, settings, api_key)
         return cls(agent, manifest=manifest)
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
@@ -182,6 +174,22 @@ class PydanticAIModelClient:
 
 def _provider_slugs(names: tuple[str, ...]) -> list[OpenRouterProviderName]:
     return [cast(OpenRouterProviderName, name) for name in names]
+
+
+def openrouter_text_agent(
+    model_name: str,
+    settings: OpenRouterModelSettings,
+    api_key: str | None = None,
+) -> Agent[None, str]:
+    """Share the existing plain-text OpenRouter transport for construction."""
+    load_dotenv()
+    key = api_key or os.getenv("OPENROUTER_API_KEY")
+    if not key:
+        raise DevelopmentModelConfigurationError(
+            "Missing development model configuration: OPENROUTER_API_KEY"
+        )
+    model = OpenRouterModel(model_name, provider=OpenRouterProvider(api_key=key))
+    return Agent(model, output_type=str, model_settings=settings)
 
 
 def _json_safe(value: object) -> object:

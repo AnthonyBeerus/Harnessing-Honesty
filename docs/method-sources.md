@@ -109,28 +109,93 @@ MLE-bench evaluate end-to-end competition workflows, not whether a displayed
 evidence path supports a conclusion. AgentDojo, AgentBench, and tau-bench are
 workflow background only.
 
-## LLM-assisted surface writing
+## Surface construction model
 
-The formal cases are grounded in external benchmarks. Recorded LLM assistance
-is reserved for later surface realization after each formal task and key are
-fixed, consistent with reported construction practice
+The formal cases come from external benchmarks. A construction model rewrites
+their surface wording only after the task and key are fixed, consistent with
+reported construction practice
 in sycophancy research [2, 10]. AutoBencher supports grounding generation in
 privileged evidence and executable checks instead of parametric memory [87,
 secs. 4.1 and 6.4]. None of these sources supplies or adjudicates an answer key.
 
-One high-capability general-purpose model outside the registered test set will write
-surface candidates after the formal inputs and key are fixed. Record the
-provider, exact model identifier and exposed version, selection date, decoding
-parameters, fixed prompt, raw output, selection decision, and every accepted
-human edit. “High-capability” means the provider's most capable generally
-available text model on the recorded selection date, not a parameter-count
-claim.
+The selected general-purpose model, `anthropic/claude-sonnet-5`, is outside the
+registered test set. It will write the final surface candidates after the
+formal inputs and key are fixed. Record the provider, exposed model version,
+selection date, decoding parameters, prompt, raw output, selection decision,
+and accepted edits. Selection is based on this bounded task, not parameter
+count or a general intelligence leaderboard.
 
 The model receives the fixed formal case, source-role note, and tone and length
-constraints. It returns exactly three candidates in one response. It cannot
-alter the formal inputs, answer key, oracle, family, stratum, or pressure
-condition. Human review applies a fixed rubric covering semantic fidelity,
-naturalness, answer-cue symmetry, licence compliance, and preservation of the
-formal key. Both local oracles must agree after the surface is attached.
-Registered evaluation models cannot generate, select, rewrite, or reject
-confirmatory items.
+constraints. It returns three candidates in one response. It cannot alter the
+formal inputs, key, oracle, family, stratum, or pressure condition. Review
+checks semantic fidelity, answerability, ambiguity, cue symmetry, naturalness,
+licence compliance, and preservation of the key. Both local oracles must still
+agree. Registered evaluation models play no part in generation or selection.
+
+Fable 5.1 was provisionally designated on 19 September 2026, before any
+construction call. Before dispatch, that designation was reopened because no
+task-specific comparison supported paying for it. A separate, predeclared
+model-selection pilot compares Fable 5.1, Opus 5 and Sonnet 5. These models
+are outside the three registered evaluation-model identities. The pilot uses
+two cases per existing family, selected by SHA-256 ordering of
+`surface-model-pilot-v1:<item_id>`; the selected IDs are `log-entail-12`,
+`log-math-14`, `pipe-metric-11`, `pipe-leak-03`, `prog-inv-01`,
+`prog-trace-03`, `sys-register-03`, and `sys-lock-13`. Every model receives
+the identical fixed prompt and returns three candidates per case: 24 calls,
+72 candidates, with no registered evaluation-model call or outcome.
+
+Raw prompts, responses, usage, model IDs and failure records are append-only.
+The candidate-level JSON and CSV review packet hides the construction-model
+identity; a separate map remains sealed until reviewer dispositions are
+recorded. One researcher checks semantic fidelity, answerability, ambiguity,
+answer-cue symmetry, naturalness and licence compliance. A candidate is
+acceptable only if all gates pass and both local oracles preserve the fixed
+key. For each model, count the eight cases with at least one acceptable
+candidate. If several models cover all eight, choose the lowest-priced one
+using recorded actual usage and current provider rates; if only one covers all
+eight, choose it. If none does, stop and report the failure before changing
+the method. No candidate is selected using registered-model behaviour, and
+the pilot does not itself establish instrument validity or inter-rater
+reliability. The chosen model then handles all 60 formal cases under one
+fixed prompt, including fresh generation for the eight pilot cases; the
+pilot wording is not silently promoted into the final corpus.
+
+The pilot request omits temperature and seed, uses provider defaults, caps
+output at 2,048 tokens, requires supported parameters, pins Anthropic as
+provider and disables fallback. The construction input contains only
+fictional service names and local formal cases; no proposal, participant
+data, or registered-model output is sent. Fable's recorded OpenRouter rate
+was $10 per million input tokens and $50 per million output tokens [90].
+
+Pilot execution on 19 September 2026 produced 24 parseable responses and 72
+unaccepted candidate surfaces. OpenRouter's response metadata reported USD
+$0.175320 for Fable, $0.102330 for Opus, and $0.036412 for Sonnet
+($0.314062 total). The PydanticAI usage objects recorded zero input and
+output tokens for these responses, so token counts are not used to compute or
+compare this pilot's cost. The blinded CSV/JSON and separate identity map are
+in `data/qualification/surface-model-pilot-v1/`; the review fields were blank
+when the pilot ended. These execution facts do not change the selection rule.
+
+A post-pilot, pre-review cross-family extension was chosen before any new
+dispatch; see the dated [research decision](research-design-decisions.md#2026-09-19--cross-family-construction-model-pilot-extension).
+The original three-model plan above remains as history. The extension adds
+pinned Grok 4.6 and GLM 5.3 call
+sets on the same eight cases, giving five construction models across three
+provider families. The same per-model acceptance and actual-cost rule now
+applies to all five. New raw attempts and a newly blinded combined packet are
+separate from the immutable original pilot files. No added model result was
+available when the extension was specified. The extension subsequently
+produced 16 parseable responses and 48 new candidates. The combined blinded
+CSV/JSON in `data/qualification/surface-model-pilot-v2/` contains 120 rows
+across the five models, with a separate identity map and blank disposition
+fields at packet creation. The original candidate text is unchanged but
+reblinded in this new packet; blind IDs from the first packet must not be
+transferred.
+OpenRouter reported USD $0.127189 for the 16 successful extension responses;
+one preceding Grok provider-pin error is preserved without a response-cost
+record. The dated decision records that correction and the model costs. On
+2 October 2026, the completed 120-row disposition sheet was joined to the
+identity map. All five models covered all eight cases. The cost rule selected
+`anthropic/claude-sonnet-5` ($0.036412) for full generation. The pilot is
+complete; generating and reviewing the 180 full-corpus candidates remains
+outstanding.
