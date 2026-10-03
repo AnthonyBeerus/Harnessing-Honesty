@@ -4,7 +4,7 @@
   "repair_count": 4,
   "old_pool_hash": "8e80204357116fb874b199a31f3506aac79cfa1ade549b7b21311fcf5393014d",
   "new_pool_hash": "95366bc65475771015915c1c90eeb5ddc18d09576d326e9e7ca01d9394e83943",
-  "corpus_sha256": "00f0651fcfb61e1629a8363f983dd159f1af509522fad0a46f8e28fd30cbc9e1",
+  "corpus_sha256": "f925feffb60acdeba09ee30980aeed6246f32a5b017f50d7ad4d05f387952c03",
   "changes": [
     {
       "item_id": "sys-register-00",
