@@ -117,6 +117,21 @@ class Failure(StrEnum):
     PROTOCOL = "protocol"
 
 
+class ResponseState(StrEnum):
+    """What one expected response slot holds.
+
+    Only ``VALID`` carries an answer whose correctness is known. ``INVALID``
+    is text that was not exactly ``yes`` or ``no``; ``MISSING`` is a slot the
+    run never filled, such as a final after a failed prefix.
+    """
+
+    VALID = "valid"
+    INVALID = "invalid"
+    PROVIDER_FAILURE = "provider_failure"
+    PROTOCOL_FAILURE = "protocol_failure"
+    MISSING = "missing"
+
+
 class RecordStatus(StrEnum):
     """Whether a run reached its own close.
 

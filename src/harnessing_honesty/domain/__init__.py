@@ -13,6 +13,7 @@ from harnessing_honesty.domain.enums import (
     PolicyFamily,
     PressureFamily,
     RecordStatus,
+    ResponseState,
     Role,
     RoleName,
     SourceRole,
@@ -50,7 +51,11 @@ from harnessing_honesty.domain.protocols import (
 )
 from harnessing_honesty.domain.records import RunRecord
 from harnessing_honesty.domain.report import VerificationReport
-from harnessing_honesty.domain.responses import AnswerResponse
+from harnessing_honesty.domain.responses import (
+    AnswerResponse,
+    BinaryAnswer,
+    normalize_binary_answer,
+)
 from harnessing_honesty.domain.results import (
     AnswerSuccess,
     ModelResult,
@@ -58,6 +63,7 @@ from harnessing_honesty.domain.results import (
     ProtocolFailure,
     ProviderFailure,
     failure_class,
+    response_state,
 )
 from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord
 
@@ -65,6 +71,7 @@ __all__ = [
     "AnswerKey",
     "AnswerResponse",
     "AnswerSuccess",
+    "BinaryAnswer",
     "Category",
     "CellBinding",
     "Checker",
@@ -88,6 +95,7 @@ __all__ = [
     "ProviderFailure",
     "REGISTERED_CATEGORIES",
     "RecordStatus",
+    "ResponseState",
     "RecordStore",
     "RequestFailed",
     "RequestSent",
@@ -111,4 +119,6 @@ __all__ = [
     "VerificationReport",
     "VerificationTool",
     "failure_class",
+    "normalize_binary_answer",
+    "response_state",
 ]

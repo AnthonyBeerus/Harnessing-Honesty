@@ -21,7 +21,10 @@ from pydantic_ai.providers.openrouter import OpenRouterProvider
 
 from harnessing_honesty.models.config import ServingManifest
 from harnessing_honesty.domain.messages import Message
-from harnessing_honesty.domain.responses import AnswerResponse
+from harnessing_honesty.domain.responses import (
+    AnswerResponse,
+    normalize_binary_answer,
+)
 from harnessing_honesty.domain.results import (
     AnswerSuccess,
     ModelResult,
@@ -120,10 +123,11 @@ class PydanticAIModelClient:
         if not isinstance(result.output, str):
             return ParseFailure(detail="model output was not text")
         raw_response = result.output
-        normalized = raw_response.strip().lower()
-        if normalized not in {"yes", "no"}:
+        normalized = normalize_binary_answer(raw_response)
+        if normalized is None:
             return ParseFailure(
-                detail=f"expected exactly yes or no; received {raw_response!r}"
+                detail=f"expected exactly yes or no; received {raw_response!r}",
+                raw_response=raw_response,
             )
 
         return AnswerSuccess(

@@ -10,7 +10,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from harnessing_honesty.domain.enums import Failure
+from harnessing_honesty.domain.enums import Failure, ResponseState
 from harnessing_honesty.domain.responses import AnswerResponse
 
 
@@ -45,10 +45,16 @@ class AnswerSuccess(_Result):
 
 
 class ParseFailure(_Result):
-    """A response arrived but was not exactly a binary answer."""
+    """A response arrived but was not exactly a binary answer.
+
+    ``raw_response`` keeps the text that failed. ``None`` means no text
+    output reached the parser, not an empty string; events written before
+    this field existed load as ``None``.
+    """
 
     kind: Literal["parse_failure"] = "parse_failure"
     detail: str
+    raw_response: str | None = None
 
 
 class ProviderFailure(_Result):
@@ -92,3 +98,20 @@ def failure_class(result: ModelResult) -> Failure | None:
     if isinstance(result, ProtocolFailure):
         return Failure.PROTOCOL
     return None
+
+
+def response_state(result: ModelResult | None) -> ResponseState:
+    """Classify one expected response; ``None`` is a slot never filled.
+
+    Derived, like ``failure_class``, so the state cannot disagree with the
+    stored result.
+    """
+    if result is None:
+        return ResponseState.MISSING
+    if isinstance(result, AnswerSuccess):
+        return ResponseState.VALID
+    if isinstance(result, ParseFailure):
+        return ResponseState.INVALID
+    if isinstance(result, ProviderFailure):
+        return ResponseState.PROVIDER_FAILURE
+    return ResponseState.PROTOCOL_FAILURE
