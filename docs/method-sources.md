@@ -111,19 +111,18 @@ workflow background only.
 
 ## Surface construction model
 
-The formal cases come from external benchmarks. A construction model rewrites
-their surface wording only after the task and key are fixed, consistent with
-reported construction practice
-in sycophancy research [2, 10]. AutoBencher supports grounding generation in
-privileged evidence and executable checks instead of parametric memory [87,
-secs. 4.1 and 6.4]. None of these sources supplies or adjudicates an answer key.
+Formal tasks and keys are fixed before a construction model rewrites the
+wording, following sycophancy construction precedents [2, 10]. AutoBencher
+supports generation grounded in evidence and executable checks rather than
+parametric memory [87, secs. 4.1 and 6.4]. These sources do not supply the keys.
 
-The selected general-purpose model, `anthropic/claude-sonnet-5`, is outside the
-registered test set. It will write the final surface candidates after the
-formal inputs and key are fixed. Record the provider, exposed model version,
-selection date, decoding parameters, prompt, raw output, selection decision,
-and accepted edits. Selection is based on this bounded task, not parameter
-count or a general intelligence leaderboard.
+`anthropic/claude-sonnet-5`, outside the registered test set, wrote three
+candidates per case. One researcher accepted 149 originals and rejected 31;
+four wording repairs completed coverage of all 60 cases. No independent review
+or inter-rater agreement is claimed. `data/corpus/accepted-v1.json` stores the
+selected wording and unchanged formal tasks. Retain the provider, model version,
+selection date, decoding settings, prompts, raw responses, dispositions and edits.
+Model selection used task-specific results, not size or leaderboard rank.
 
 The model receives the fixed formal case, source-role note, and tone and length
 constraints. It returns three candidates in one response. It cannot alter the

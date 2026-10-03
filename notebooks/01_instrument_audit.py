@@ -18,9 +18,10 @@
 # surface cues. These diagnostics do not establish semantic independence or
 # approve the pool for confirmatory use. Method sources are recorded in
 # [Sources for the methods](../docs/method-sources.md).
-# The formal cases are grounded in external benchmarks. Recorded LLM assistance
-# is reserved for later surface realization after the formal tasks and keys are
-# fixed. The cases are programmatically dual-validated.
+# The formal cases are grounded in external benchmarks. Surface wording was
+# selected from recorded model responses after the formal tasks and keys were
+# fixed, with one researcher accepting the wording and four recorded repairs.
+# The accepted JSON corpus is checked by both existing oracles on every load.
 
 # %% [markdown]
 # ## Inputs and checks
@@ -40,7 +41,7 @@ from IPython.display import Markdown, display
 
 from harnessing_honesty.compiler.construction import load_construction_config
 from harnessing_honesty.compiler.freeze import build_freeze
-from harnessing_honesty.compiler.generate import generate_family_specs
+from harnessing_honesty.compiler.corpus import load_corpus, oracle_paths, tuples
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.compiler.variation import (
     formal_structure_signature,
@@ -72,13 +73,12 @@ working_freeze = build_freeze(
     construction_config=construction,
 )
 specs = tuple(
-    spec
-    for family in TaskFamily
-    for spec in generate_family_specs(
-        family,
-        construction.family_seed(family),
-        construction.service_names_for(family),
-    )
+    {"item_id": record.item.item_id, "family": record.item.family,
+     "archetype": record.item.archetype, "input_payload": tuples(record.formal_input),
+     "claim": record.surface.claim, "evidence": record.surface.evidence,
+     "first": oracle_paths(record)[0], "second": oracle_paths(record)[1],
+     "oracle_args": oracle_paths(record)[2], "expected": tuples(record.oracle_expected)}
+    for record in load_corpus().records
 )
 assert tuple(spec["item_id"] for spec in specs) == tuple(item.item_id for item in items)
 

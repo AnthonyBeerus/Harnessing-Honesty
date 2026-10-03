@@ -1,4 +1,4 @@
-"""Scenario compiler: wrapper, oracles, family generators, freeze pool."""
+"""Reviewed corpus, wrapper, paired oracles, and freeze pool."""
 
 from harnessing_honesty.compiler.construction import ConstructionConfig
 from harnessing_honesty.compiler.freeze import FreezeManifest, build_freeze

@@ -195,6 +195,76 @@ the 60 cases; those 180 candidates must be reviewed, then the accepted cases
 migrated to authoritative JSON. The construction models are outside the
 registered evaluation-model set.
 
+### Full-corpus generation — 2 October 2026
+
+The run stopped after five responses to add five-call batches and 60-second
+cooldowns. The interrupted `sys-policy-05` request has no response record;
+completion and cost are unknown. Its continuation retry succeeded.
+`sys-register-06` failed the bare-JSON parser because its response was fenced;
+a same-prompt retry succeeded. Five further cases parsed before
+`sys-register-12` and its retry both failed for the same reason. At that stop,
+12 cases had valid responses: $0.088130 over 15 completed responses.
+
+Two amendments were approved after format failures on 2 October:
+
+- Allow one retry for a parse failure, with model, prompt and settings unchanged.
+  No quality retries; a second parse failure stops the run.
+- Accept one exact outer `json` Markdown fence. Preserve raw text, record
+  `outer_json_fence_removed`, and keep schema validation unchanged. Do not strip
+  prose or other wrappers. The recorded `sys-register-12` retry was normalized
+  without another call; the initial failed attempt was not used.
+
+The remaining 47 cases completed in batches. `log-math-14` returned an invalid
+nested `candidates` array; its single retry succeeded. The final packet has
+60 cases and 180 candidates. Logs contain 63 completed responses and $0.291006
+in known costs, including failures and retries. The normalized response is
+counted once. No rate-limit error occurred. Report both post-failure amendments,
+retain every raw attempt, and disclose the interrupted call's unknown cost.
+
+### Review and selection — 3 October 2026
+
+The 12 saved batches contain 180 unique candidates: 149 ACCEPT and 31 REJECT.
+All six gates are filled, decisions match ratings, and every rejection has a
+reason. Text and blinded IDs match the original packet.
+`reviewed-dispositions.csv` consolidates the ratings;
+`review-completion-audit.json` records the checks and batch SHA-256 hashes.
+
+Accepted originals cover 56 cases. `pipe-leak-00`, `pipe-join-04`,
+`pipe-join-10`, and `log-math-08` required C01 wording repairs. No provider
+identities were consulted and no new calls were made. Original rejections are
+preserved; `repair-manifest.json` records before/after edits. All four saved
+repairs match those edits and have six PASS gates and an ACCEPT decision.
+Review was by one researcher, not independent annotators.
+
+Selection uses the first accepted candidate in blinded C01/C02/C03 order, or
+the accepted C01 repair where all originals failed. This rule was recorded
+after review, not preregistered. No evaluation-model outcomes informed selection.
+Step 2.7.3 is complete: all 60 cases have accepted wording.
+
+### JSON migration — 2.7.4
+
+`data/corpus/accepted-v1.json` is the sole accepted-case source. Each record
+contains the private item, formal input, expected oracle result, original and
+selected wording, acceptance gates, reviewer count, log location, response hash,
+candidate index and repair description. Existing provenance and dependencies
+retain source versions, roles, licences, generator IDs, transformation notes
+and evidence IDs.
+
+The loader checks prompt reconstruction, input/output hashes, paired-oracle
+results, derived keys and pool counts. It rejects a different construction
+configuration. `case_specs.py`, `_finish` and the case builders are removed;
+there is no shim. Construction scripts read original wording from JSON rather
+than generate formal cases. The existing audit notebook reads the same corpus.
+
+`data/corpus/migration-v1.json` records old/new prompt and pool hashes. Restoring
+only the original prompts reproduces the old pool hash:
+`8e80204357116fb874b199a31f3506aac79cfa1ade549b7b21311fcf5393014d`.
+The new hash is
+`95366bc65475771015915c1c90eeb5ddc18d09576d326e9e7ca01d9394e83943`.
+All other private fields are unchanged. The changed prompts invalidate the old
+freeze approval. No new freeze was signed and no live calls were made.
+Next: code review and user commit, then 2.7.5 audit, amendments and freeze.
+
 Surface review evaluates fidelity and naturalness, not authorship detection.
 [WritingBench](https://proceedings.neurips.cc/paper_files/paper/2025/hash/4aedf0cba303537fcb6cf948bb41b2df-Abstract-Datasets_and_Benchmarks_Track.html)
 shows that writing quality is multidimensional; the current

@@ -5,8 +5,8 @@ from harnessing_honesty.compiler.construction import (
     ConstructionConfig,
     load_construction_config,
 )
-from harnessing_honesty.compiler.generate import generate_family
-from harnessing_honesty.domain.enums import CompilerStage, TaskFamily
+from harnessing_honesty.compiler.corpus import load_corpus
+from harnessing_honesty.domain.enums import CompilerStage
 from harnessing_honesty.domain.instrument import InstrumentItem
 
 EXCLUDED_DEVELOPMENT_IDS: frozenset[str] = frozenset(
@@ -27,15 +27,10 @@ def confirmatory_pool(
     config: ConstructionConfig | None = None,
 ) -> tuple[InstrumentItem, ...]:
     resolved = config or load_construction_config()
-    items = (
-        generate_family(
-            family,
-            resolved.family_seed(family),
-            resolved.service_names_for(family),
-        )
-        for family in TaskFamily
-    )
-    pool = tuple(item for family_items in items for item in family_items)
+    corpus = load_corpus()
+    if corpus.construction_config_hash != resolved.digest():
+        raise ValueError("construction configuration does not match the accepted corpus")
+    pool = tuple(record.item for record in corpus.records)
     if EXCLUDED_DEVELOPMENT_IDS & {item.item_id for item in pool}:
         raise RuntimeError("development identities leaked into the confirmatory pool")
     audit_pool(pool)

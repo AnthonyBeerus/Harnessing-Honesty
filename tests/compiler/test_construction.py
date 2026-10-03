@@ -6,7 +6,7 @@ from harnessing_honesty.compiler.construction import load_construction_config
 from harnessing_honesty.compiler.freeze import build_freeze, sign_freeze
 from harnessing_honesty.compiler.pool import confirmatory_pool
 
-WORKING_POOL_HASH = "8e80204357116fb874b199a31f3506aac79cfa1ade549b7b21311fcf5393014d"
+WORKING_POOL_HASH = "95366bc65475771015915c1c90eeb5ddc18d09576d326e9e7ca01d9394e83943"
 
 
 def _design_cells() -> tuple[tuple[str, str, str, str], ...]:
@@ -38,25 +38,12 @@ def test_working_pool_matches_the_reviewed_instrument() -> None:
     assert freeze.pool_hash == WORKING_POOL_HASH
 
 
-def test_construction_seed_changes_material_but_not_the_design() -> None:
+def test_changed_construction_config_cannot_regenerate_accepted_cases() -> None:
     config = load_construction_config()
     changed = config.model_copy(update={"seed": config.seed + 1})
 
-    original = confirmatory_pool(config)
-    regenerated = confirmatory_pool(changed)
-
-    assert [item.prompt.question for item in original] != [
-        item.prompt.question for item in regenerated
-    ]
-    assert tuple(
-        (
-            item.item_id,
-            item.family.value,
-            item.stratum.value,
-            item.answer_key.canonical_answer,
-        )
-        for item in regenerated
-    ) == _design_cells()
+    with pytest.raises(ValueError, match="does not match the accepted corpus"):
+        confirmatory_pool(changed)
 
 
 def test_each_service_name_has_two_yes_and_two_no_keys() -> None:

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from pydantic_ai.models.openrouter import OpenRouterModelSettings
 
-from harnessing_honesty.compiler.case_specs import CaseSpec
+from typing import Any
 from harnessing_honesty.models.pydantic_ai_client import openrouter_text_agent
 from scripts.generate_surface_candidates import (
     MAX_TOKENS,
@@ -35,9 +35,9 @@ def _digest(value: str) -> str:
     return sha256(value.encode("utf-8")).hexdigest()
 
 
-def select_pilot_specs(specs: tuple[CaseSpec, ...]) -> tuple[CaseSpec, ...]:
+def select_pilot_specs(specs: tuple[dict[str, Any], ...]) -> tuple[dict[str, Any], ...]:
     """Pick two fixed items per existing family without model output."""
-    groups: dict[tuple[str, str], list[CaseSpec]] = {}
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for spec in specs:
         cell = (spec["family"].value, spec["stratum"].value)
         groups.setdefault(cell, []).append(spec)
@@ -53,7 +53,7 @@ def select_pilot_specs(specs: tuple[CaseSpec, ...]) -> tuple[CaseSpec, ...]:
 
 
 def blind_review_rows(
-    specs: tuple[CaseSpec, ...],
+    specs: tuple[dict[str, Any], ...],
     responses: dict[str, dict[str, list[dict[str, str]]]],
     *,
     models: tuple[tuple[str, str], ...] = PILOT_MODELS,
@@ -132,7 +132,7 @@ def _model_responses(path: Path) -> dict[str, list[dict[str, str]]]:
     return responses
 
 
-def _run_model(model_id: str, route: str, specs: tuple[CaseSpec, ...], output: Path) -> None:
+def _run_model(model_id: str, route: str, specs: tuple[dict[str, Any], ...], output: Path) -> None:
     settings: OpenRouterModelSettings = {
         "openrouter_provider": {"only": [route], "order": [route],
                                 "allow_fallbacks": False, "require_parameters": True},

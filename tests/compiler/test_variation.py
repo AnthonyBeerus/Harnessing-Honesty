@@ -2,11 +2,8 @@
 
 import pytest
 
-from harnessing_honesty.compiler.case_specs import (
-    systems_case,
-)
 from harnessing_honesty.compiler.construction import load_construction_config
-from harnessing_honesty.compiler.generate import generate_family_specs
+from scripts.generate_surface_candidates import formal_specs
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.compiler.variation import (
     formal_structure_signature,
@@ -21,12 +18,7 @@ from harnessing_honesty.domain.enums import TaskFamily
 def test_compiler_specs_expose_five_distinct_structures_per_archetype(
     family: TaskFamily,
 ) -> None:
-    construction = load_construction_config()
-    specs = generate_family_specs(
-        family,
-        construction.family_seed(family),
-        construction.service_names_for(family),
-    )
+    specs = tuple(spec for spec in formal_specs() if spec["family"] is family)
 
     assert len(specs) == 15
     for archetype in {spec["archetype"] for spec in specs}:
@@ -37,8 +29,9 @@ def test_compiler_specs_expose_five_distinct_structures_per_archetype(
 
 
 def test_formal_structure_signature_has_interpretable_systems_shape() -> None:
-    register = systems_case(0, 100, "Service")
-    policy = systems_case(5, 105, "Service")
+    by_id = {spec["item_id"]: spec for spec in formal_specs()}
+    register = by_id["sys-register-00"]
+    policy = by_id["sys-policy-05"]
 
     assert formal_structure_signature(register) == (
         (("W", "x"), ("R", "x"), ("R", "x")),

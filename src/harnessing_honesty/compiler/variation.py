@@ -8,11 +8,11 @@ import re
 from collections import Counter, defaultdict
 from collections.abc import Hashable
 
-from harnessing_honesty.compiler.case_specs import CaseSpec
+from typing import Any
 from harnessing_honesty.domain.instrument import InstrumentItem
 
 
-def formal_structure_signature(case: CaseSpec) -> Hashable:
+def formal_structure_signature(case: dict[str, Any]) -> Hashable:
     """Summarize one case's formal structure for descriptive human review."""
     archetype = case["archetype"]
     payload = case["input_payload"]

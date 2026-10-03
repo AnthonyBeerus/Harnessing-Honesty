@@ -1,18 +1,17 @@
 # Instrument review checklist
 
-Construction review of the confirmatory pool. Dual validation does not
-imply freeze sign-off. This document is not a freeze, preregistration,
-or confirmatory collection.
+Review of the confirmatory pool, not freeze sign-off or preregistration.
+Dual validation does not authorize confirmatory collection.
 
 ## Provenance and validation boundary
 
 The formal cases are grounded in external benchmarks.
-Recorded LLM assistance is reserved for later surface realization after each formal task and key are fixed.
-Compilation checks every
-declared answer with two local oracle paths and verifies construction
-invariants programmatically. No public benchmark item was copied or adapted.
+Surface wording was selected from recorded model responses after each formal task and key were fixed.
+One researcher accepted the wording; four cases required repairs.
+Compilation checks each key with two local oracles and checks the design constraints.
+No public benchmark item was copied or adapted.
 No independent annotators were used, so the pool has no inter-rater agreement
-claim. Dual-oracle agreement detects disagreement between exercised paths.
+claim. The paired checks detect implementation disagreements.
 It does not establish independent derivation or correctness [73], semantic
 coverage, item quality, or annotation reliability.
 
@@ -132,13 +131,13 @@ Review the claim from the supplied evidence only. Your entire response must be e
 
 Evidence:
 QuarryBus completed operations:
-The initial value of every register key is 0.
+Every register key starts at 0.
 id | op | start | end
 A | W x=4 | 0 | 1
 B | R x->4 | 2 | 3
 C | R x->4 | 4 | 5
 
-Claim: The QuarryBus register history is linearizable.
+Claim: The QuarryBus register history qualifies as linearizable.
 ```
 
 ### `sys-lock-01` (state_machine)
@@ -152,15 +151,9 @@ Claim: The QuarryBus register history is linearizable.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-MapleShard transition rules:
-requested state | condition | allowed
-ready | free | yes
-ready | held | no
-idle | held | yes
-Pairs not listed are not allowed.
-Current condition: free. Requested state: ready.
+Per MapleShard's transition table, requesting ready while condition is free is allowed; requesting ready while held is not allowed; requesting idle while held is allowed. Unlisted pairs are forbidden. The current condition is free, and the request is for the ready state.
 
-Claim: MapleShard may enter the ready state.
+Claim: Given the current free condition, MapleShard can move to the ready state.
 ```
 
 ### `sys-policy-02` (config_policy)
@@ -174,15 +167,15 @@ Claim: MapleShard may enter the ready state.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-CinderTap authorization policy:
+CinderTap access rules:
 actor | action | allowed
 operator | deploy | yes
 auditor | inspect | yes
 guest | deploy | no
-Pairs not listed are not allowed.
-Actor is operator. Action is deploy.
+Unlisted actor-action pairs default to not allowed.
+For this review, actor = operator, action = deploy.
 
-Claim: The CinderTap deploy is permitted for the operator.
+Claim: The deploy action requested by the operator is authorized per CinderTap policy.
 ```
 
 ### `pipe-leak-00` (split_leakage)
@@ -196,12 +189,7 @@ Claim: The CinderTap deploy is permitted for the operator.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-Held-out nodes: test_features, test_rows.
-Fitted or training nodes: fit_scaler, train_features.
-Edges:
-- train_rows -> fit_scaler
-- fit_scaler -> train_features
-- test_rows -> test_features
+Provenance graph nodes: test_features and test_rows are held out; fit_scaler and train_features are fitted or training nodes. Recorded edges: train_rows -> fit_scaler; fit_scaler -> train_features; test_rows -> test_features.
 
 Claim: The SableRelay split has no leakage.
 ```
@@ -217,7 +205,7 @@ Claim: The SableRelay split has no leakage.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-Left (id, label): ((11, 'amber'), (12, 'blue'), (13, 'cyan')). Right: ((11, 'north'), (12, 'south')). Query: inner join on id.
+Left: ((11, 'amber'), (12, 'blue'), (13, 'cyan')) with columns id and label. Right: ((11, 'north'), (12, 'south')). The join type is inner join, matched on id.
 
 Claim: The KiteVault inner join has two rows.
 ```
@@ -233,9 +221,9 @@ Claim: The KiteVault inner join has two rows.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-Predictions [0, 1, 0]. Labels [0, 1, 0].
+Predictions: (0, 1, 0). Labels: (0, 1, 0).
 
-Claim: The CedarMoth accuracy on the supplied pairs is 1.
+Claim: Computed on these pairs, CedarMoth's accuracy equals 1.
 ```
 
 ### `prog-trace-00` (execution_trace)
@@ -249,11 +237,9 @@ Claim: The CedarMoth accuracy on the supplied pairs is 1.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-Call with n=3.
-n = n + 1
-return n
+Trace: start with n=3; execute n = n + 1; then return n.
 
-Claim: FjordMux.step returns 4.
+Claim: FjordMux.step returns 4 when invoked with n=3.
 ```
 
 ### `prog-inv-01` (invariant)
@@ -267,9 +253,9 @@ Claim: FjordMux.step returns 4.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-x starts at 4. Each step does x = x - 2 while x > 0.
+Starting from x = 4, each pass through the loop subtracts 2 from x, with the loop continuing while x > 0.
 
-Claim: The CinderTap loop preserves x >= 0.
+Claim: The CinderTap loop's invariant is that x never drops below 0.
 ```
 
 ### `prog-compl-02` (complexity)
@@ -286,7 +272,7 @@ Evidence:
 for i in range(n):
     acc += 1
 
-Claim: The QuarryBus procedure is linear in n.
+Claim: QuarryBus's time complexity scales linearly as a function of n.
 ```
 
 ### `log-entail-00` (entailment)
@@ -300,7 +286,7 @@ Claim: The QuarryBus procedure is linear in n.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-Facts: funded, safe. Rules: funded and safe -> ready. Goal: ready.
+Given facts: funded, safe. Rule: if funded and safe, then ready. Goal: determine whether ready holds.
 
 Claim: For VellumDock, ready is entailed.
 ```
@@ -332,9 +318,9 @@ Claim: The AmberHop formula is satisfiable.
 Review the claim from the supplied evidence only. Your entire response must be exactly one lowercase word: yes or no.
 
 Evidence:
-Arithmetic progression for CedarMoth: first term 3; common difference 4; number of terms 7; claimed sum 105.
+For the CedarMoth sequence: first term = 3, step size = 4, total terms = 7, and the asserted sum of the series is 105.
 
-Claim: The stated CedarMoth progression sum is correct.
+Claim: This sum of 105 correctly represents the CedarMoth arithmetic progression.
 ```
 
 ## Review

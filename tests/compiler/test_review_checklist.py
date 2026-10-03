@@ -23,7 +23,7 @@ def test_checklist_lists_ids_keys_strata_licences_and_exclusions() -> None:
     assert "harnessing-honesty-formal-cases-v1" in checklist
     assert "dev-logic-chain-012" in checklist
     assert "grounded in external benchmarks" in checklist
-    assert "Recorded LLM assistance is reserved for later surface realization" in checklist
+    assert "Surface wording was selected from recorded model responses" in checklist
     assert "generated with LLM assistance" not in checklist
     assert "No independent annotators were used" in checklist
     assert "does not establish independent derivation or correctness [73]" in checklist

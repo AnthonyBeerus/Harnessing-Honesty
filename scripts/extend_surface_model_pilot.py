@@ -6,7 +6,7 @@ from hashlib import sha256
 import json
 from pathlib import Path
 
-from harnessing_honesty.compiler.case_specs import CaseSpec
+from typing import Any
 from scripts.generate_surface_candidates import formal_specs
 from scripts.pilot_surface_models import (
     PILOT_MODELS,
@@ -27,7 +27,7 @@ BLINDING_SALT = "surface-model-review-v2"
 
 
 def combined_packet(
-    specs: tuple[CaseSpec, ...],
+    specs: tuple[dict[str, Any], ...],
     responses: dict[str, dict[str, list[dict[str, str]]]],
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     """Require all five models and all three candidates before new blinding."""
