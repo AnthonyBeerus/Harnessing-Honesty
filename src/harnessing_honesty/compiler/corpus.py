@@ -1,6 +1,6 @@
 """Load the reviewed JSON corpus and check its fixed formal tasks.
 
-Task data and evaluation code remain separate [65, Sec. 2.2], [66], [67].
+Task data and evaluation code remain separate [65, Sec. 2.1], [66], [67].
 The corpus is not a template language and cannot generate new cases.
 """
 

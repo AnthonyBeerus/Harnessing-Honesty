@@ -2,4 +2,4 @@
 docs/baseline/2026-09-03/osf/* -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 
 # Keep corpus byte hashes stable across Windows and Unix checkouts.
-data/corpus/*.json text eol=lf
+data/corpus/** text eol=lf

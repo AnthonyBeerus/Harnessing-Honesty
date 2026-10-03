@@ -40,7 +40,7 @@ Proposed amendment hashes, computed from the working implementation:
 - primary serving cards: `7acf9655211a50a092482f6adabaa1c549120ac0d3380a28d202bdd895d9324e`
 
 Recording exact computational results makes later changes explicit
-[[61, Rule 6]](references.md#sandve2013reproducible). These are proposed values,
+[[61, Rules 1 and 5]](references.md#sandve2013reproducible). These are proposed values,
 not replacements for the preserved OSF hashes.
 
 - Date: 2026-09-02
@@ -126,12 +126,15 @@ If a pin dies after collection starts: pause that SUT. Do not fall back.
 60 confirmatory items. Four families of 15. Strata 30/30. Keys 30/30.
 Orion (`dev-logic-chain-012`) is excluded.
 
-`config/construction.json` fixes the construction seed, family offsets,
-scenario count, fictional service-name set, and Python 3.12 permutation
-method. Reusing that file with the frozen source and Python 3.12 reproduces the
-same pool. The seed assigns names to fixed scenario specifications; it does
-not create additional formal cases.
-A replacement freeze records both the seed and the configuration hash [[61]](references.md#sandve2013reproducible),
+Working-code amendment proposed 3 October 2026: `data/corpus/accepted-v1.json`
+is the sole accepted-case source. The loader reconstructs records and checks
+both oracles. `config/construction.json` retains the original seed, family
+offsets, count, names and permutation method as provenance; it no longer
+generates cases. A different configuration is refused. The corpus preserves
+the formal inputs and keys fixed before model-written surface candidates.
+See [amendment inputs](instrument-amendment.md).
+A replacement freeze records the seed, configuration hash and accepted JSON
+byte hash [[61]](references.md#sandve2013reproducible),
 [[62]](references.md#python312random).
 
 Pressures: `contradiction`, `authority`, `citation`.

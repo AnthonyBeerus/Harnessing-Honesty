@@ -15,7 +15,7 @@ registered hypotheses, estimands, sampling, and analysis.
 | Calls | One neutral response, three pressured drafts, and nine policy-conditioned finals: 13 calls per model block. |
 | Outcome | Deterministic exact scoring of the public binary response. |
 | Evidence | Raw attempts, provider metadata, reconstruction inputs, dual-oracle results, and freeze hashes are retained. |
-| Eligibility | Regressive shift is evaluated only where the neutral answer is correct and the pressured draft changes to the false counter-position. |
+| Eligibility | The neutral answer must be correct. Analyse incorrect drafts (recovery) and correct drafts (maintenance) separately; do not pool them. |
 | Multi-turn behaviour | Descriptive evidence only; it does not redefine the registered primary outcome. |
 
 ## Answer-key isolation
@@ -104,7 +104,7 @@ working-pool hash changes from
 
 ## Surface construction model
 
-The formal cases come from external benchmarks. A construction model rewrites
+The formal cases are grounded in external benchmarks. A construction model rewrites
 their surface wording only after the task and key are fixed; it does not set
 either one. This follows prior sycophancy construction practice [2, 10]. The
 original plan called for a blinded, eight-case comparison of three models.
@@ -239,9 +239,9 @@ Review was by one researcher, not independent annotators.
 Selection uses the first accepted candidate in blinded C01/C02/C03 order, or
 the accepted C01 repair where all originals failed. This rule was recorded
 after review, not preregistered. No evaluation-model outcomes informed selection.
-Step 2.7.3 is complete: all 60 cases have accepted wording.
+All 60 cases have accepted wording.
 
-### JSON migration — 2.7.4
+### JSON migration
 
 `data/corpus/accepted-v1.json` is the sole accepted-case source. Each record
 contains the private item, formal input, expected oracle result, original and
@@ -263,7 +263,9 @@ The new hash is
 `95366bc65475771015915c1c90eeb5ddc18d09576d326e9e7ca01d9394e83943`.
 All other private fields are unchanged. The changed prompts invalidate the old
 freeze approval. No new freeze was signed and no live calls were made.
-Next: code review and user commit, then 2.7.5 audit, amendments and freeze.
+The migration was committed as `5eaec04`, followed by `47a0188` to preserve
+corpus byte hashes across checkout line endings. Next: instrument audit, amendments
+and freeze.
 
 Surface review evaluates fidelity and naturalness, not authorship detection.
 [WritingBench](https://proceedings.neurips.cc/paper_files/paper/2025/hash/4aedf0cba303537fcb6cf948bb41b2df-Abstract-Datasets_and_Benchmarks_Track.html)
@@ -278,3 +280,90 @@ ranking nor [cross-model text-detection research](https://aclanthology.org/2024.
 establishes a provider-wide ordering of perceived machine-written style or
 guarantees that an evaluation model will not notice generated prose. The study
 therefore relies on blinded review of task-specific fidelity and naturalness.
+
+### Offline release evidence — 3 October 2026
+
+The existing instrument notebook now reads source, disposition and hash tables
+from the accepted JSON. `scripts.prepare_instrument_release` checks all selected
+wording against saved batch ratings, raw response hashes and recorded repairs,
+then exports CSV evidence and an unsigned freeze candidate. Existing release
+directories are never overwritten. The candidate adds the accepted JSON byte
+hash; signing now requires that field. The registered manifest is unchanged.
+
+The release records 60 cases, 149 accepted originals, 31 rejected originals and
+four accepted repairs. Both local oracles agree for all 60. Full tests passed
+(371); all four existing audit notebooks executed in fresh kernels with outputs
+retained under `data/notebooks/instrument-release-v1/`. The instrument notebook
+contains 33 cells, 16 executable. Execution and output checks are not visual
+layout validation or instrument sign-off.
+
+The audit reports 60 distinct formal inputs and screened signatures, balanced
+service-name keys, and disjoint name-masked yes/no length ranges in four
+archetypes (complexity, entailment, register history and SAT). Five cases still
+share each archetype. These are disclosed dependencies and possible surface
+cues, not proof of effective independence or a reason to select cases using
+evaluation-model outcomes.
+
+Citation checks corrected BIG-bench's JSON API locator (section 2.1) and Sandve's
+stored-result locators (Rules 1 and 5). The core eligibility summary now includes
+both recovery and maintenance, matching the unchanged registered protocol.
+The file-level citation disposition is in `method-sources.md`. Amendment inputs
+in `instrument-amendment.md` reconcile the proposal categories, record the
+scheduling deviation and distinguish construction, evaluation and researcher
+roles. No extra surface review is requested.
+
+All four families have changed model-visible wording. Four excluded development
+smoke matrices, 15 calls each, remain pending after reviewed code.
+No live calls, new freeze approval, amendment publication or commit occurred in
+this pass. Instrument approval remains open at those gates.
+
+### Adversarial-review repairs — 3 October 2026
+
+The external review reproduced the preliminary tables and candidate but found
+missing producer provenance in release-v1. That directory is unchanged and
+must not be committed as the reproducible release. A reviewed code commit and
+a fresh clean-source export remain separate approval steps. The exporter now
+records the source revision, working tree and producer hash before writing.
+
+`build_freeze` now refuses a supplied pool unless its full records equal the
+accepted pool or that pool's exact signed-off form. Matching IDs alone are
+insufficient. Review reconciliation checks corpus/C01/C02/C03 ordering, every
+disposition's gates and decision, unique identities, repair descriptions, rejected
+source decisions and the historical repair statuses. Selection explicitly sorts
+accepted candidates by review ID. UTF-8 reads and repository-root resolution
+remove implicit locale and working-directory assumptions. Output directories
+remain exclusive; mid-write failures may leave a partial directory, which must
+be preserved and superseded rather than treated as a completed release.
+
+Tests now directly exercise reconciliation, altered selected raw responses,
+reordered reviews with updated file hashes, forged repair metadata, changed
+same-ID records, exact signed-off records and fresh export reproduction. The
+five CSVs and candidate remain byte-identical to preliminary release-v1. The
+suite passed 384 tests with the existing event-loop warning. Local-input tests
+skip when ignored review evidence is absent; tests against preliminary release
+files also skip when that uncommitted directory is absent. These skips are not
+evidence of fresh-clone reproducibility.
+
+The amendment now defines the four transformation categories and their counts.
+Full-corpus review IDs hid generation order, not case or model identity. Repair
+drafter and suggested-rating authorship remain unrecorded and require researcher
+confirmation; a saved disposition does not establish unaided authorship. This
+limits reporting readiness but does not trigger another full-corpus review.
+
+The earlier statement that the project exceeded the proposal's schedule was
+stronger than the verified evidence. The amendment now records that the signed
+September freeze was reopened and replacement remains pending on 3 October;
+no calendar overrun is inferred from a relative Gantt without a start date.
+The existing smoke checks unchanged development fixtures, not accepted corpus
+wording. A replacement-freeze procedure is documented but not executed; the
+active manifest and accepted-freeze constant are unchanged. No commit, paid
+call, sign-off or publication occurred in this repair pass.
+
+### Repository terminology cleanup — 3 October 2026
+
+Documentation and export labels now use descriptive instrument, migration and
+publication names. The preliminary release audit's pending-publication label
+was edited at user request, with a metadata-edit record; it was not regenerated.
+The retained instrument notebook's narrative was also edited and marked as
+post-execution work. Its original execution/source hashes remain historical.
+Tables, candidate, formal cases, keys and approval requirements are unchanged.

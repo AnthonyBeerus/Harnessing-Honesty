@@ -32,7 +32,7 @@ def test_same_construction_config_reproduces_the_pool() -> None:
 
 def test_working_pool_matches_the_reviewed_instrument() -> None:
     # Fixing the exact computational result makes later changes explicit
-    # rather than relying on the construction procedure alone [61, Rule 6].
+    # rather than relying on the construction procedure alone [61, Rules 1 and 5].
     freeze = build_freeze(freeze_id="working-logic-variation")
 
     assert freeze.pool_hash == WORKING_POOL_HASH

@@ -46,8 +46,8 @@ validity.
 ## Software structure and citation practice
 
 The implementation follows one route from configuration through cases,
-messages, provider attempts, scores, and analysis. Case specifications remain
-the authoritative construction input. Point citations appear in documentation,
+messages, provider attempts, scores, and analysis. The reviewed JSON corpus is
+the authoritative accepted-case input. Point citations appear in documentation,
 not in model-visible prompts or response schemas. The notebook and command-line
 interfaces use the shared implementation.
 
@@ -196,5 +196,50 @@ record. The dated decision records that correction and the model costs. On
 2 October 2026, the completed 120-row disposition sheet was joined to the
 identity map. All five models covered all eight cases. The cost rule selected
 `anthropic/claude-sonnet-5` ($0.036412) for full generation. The pilot is
-complete; generating and reviewing the 180 full-corpus candidates remains
-outstanding.
+complete. Full generation and review subsequently finished on 3 October;
+149 originals were accepted, 31 rejected, and four accepted repairs completed
+coverage. The chronology above preserves the original pilot boundaries.
+
+## Instrument citation disposition — 3 October 2026
+
+This inventory covers the release changes and directly adjacent implementation.
+It does not certify every historical citation in the repository. Primary-source
+checks corrected BIG-bench's JSON API locator to section 2.1 [65] and Sandve's
+stored-result locators to Rules 1 and 5 [61]; Rule 6 concerns random seeds.
+The immutable baseline retains its original text. Reference numbering and
+BibTeX keys are unchanged. Source and licence dispositions for individual
+archetypes remain in the register above and the JSON-derived release table.
+
+| File or adjacent group | Disposition | Basis and boundary |
+| --- | --- | --- |
+| `compiler/corpus.py` | Citation retained; locator corrected | Data/evaluator separation [65, sec. 2.1], [66, 67]. JSON is not another generation language. |
+| `compiler/review.py` | Citation added; existing retained | Retained results [61, Rules 1 and 5]; oracle agreement limitations [73]. |
+| `compiler/freeze.py` | Citation retained | Prospective registration/deviation boundary [28]. Byte hashing is local integrity plumbing, not a new method. |
+| `compiler/variation.py` | Citation retained | Coverage beyond aggregate count [63, sec. 2.3]; descriptive screens are not CheckList validation or artifact classifiers. |
+| `compiler/pool.py`, `construction.py`, `manifests.py`, `wrapper.py` | Existing citations retained; no new citation warranted | No method or behavior changed in this pass. Corpus configuration and wrapper checks are local implementation requirements. |
+| `compiler/oracles.py`, `dual.py` | Existing citations retained; no new citation warranted | Oracle algorithms unchanged. This pass reruns them; it does not establish independent derivation. |
+| `scripts/prepare_instrument_release.py` | Citation added | Saved computation/results [61, Rules 1, 4 and 5]. CSV reconciliation and exclusive output directories are routine plumbing. |
+| `scripts/generate_surface_candidates.py`, `scripts/run_notebooks.py` | No new citation warranted | Existing parser reused; no generation or dispatch change. Fresh-kernel execution records local evidence. |
+| `notebooks/01_instrument_audit.py` | Citation added; existing retained | Retained output and hashes [61, Rules 1 and 5]; coverage [63] and surface artifacts [64] remain descriptive. |
+| `tests/compiler/test_instrument_release.py` | No citation warranted | Local invariants, export identity and unsigned-state regression tests. |
+| `tests/compiler/test_construction.py` | Citation retained; locator corrected | Computational result record [61, Rules 1 and 5], not random-seed guidance. |
+| `docs/preregistration-template.md` | Citation retained; locator corrected | Stored results [61], seed provenance [62], preserved OSF boundary [51]. Proposed amendments are labelled. |
+| `docs/freeze-manifest.md` | Existing citations retained; no new citation warranted | Manifest fields and candidate status describe the local implementation. |
+| `docs/instrument-amendment.md` | Citation added | Reproducible records [61], coverage/artifact limits [63, 64] and correlated oracle errors [73]. Counts and schedule departures come from local records and the unchanged proposal. |
+| `docs/research-design-decisions.md` | Existing citations retained; no new citation warranted | Dated local decisions and observed checks, not additional literature claims. |
+| `docs/method-sources.md`, `docs/references.md`, `docs/references.bib` | Citation retained; locator corrected | Central register remains authoritative. No new reference number or unresolved key added. |
+| `data/corpus/accepted-v1.json`, `migration-v1.json`, `release-v1/*` | No additional citation warranted | Source metadata already travels with the cases; generated CSV/JSON records local evidence, not scholarly prose. |
+| `.gitattributes`, `CITATION.cff` | No citation warranted | Stable LF bytes and software citation metadata; no invented DOI, release date or additional author. |
+
+The [amendment inputs](instrument-amendment.md) distinguish source-grounded
+formal cases from model-written surfaces and single-researcher review. Software
+metadata is provided in `CITATION.cff`; it is not a publication claim.
+
+The subsequent adversarial-review repairs add only local validation requirements
+to `compiler/freeze.py`, `scripts/prepare_instrument_release.py` and
+`tests/compiler/test_instrument_release.py`: full-record correspondence,
+review/repair integrity, explicit paths/encoding, pre-export provenance and
+negative/reproduction tests. No additional scholarly citation is warranted for
+that plumbing. The amendment and manifest documentation clarify blinding,
+transformation labels, unresolved authorship, recorded freeze delay and the
+proposed replacement procedure; they do not establish new scientific results.

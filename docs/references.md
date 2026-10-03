@@ -231,7 +231,7 @@ The archived registration retains its original references.
 
 <a id="srivastava2022bigbench"></a>
 
-[65] A. Srivastava *et al.*, “Beyond the imitation game: Quantifying and extrapolating the capabilities of language models,” arXiv:2206.04615, 2022, sec. 2.2. doi: [10.48550/arXiv.2206.04615](https://doi.org/10.48550/arXiv.2206.04615).
+[65] A. Srivastava *et al.*, “Beyond the imitation game: Quantifying and extrapolating the capabilities of language models,” arXiv:2206.04615, 2022, sec. 2.1. doi: [10.48550/arXiv.2206.04615](https://doi.org/10.48550/arXiv.2206.04615).
 
 <a id="sinha2026sycobench"></a>
 

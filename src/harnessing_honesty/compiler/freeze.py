@@ -11,6 +11,7 @@ from harnessing_honesty.compiler.construction import (
     ConstructionConfig,
     load_construction_config,
 )
+from harnessing_honesty.compiler.corpus import DEFAULT_CORPUS_PATH
 from harnessing_honesty.compiler.manifests import licence_rows, overlap_rows
 from harnessing_honesty.compiler.pool import EXCLUDED_DEVELOPMENT_IDS, confirmatory_pool, sign_off_pool
 from harnessing_honesty.compiler.wrapper import WRAPPER_PREFIX
@@ -57,6 +58,7 @@ class FreezeManifest(BaseModel):
     freeze_id: str
     construction_seed: int | None = None
     construction_config_hash: str | None = None
+    corpus_sha256: str | None = None
     scheduler_seed: int
     sampling_seed: int
     wrapper_hash: str
@@ -120,8 +122,9 @@ def primary_serving_digest() -> str:
     the confirmatory serving identity.
     """
     materials: list[dict[str, object]] = []
+    root = Path(__file__).resolve().parents[3]
     for path in PRIMARY_SERVING_CARDS:
-        serving = load_run_config(Path(path)).serving
+        serving = load_run_config(root / path).serving
         materials.append(serving.material())
     materials.sort(key=lambda row: str(row["requested_model"]))
     return config_hash({"primary_serving": materials})
@@ -138,7 +141,10 @@ def build_freeze(
     construction_config: ConstructionConfig | None = None,
 ) -> FreezeManifest:
     construction = construction_config or load_construction_config()
-    pool = items if items is not None else confirmatory_pool(construction)
+    corpus_pool = confirmatory_pool(construction)
+    pool = items if items is not None else corpus_pool
+    if pool != corpus_pool and pool != sign_off_pool(corpus_pool):
+        raise ValueError("freeze items differ from the accepted corpus or its signed-off pool")
     template_blob = json.dumps(freeze_template_payload(), sort_keys=True)
     report_blob = json.dumps([_item_ceiling(item) for item in pool], sort_keys=True)
     pool_blob = json.dumps(
@@ -151,6 +157,7 @@ def build_freeze(
         freeze_id=freeze_id,
         construction_seed=construction.seed,
         construction_config_hash=construction.digest(),
+        corpus_sha256=hashlib.sha256(DEFAULT_CORPUS_PATH.read_bytes()).hexdigest(),
         scheduler_seed=scheduler_seed,
         sampling_seed=sampling_seed,
         wrapper_hash=_sha(WRAPPER_PREFIX),
@@ -181,6 +188,8 @@ def sign_freeze(freeze: FreezeManifest, signer: str) -> FreezeManifest:
         raise ValueError("signed freeze requires claims_hash")
     if freeze.construction_seed is None or not freeze.construction_config_hash:
         raise ValueError("signed freeze requires construction configuration")
+    if not freeze.corpus_sha256:
+        raise ValueError("signed freeze requires accepted corpus hash")
     return freeze.model_copy(update={"signer": name})
 
 

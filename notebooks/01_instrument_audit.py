@@ -33,6 +33,7 @@
 
 # %%
 import json
+from hashlib import sha256
 from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import median
@@ -42,6 +43,7 @@ from IPython.display import Markdown, display
 from harnessing_honesty.compiler.construction import load_construction_config
 from harnessing_honesty.compiler.freeze import build_freeze
 from harnessing_honesty.compiler.corpus import load_corpus, oracle_paths, tuples
+from harnessing_honesty.compiler.review import release_tables
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.compiler.variation import (
     formal_structure_signature,
@@ -64,6 +66,8 @@ root = next(
 manifest_path = root / "config/freeze.json"
 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 construction = load_construction_config(root / "config/construction.json")
+corpus = load_corpus()
+release = release_tables(corpus)
 items = confirmatory_pool(construction)
 reconstructed_items = confirmatory_pool(construction)
 assert reconstructed_items == items
@@ -78,7 +82,7 @@ specs = tuple(
      "claim": record.surface.claim, "evidence": record.surface.evidence,
      "first": oracle_paths(record)[0], "second": oracle_paths(record)[1],
      "oracle_args": oracle_paths(record)[2], "expected": tuples(record.oracle_expected)}
-    for record in load_corpus().records
+    for record in corpus.records
 )
 assert tuple(spec["item_id"] for spec in specs) == tuple(item.item_id for item in items)
 
@@ -94,6 +98,62 @@ def show_table(headers: tuple[str, ...], rows: list[tuple[object, ...]]) -> None
 
     separator = tuple("---" for _ in headers)
     display(Markdown("\n".join((line(headers), line(separator), *(line(row) for row in rows)))))
+
+
+# %% [markdown]
+# ## Sources and accepted wording
+#
+# These tables come from the accepted JSON, not a second case inventory.
+# Sources supply semantics, task structure or construction precedent; no public
+# item is copied. Full per-case rows are exported by
+# `python -m scripts.prepare_instrument_release` [61, Rules 1 and 5].
+# The export checks selected wording against saved ratings and raw responses.
+
+# %%
+source_groups = defaultdict(list)
+for row in release["source-matrix"]:
+    source_groups[row["archetype"]].append(row)
+show_table(
+    ("Family", "Stratum", "Archetype", "Cases", "Transformation", "Sources and roles"),
+    [
+        (group[0]["family"], group[0]["stratum"], archetype,
+         len({row["item_id"] for row in group}), group[0]["transformation"],
+         "; ".join(sorted({f"{row['source']} ({row['role']})" for row in group})))
+        for archetype, group in sorted(source_groups.items())
+    ],
+)
+show_table(
+    ("Case", "Selected candidate", "Reviewer count", "Decision", "Repair"),
+    [(row["item_id"], row["blind_id"], row["reviewer_count"], row["decision"],
+      row["edit_description"] or "none") for row in release["selected-dispositions"]],
+)
+
+# %% [markdown]
+# ## Migration hashes
+#
+# Source wording reconstructs the pre-surface pool; accepted wording reconstructs
+# the current pool. Only prompt bytes changed during the JSON migration. Hash identity is
+# a reproducibility check, not instrument approval [61, Rules 1 and 5].
+
+# %%
+migration_path = root / "data/corpus/migration-v1.json"
+migration = json.loads(migration_path.read_text())
+corpus_path = root / "data/corpus/accepted-v1.json"
+assert sha256(corpus_path.read_bytes()).hexdigest() == migration["corpus_sha256"]
+assert working_freeze.pool_hash == migration["new_pool_hash"]
+assert all(row["preserved_private_fields"] for row in migration["changes"])
+show_table(
+    ("Identity", "SHA-256"),
+    [("Accepted JSON bytes", migration["corpus_sha256"]),
+     ("Before surface selection", migration["old_pool_hash"]),
+     ("After surface selection", migration["new_pool_hash"]),
+     ("Preserved OSF pool", manifest["pool_hash"])],
+)
+show_table(
+    ("Case", "Selected candidate", "Original prompt SHA-256", "Accepted prompt SHA-256"),
+    [(row["item_id"], row["selected_blind_id"], row["before_prompt_sha256"],
+      row["after_prompt_sha256"]) for row in migration["changes"]],
+)
 
 
 # %% [markdown]
@@ -514,7 +574,7 @@ display(
         f"**{len(imbalanced_names)} of {len(name_counts)}** service names have unequal "
         "yes/no counts. The exact-question count is "
         f"**{exact_total}**. These results identify cases for review; they do not "
-        "approve the pool. Construction from the recorded configuration was "
+        "approve the pool. Loading the accepted JSON was "
         "identical on a second pass, with working pool hash `"
         f"{working_freeze.pool_hash}`. This differs from the preserved registered "
         "pool hash, so it is reproducibility evidence rather than freeze approval. "
@@ -537,8 +597,8 @@ display(
         f"{', '.join(separated_length_archetypes)}. Those differences arise from "
         "the current case wording and evidence, but this screen cannot determine "
         "whether they are necessary evidence or usable shortcuts. Five cases still "
-        "share each archetype, constructor, prompt template, and oracle pair; that "
-        "this dependence must not be reported as 60 independent task designs. "
+        "share each archetype and oracle pair; this dependence must not be "
+        "reported as 60 independent task designs. "
         "The signatures are deliberately coarse and archetype-specific. No item is "
         "selected or rejected, and the pool is not signed off, by this notebook."
     )

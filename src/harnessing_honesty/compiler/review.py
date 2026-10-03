@@ -1,6 +1,7 @@
 """Construction review checklist for the confirmatory pool."""
 
 from harnessing_honesty.compiler.manifests import licence_rows
+from harnessing_honesty.compiler.corpus import Corpus, oracle_paths, tuples
 from harnessing_honesty.compiler.pool import EXCLUDED_DEVELOPMENT_IDS
 from harnessing_honesty.domain.instrument import InstrumentItem
 
@@ -18,6 +19,37 @@ _ARCHETYPE_ORDER = (
     "sat",
     "math_claim",
 )
+
+
+def release_tables(corpus: Corpus) -> dict[str, list[dict[str, object]]]:
+    """Export corpus evidence, not model outcomes [61, Rules 1 and 5]."""
+    sources, dispositions, oracle_results = [], [], []
+    for record in corpus.records:
+        item, acceptance = record.item, record.acceptance
+        transformation = item.provenance.split("; ")[1].split(" from ")[0]
+        for dep in item.dependencies:
+            sources.append({"item_id": item.item_id, "family": item.family.value,
+                            "stratum": item.stratum.value, "archetype": item.archetype,
+                            "source": dep.name, "role": dep.role.value,
+                            "licence": dep.licence, "source_note": dep.note,
+                            "transformation": transformation,
+                            "evidence_ids": "; ".join(item.evidence_ids), "provenance": item.provenance})
+        dispositions.append({"item_id": item.item_id, "blind_id": acceptance.blind_id,
+                             "decision": acceptance.decision, "reviewer_count": acceptance.reviewer_count,
+                             **acceptance.gates, "edit_description": acceptance.edit_description})
+        first, second, args = oracle_paths(record)
+        left, right = first(*args), second(*args)
+        expected = tuples(record.oracle_expected)
+        if left != right or left != expected:
+            raise ValueError(f"oracle disagreement for {item.item_id}")
+        oracle_results.append({"item_id": item.item_id, "oracle": item.oracle_name,
+                               "version": item.oracle_version, "first": first.__name__,
+                               "second": second.__name__, "first_result": repr(left),
+                               "second_result": repr(right), "expected": repr(expected),
+                               "key": item.answer_key.canonical_answer,
+                               "counter_answer": item.counter_answer, "status": "PASS"})
+    return {"source-matrix": sources, "selected-dispositions": dispositions,
+            "paired-oracles": oracle_results}
 
 
 def _exemplars(items: tuple[InstrumentItem, ...]) -> tuple[InstrumentItem, ...]:

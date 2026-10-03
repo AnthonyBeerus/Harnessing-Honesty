@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+message: "If you use this software, cite the repository version used in your study."
+type: software
+title: "Harnessing Honesty: How Harness Design Shapes Epistemic Sycophancy in LLM Agents"
+version: 0.1.0
+authors:
+  - family-names: Morima
+    given-names: Anthony
+    name-suffix: jr
