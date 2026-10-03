@@ -28,10 +28,10 @@ items load from this manifest; they are not constructed as
 
 ## Candidate, not approval
 
-`data/corpus/release-v1/freeze-candidate.json` is unsigned. Its records retain
+`data/corpus/release-v2/freeze-candidate.json` is unsigned. Its records retain
 `review_status=constructed`; it does not authorize MAIN collection. The audit
 and CSV tables in that directory are prepared by
-`python -m scripts.prepare_instrument_release`. Rebuild a candidate in a new
+`python -m scripts.prepare_instrument_release --output <new-directory>`. Rebuild a candidate in a new
 directory after any bound input changes. Do not overwrite the OSF baseline or
 replace `config/freeze.json` until review and amendment requirements are met.
 
@@ -45,6 +45,19 @@ time. This pass neither moves nor replaces it.
 Record the generating revision, producer hash, source-tree state and artifact
 hashes. Generating a release directory itself changes Git status; distinguish
 pre-export source cleanliness from newly generated output.
+
+## Release provenance
+
+Release-v2 used a clean checkout of `8a5bd79` and local ignored review inputs.
+Its producer hash matches the committed LF script. Verify it in Git Bash:
+
+```bash
+git show 8a5bd79:scripts/prepare_instrument_release.py | sha256sum
+```
+
+The exporter hashes working-file bytes, so CRLF checkouts may differ. The audit
+omits runtime versions; reproduction used the same environment. Other environments
+are untested. Reconciliation covers selected responses, not every log line.
 
 ## Replacement-freeze procedure
 

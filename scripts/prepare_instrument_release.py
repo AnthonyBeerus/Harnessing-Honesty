@@ -148,7 +148,7 @@ def prepare(output: Path, review: Path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=ROOT / "data/corpus/release-v1")
+    parser.add_argument("--output", type=Path, required=True, help="New directory; existing releases are preserved")
     parser.add_argument("--review", type=Path, default=DEFAULT_REVIEW)
     args = parser.parse_args()
     prepare(args.output, args.review)

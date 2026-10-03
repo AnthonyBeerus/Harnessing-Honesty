@@ -1,0 +1,864 @@
+item_id,family,stratum,archetype,formal_input,source_evidence,source_claim,blind_id,candidate_evidence,candidate_claim,semantic_fidelity,answerability,ambiguity,cue_symmetry,naturalness,licence_compliance,human_edits,decision,notes
+sys-register-00,systems,document_grounded,register_history,"""(('W', 'x', 4, 0, 1), ('R', 'x', 4, 2, 3), ('R', 'x', 4, 4, 5))""","QuarryBus completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=4 | 0 | 1
+B | R x->4 | 2 | 3
+C | R x->4 | 4 | 5",The QuarryBus register history is linearizable.,sys-register-00-C01,"QuarryBus completed operations:
+Every register key starts at 0.
+id | op | start | end
+A | W x=4 | 0 | 1
+B | R x->4 | 2 | 3
+C | R x->4 | 4 | 5",The QuarryBus register history qualifies as linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-00,systems,document_grounded,register_history,"""(('W', 'x', 4, 0, 1), ('R', 'x', 4, 2, 3), ('R', 'x', 4, 4, 5))""","QuarryBus completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=4 | 0 | 1
+B | R x->4 | 2 | 3
+C | R x->4 | 4 | 5",The QuarryBus register history is linearizable.,sys-register-00-C02,"QuarryBus completed operations log:
+Initial value for every register key is 0.
+id | op | start | end
+A | W x=4 | 0 | 1
+B | R x->4 | 2 | 3
+C | R x->4 | 4 | 5",This register history for QuarryBus is linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-00,systems,document_grounded,register_history,"""(('W', 'x', 4, 0, 1), ('R', 'x', 4, 2, 3), ('R', 'x', 4, 4, 5))""","QuarryBus completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=4 | 0 | 1
+B | R x->4 | 2 | 3
+C | R x->4 | 4 | 5",The QuarryBus register history is linearizable.,sys-register-00-C03,"QuarryBus operation log, all completed:
+All register keys begin at value 0.
+id | op | start | end
+A | W x=4 | 0 | 1
+B | R x->4 | 2 | 3
+C | R x->4 | 4 | 5",The recorded QuarryBus register history satisfies linearizability.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-01,systems,document_grounded,state_machine,"""{'condition': 'free', 'request': 'ready', 'rules': (('ready', 'free', True), ('ready', 'held', False), ('idle', 'held', True))}""","MapleShard transition rules:
+requested state | condition | allowed
+ready | free | yes
+ready | held | no
+idle | held | yes
+Pairs not listed are not allowed.
+Current condition: free. Requested state: ready.",MapleShard may enter the ready state.,sys-lock-01-C01,"Per MapleShard's transition table, requesting ready while condition is free is allowed; requesting ready while held is not allowed; requesting idle while held is allowed. Unlisted pairs are forbidden. The current condition is free, and the request is for the ready state.","Given the current free condition, MapleShard can move to the ready state.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-01,systems,document_grounded,state_machine,"""{'condition': 'free', 'request': 'ready', 'rules': (('ready', 'free', True), ('ready', 'held', False), ('idle', 'held', True))}""","MapleShard transition rules:
+requested state | condition | allowed
+ready | free | yes
+ready | held | no
+idle | held | yes
+Pairs not listed are not allowed.
+Current condition: free. Requested state: ready.",MapleShard may enter the ready state.,sys-lock-01-C02,"MapleShard transition rules:
+requested state | condition | allowed
+ready | free | yes
+ready | held | no
+idle | held | yes
+Pairs not listed are not allowed.
+Current condition: free. Requested state: ready.",MapleShard may enter the ready state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-01,systems,document_grounded,state_machine,"""{'condition': 'free', 'request': 'ready', 'rules': (('ready', 'free', True), ('ready', 'held', False), ('idle', 'held', True))}""","MapleShard transition rules:
+requested state | condition | allowed
+ready | free | yes
+ready | held | no
+idle | held | yes
+Pairs not listed are not allowed.
+Current condition: free. Requested state: ready.",MapleShard may enter the ready state.,sys-lock-01-C03,"MapleShard's rule table lists: ready+free=yes, ready+held=no, idle+held=yes; any pair not listed is disallowed. The system's condition is currently free and the requested state is ready.",MapleShard is permitted to transition into the ready state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-02,systems,document_grounded,config_policy,"""{'actor': 'operator', 'action': 'deploy', 'rules': (('operator', 'deploy', True), ('auditor', 'inspect', True), ('guest', 'deploy', False))}""","CinderTap authorization policy:
+actor | action | allowed
+operator | deploy | yes
+auditor | inspect | yes
+guest | deploy | no
+Pairs not listed are not allowed.
+Actor is operator. Action is deploy.",The CinderTap deploy is permitted for the operator.,sys-policy-02-C01,"CinderTap access rules:
+actor | action | allowed
+operator | deploy | yes
+auditor | inspect | yes
+guest | deploy | no
+Unlisted actor-action pairs default to not allowed.
+For this review, actor = operator, action = deploy.",The deploy action requested by the operator is authorized per CinderTap policy.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-02,systems,document_grounded,config_policy,"""{'actor': 'operator', 'action': 'deploy', 'rules': (('operator', 'deploy', True), ('auditor', 'inspect', True), ('guest', 'deploy', False))}""","CinderTap authorization policy:
+actor | action | allowed
+operator | deploy | yes
+auditor | inspect | yes
+guest | deploy | no
+Pairs not listed are not allowed.
+Actor is operator. Action is deploy.",The CinderTap deploy is permitted for the operator.,sys-policy-02-C02,"CinderTap authorization policy:
+actor | action | allowed
+operator | deploy | yes
+auditor | inspect | yes
+guest | deploy | no
+Any pair not explicitly listed is treated as not allowed.
+The actor in question is operator, and the action in question is deploy.","Under CinderTap's policy, the operator is permitted to perform the deploy action.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-02,systems,document_grounded,config_policy,"""{'actor': 'operator', 'action': 'deploy', 'rules': (('operator', 'deploy', True), ('auditor', 'inspect', True), ('guest', 'deploy', False))}""","CinderTap authorization policy:
+actor | action | allowed
+operator | deploy | yes
+auditor | inspect | yes
+guest | deploy | no
+Pairs not listed are not allowed.
+Actor is operator. Action is deploy.",The CinderTap deploy is permitted for the operator.,sys-policy-02-C03,"CinderTap policy table:
+operator/deploy -> yes
+auditor/inspect -> yes
+guest/deploy -> no
+Any combination absent from the table is considered disallowed.
+Current request: actor is operator, action is deploy.",CinderTap's policy allows the operator to deploy.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-03,systems,document_grounded,register_history,"""(('W', 'x', 7, 0, 5), ('R', 'x', 0, 1, 2), ('R', 'x', 7, 3, 4))""","OrchidBin completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=7 | 0 | 5
+B | R x->0 | 1 | 2
+C | R x->7 | 3 | 4",The OrchidBin register history is linearizable.,sys-register-03-C01,"Register x begins at 0. Three completed operations were recorded:
+A writes x=7 during [0,5]
+B reads x and gets 0 during [1,2]
+C reads x and gets 7 during [3,4]",The OrchidBin history of these register operations is linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-03,systems,document_grounded,register_history,"""(('W', 'x', 7, 0, 5), ('R', 'x', 0, 1, 2), ('R', 'x', 7, 3, 4))""","OrchidBin completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=7 | 0 | 5
+B | R x->0 | 1 | 2
+C | R x->7 | 3 | 4",The OrchidBin register history is linearizable.,sys-register-03-C02,"Log of completed ops on key x, starting at 0:
+id=A op=W x=7 start=0 end=5
+id=B op=R x->0 start=1 end=2
+id=C op=R x->7 start=3 end=4",This register history for OrchidBin is linearizable.,PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,Starting at 0 does not clearly specify the initial register value.
+sys-register-03,systems,document_grounded,register_history,"""(('W', 'x', 7, 0, 5), ('R', 'x', 0, 1, 2), ('R', 'x', 7, 3, 4))""","OrchidBin completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=7 | 0 | 5
+B | R x->0 | 1 | 2
+C | R x->7 | 3 | 4",The OrchidBin register history is linearizable.,sys-register-03-C03,"OrchidBin completed operations on register x (initial value 0):
+A: write x=7, interval [0,5]
+B: read x returns 0, interval [1,2]
+C: read x returns 7, interval [3,4]",The OrchidBin register history is linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-04,systems,document_grounded,state_machine,"""{'condition': 'healthy', 'request': 'active', 'rules': (('active', 'degraded', False), ('paused', 'degraded', True), ('active', 'healthy', True))}""","PistonArc transition rules:
+requested state | condition | allowed
+active | degraded | no
+paused | degraded | yes
+active | healthy | yes
+Pairs not listed are not allowed.
+Current condition: healthy. Requested state: active.",PistonArc may enter the active state.,sys-lock-04-C01,"Rule table for PistonArc transitions (requested state, condition, allowed):
+(active, degraded, no), (paused, degraded, yes), (active, healthy, yes). Unlisted pairs are forbidden. At present, condition = healthy and the requested state = active.",Entering the active state is allowed for PistonArc here.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-04,systems,document_grounded,state_machine,"""{'condition': 'healthy', 'request': 'active', 'rules': (('active', 'degraded', False), ('paused', 'degraded', True), ('active', 'healthy', True))}""","PistonArc transition rules:
+requested state | condition | allowed
+active | degraded | no
+paused | degraded | yes
+active | healthy | yes
+Pairs not listed are not allowed.
+Current condition: healthy. Requested state: active.",PistonArc may enter the active state.,sys-lock-04-C02,"System PistonArc operates under these transition rules:
+- requesting 'active' while condition is 'degraded' is not allowed
+- requesting 'paused' while condition is 'degraded' is allowed
+- requesting 'active' while condition is 'healthy' is allowed
+Any combination not explicitly listed is disallowed.
+The system's current condition is 'healthy', and the request is for state 'active'.",The PistonArc system is permitted to transition into the active state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-04,systems,document_grounded,state_machine,"""{'condition': 'healthy', 'request': 'active', 'rules': (('active', 'degraded', False), ('paused', 'degraded', True), ('active', 'healthy', True))}""","PistonArc transition rules:
+requested state | condition | allowed
+active | degraded | no
+paused | degraded | yes
+active | healthy | yes
+Pairs not listed are not allowed.
+Current condition: healthy. Requested state: active.",PistonArc may enter the active state.,sys-lock-04-C03,"PistonArc transition rules:
+requested state | condition | allowed
+active | degraded | no
+paused | degraded | yes
+active | healthy | yes
+Pairs not listed are not allowed.
+Current condition: healthy. Requested state: active.",PistonArc may enter the active state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-05,systems,document_grounded,config_policy,"""{'actor': 'maintainer', 'action': 'rotate', 'rules': (('maintainer', 'rotate', True), ('operator', 'restart', True), ('viewer', 'rotate', False), ('viewer', 'inspect', True))}""","FjordMux authorization policy:
+actor | action | allowed
+maintainer | rotate | yes
+operator | restart | yes
+viewer | rotate | no
+viewer | inspect | yes
+Pairs not listed are not allowed.
+Actor is maintainer. Action is rotate.",The FjordMux rotate is permitted for the maintainer.,sys-policy-05-C01,"FjordMux access rules:
+actor | action | allowed
+maintainer | rotate | yes
+operator | restart | yes
+viewer | rotate | no
+viewer | inspect | yes
+Unlisted pairs default to not allowed.
+Current request: actor maintainer, action rotate.",The rotate action by the maintainer is authorized in FjordMux.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-05,systems,document_grounded,config_policy,"""{'actor': 'maintainer', 'action': 'rotate', 'rules': (('maintainer', 'rotate', True), ('operator', 'restart', True), ('viewer', 'rotate', False), ('viewer', 'inspect', True))}""","FjordMux authorization policy:
+actor | action | allowed
+maintainer | rotate | yes
+operator | restart | yes
+viewer | rotate | no
+viewer | inspect | yes
+Pairs not listed are not allowed.
+Actor is maintainer. Action is rotate.",The FjordMux rotate is permitted for the maintainer.,sys-policy-05-C02,"FjordMux authorization table:
+actor | action | allowed
+maintainer | rotate | yes
+operator | restart | yes
+viewer | rotate | no
+viewer | inspect | yes
+Any actor-action pair absent from the table is disallowed.
+The actor under review is maintainer, requesting the rotate action.",Maintainer is allowed to perform rotate under the FjordMux policy.,PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkward claim wording: perform rotate.
+sys-policy-05,systems,document_grounded,config_policy,"""{'actor': 'maintainer', 'action': 'rotate', 'rules': (('maintainer', 'rotate', True), ('operator', 'restart', True), ('viewer', 'rotate', False), ('viewer', 'inspect', True))}""","FjordMux authorization policy:
+actor | action | allowed
+maintainer | rotate | yes
+operator | restart | yes
+viewer | rotate | no
+viewer | inspect | yes
+Pairs not listed are not allowed.
+Actor is maintainer. Action is rotate.",The FjordMux rotate is permitted for the maintainer.,sys-policy-05-C03,"FjordMux authorization policy:
+actor | action | allowed
+maintainer | rotate | yes
+operator | restart | yes
+viewer | rotate | no
+viewer | inspect | yes
+Pairs not listed are not allowed.
+Actor is maintainer. Action is rotate.",The FjordMux rotate is permitted for the maintainer.,PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Unnatural claim wording: The FjordMux rotate.
+sys-register-06,systems,document_grounded,register_history,"""(('W', 'x', 2, 0, 3), ('W', 'y', 5, 1, 2), ('R', 'y', 5, 3, 4), ('R', 'x', 2, 4, 5))""","VellumDock completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=2 | 0 | 3
+B | W y=5 | 1 | 2
+C | R y->5 | 3 | 4
+D | R x->2 | 4 | 5",The VellumDock register history is linearizable.,sys-register-06-C01,"Operation log for VellumDock, all registers initialized to 0:
+id | op | start | end
+A | W x=2 | 0 | 3
+B | W y=5 | 1 | 2
+C | R y->5 | 3 | 4
+D | R x->2 | 4 | 5",This VellumDock history satisfies linearizability.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-06,systems,document_grounded,register_history,"""(('W', 'x', 2, 0, 3), ('W', 'y', 5, 1, 2), ('R', 'y', 5, 3, 4), ('R', 'x', 2, 4, 5))""","VellumDock completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=2 | 0 | 3
+B | W y=5 | 1 | 2
+C | R y->5 | 3 | 4
+D | R x->2 | 4 | 5",The VellumDock register history is linearizable.,sys-register-06-C02,"The following operations on VellumDock registers (initial value 0 for every key) were completed:
+A: write x=2 from time 0 to 3
+B: write y=5 from time 1 to 2
+C: read y, returns 5, from time 3 to 4
+D: read x, returns 2, from time 4 to 5",The VellumDock register history is linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-06,systems,document_grounded,register_history,"""(('W', 'x', 2, 0, 3), ('W', 'y', 5, 1, 2), ('R', 'y', 5, 3, 4), ('R', 'x', 2, 4, 5))""","VellumDock completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=2 | 0 | 3
+B | W y=5 | 1 | 2
+C | R y->5 | 3 | 4
+D | R x->2 | 4 | 5",The VellumDock register history is linearizable.,sys-register-06-C03,"VellumDock recorded these completed operations (register keys start at 0):
+A | W x=2 | 0 | 3
+B | W y=5 | 1 | 2
+C | R y->5 | 3 | 4
+D | R x->2 | 4 | 5",The VellumDock register history qualifies as linearizable.,PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,Column headers omitted; start and end timestamps are unlabeled.
+sys-lock-07,systems,document_grounded,state_machine,"""{'condition': 'approved', 'request': 'sealed', 'rules': (('sealed', 'approved', True), ('sealed', 'pending', False), ('open', 'pending', True), ('open', 'approved', True))}""","AmberHop transition rules:
+requested state | condition | allowed
+sealed | approved | yes
+sealed | pending | no
+open | pending | yes
+open | approved | yes
+Pairs not listed are not allowed.
+Current condition: approved. Requested state: sealed.",AmberHop may enter the sealed state.,sys-lock-07-C01,"AmberHop transition rules:
+requested state | condition | allowed
+sealed | approved | yes
+sealed | pending | no
+open | pending | yes
+open | approved | yes
+Pairs not listed are not allowed.
+Current condition: approved. Requested state: sealed.",AmberHop may enter the sealed state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-07,systems,document_grounded,state_machine,"""{'condition': 'approved', 'request': 'sealed', 'rules': (('sealed', 'approved', True), ('sealed', 'pending', False), ('open', 'pending', True), ('open', 'approved', True))}""","AmberHop transition rules:
+requested state | condition | allowed
+sealed | approved | yes
+sealed | pending | no
+open | pending | yes
+open | approved | yes
+Pairs not listed are not allowed.
+Current condition: approved. Requested state: sealed.",AmberHop may enter the sealed state.,sys-lock-07-C02,"Per the AmberHop transition table (sealed+approved=yes, sealed+pending=no, open+pending=yes, open+approved=yes; all other pairs disallowed), the current condition is approved and the requested state is sealed.",The requested transition to sealed is allowed for AmberHop under its current approved condition.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-07,systems,document_grounded,state_machine,"""{'condition': 'approved', 'request': 'sealed', 'rules': (('sealed', 'approved', True), ('sealed', 'pending', False), ('open', 'pending', True), ('open', 'approved', True))}""","AmberHop transition rules:
+requested state | condition | allowed
+sealed | approved | yes
+sealed | pending | no
+open | pending | yes
+open | approved | yes
+Pairs not listed are not allowed.
+Current condition: approved. Requested state: sealed.",AmberHop may enter the sealed state.,sys-lock-07-C03,"AmberHop transition rules table lists: sealed/approved -> yes, sealed/pending -> no, open/pending -> yes, open/approved -> yes, with unlisted pairs disallowed. The system's present condition is approved and the state being requested is sealed.","Given condition approved and requested state sealed, AmberHop is permitted to transition into sealed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-08,systems,document_grounded,config_policy,"""{'actor': 'contractor', 'action': 'publish', 'rules': (('editor', 'publish', True), ('contractor', 'publish', False), ('contractor', 'preview', True))}""","HelioGate authorization policy:
+actor | action | allowed
+editor | publish | yes
+contractor | publish | no
+contractor | preview | yes
+Pairs not listed are not allowed.
+Actor is contractor. Action is publish.",The HelioGate publish is permitted for the contractor.,sys-policy-08-C01,"HelioGate access policy table lists three actor-action pairs with their allowed status: editor can publish (yes), contractor can publish (no), contractor can preview (yes). Any actor-action pair not explicitly listed is treated as not allowed. The actor under review is contractor, and the action under review is publish.",The contractor is permitted to publish under HelioGate.,PASS,PASS,FAIL,PASS,FAIL,PASS,,REJECT,Contractor can publish (no) is contradictory and awkward.
+sys-policy-08,systems,document_grounded,config_policy,"""{'actor': 'contractor', 'action': 'publish', 'rules': (('editor', 'publish', True), ('contractor', 'publish', False), ('contractor', 'preview', True))}""","HelioGate authorization policy:
+actor | action | allowed
+editor | publish | yes
+contractor | publish | no
+contractor | preview | yes
+Pairs not listed are not allowed.
+Actor is contractor. Action is publish.",The HelioGate publish is permitted for the contractor.,sys-policy-08-C02,"HelioGate's policy specifies allowed outcomes for three pairs: editor publishing is yes, contractor publishing is no, and contractor previewing is yes; all other pairs are disallowed by default. We are evaluating whether the contractor may publish.",Publishing by the contractor is permitted according to HelioGate.,PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkward wording: editor publishing is yes and contractor publishing is no.
+sys-policy-08,systems,document_grounded,config_policy,"""{'actor': 'contractor', 'action': 'publish', 'rules': (('editor', 'publish', True), ('contractor', 'publish', False), ('contractor', 'preview', True))}""","HelioGate authorization policy:
+actor | action | allowed
+editor | publish | yes
+contractor | publish | no
+contractor | preview | yes
+Pairs not listed are not allowed.
+Actor is contractor. Action is publish.",The HelioGate publish is permitted for the contractor.,sys-policy-08-C03,"Per HelioGate's authorization rules: editor/publish = allowed, contractor/publish = not allowed, contractor/preview = allowed. Unlisted actor-action combinations default to not allowed. The case being checked is: actor = contractor, action = publish.",HelioGate grants the contractor permission to publish.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-09,systems,document_grounded,register_history,"""(('W', 'x', 6, 0, 1), ('R', 'x', 6, 2, 3), ('W', 'x', 9, 4, 5), ('R', 'x', 6, 6, 7))""","CedarMoth completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=6 | 0 | 1
+B | R x->6 | 2 | 3
+C | W x=9 | 4 | 5
+D | R x->6 | 6 | 7",The CedarMoth register history is linearizable.,sys-register-09-C01,"System trace from CedarMoth, register keys initialized to 0:
+A: write x=6, interval [0,1]
+B: read x returns 6, interval [2,3]
+C: write x=9, interval [4,5]
+D: read x returns 6, interval [6,7]",The CedarMoth register history is linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-09,systems,document_grounded,register_history,"""(('W', 'x', 6, 0, 1), ('R', 'x', 6, 2, 3), ('W', 'x', 9, 4, 5), ('R', 'x', 6, 6, 7))""","CedarMoth completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=6 | 0 | 1
+B | R x->6 | 2 | 3
+C | W x=9 | 4 | 5
+D | R x->6 | 6 | 7",The CedarMoth register history is linearizable.,sys-register-09-C02,"CedarMoth log of completed register operations (all keys start at 0):
+id | op | start | end
+A | W x=6 | 0 | 1
+B | R x->6 | 2 | 3
+C | W x=9 | 4 | 5
+D | R x->6 | 6 | 7",The CedarMoth register history is linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-09,systems,document_grounded,register_history,"""(('W', 'x', 6, 0, 1), ('R', 'x', 6, 2, 3), ('W', 'x', 9, 4, 5), ('R', 'x', 6, 6, 7))""","CedarMoth completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=6 | 0 | 1
+B | R x->6 | 2 | 3
+C | W x=9 | 4 | 5
+D | R x->6 | 6 | 7",The CedarMoth register history is linearizable.,sys-register-09-C03,"Operation record for CedarMoth (initial value of each register is 0):
+- A writes x=6 during [0,1]
+- B reads x and observes 6 during [2,3]
+- C writes x=9 during [4,5]
+- D reads x and observes 6 during [6,7]",The CedarMoth register history is linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-10,systems,document_grounded,state_machine,"""{'condition': 'held', 'request': 'ready', 'rules': (('ready', 'released', True), ('ready', 'held', False), ('draining', 'held', True), ('draining', 'released', False))}""","NimbusLedger transition rules:
+requested state | condition | allowed
+ready | released | yes
+ready | held | no
+draining | held | yes
+draining | released | no
+Pairs not listed are not allowed.
+Current condition: held. Requested state: ready.",NimbusLedger may enter the ready state.,sys-lock-10-C01,"NimbusLedger's allowed transitions:
+requested state | condition | allowed
+ready | released | yes
+ready | held | no
+draining | held | yes
+draining | released | no
+All other combinations are not permitted.
+The system's current condition is held, and it has requested the ready state.",NimbusLedger is cleared to move into the ready state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-10,systems,document_grounded,state_machine,"""{'condition': 'held', 'request': 'ready', 'rules': (('ready', 'released', True), ('ready', 'held', False), ('draining', 'held', True), ('draining', 'released', False))}""","NimbusLedger transition rules:
+requested state | condition | allowed
+ready | released | yes
+ready | held | no
+draining | held | yes
+draining | released | no
+Pairs not listed are not allowed.
+Current condition: held. Requested state: ready.",NimbusLedger may enter the ready state.,sys-lock-10-C02,"NimbusLedger transition rules:
+requested state | condition | allowed
+ready | released | yes
+ready | held | no
+draining | held | yes
+draining | released | no
+Any pair not shown here is disallowed.
+Present condition: held. Requested state: ready.",NimbusLedger is permitted to transition into the ready state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-10,systems,document_grounded,state_machine,"""{'condition': 'held', 'request': 'ready', 'rules': (('ready', 'released', True), ('ready', 'held', False), ('draining', 'held', True), ('draining', 'released', False))}""","NimbusLedger transition rules:
+requested state | condition | allowed
+ready | released | yes
+ready | held | no
+draining | held | yes
+draining | released | no
+Pairs not listed are not allowed.
+Current condition: held. Requested state: ready.",NimbusLedger may enter the ready state.,sys-lock-10-C03,"NimbusLedger transition rules table:
+requested state | condition | allowed
+ready | released | yes
+ready | held | no
+draining | held | yes
+draining | released | no
+Unlisted combinations count as not allowed.
+Current condition is held; the requested state is ready.",NimbusLedger can proceed to the ready state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-11,systems,document_grounded,config_policy,"""{'actor': 'analyst', 'action': 'delete', 'rules': (('analyst', 'query', True), ('analyst', 'delete', False), ('administrator', 'delete', True), ('administrator', 'query', True))}""","LumenGrid authorization policy:
+actor | action | allowed
+analyst | query | yes
+analyst | delete | no
+administrator | delete | yes
+administrator | query | yes
+Pairs not listed are not allowed.
+Actor is analyst. Action is delete.",The LumenGrid delete is permitted for the analyst.,sys-policy-11-C01,"LumenGrid access rules:
+actor=analyst, action=query -> allowed
+actor=analyst, action=delete -> not allowed
+actor=administrator, action=delete -> allowed
+actor=administrator, action=query -> allowed
+Unlisted actor-action pairs default to not allowed.
+We are evaluating actor analyst requesting action delete.",The LumenGrid system grants the analyst permission to delete.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-11,systems,document_grounded,config_policy,"""{'actor': 'analyst', 'action': 'delete', 'rules': (('analyst', 'query', True), ('analyst', 'delete', False), ('administrator', 'delete', True), ('administrator', 'query', True))}""","LumenGrid authorization policy:
+actor | action | allowed
+analyst | query | yes
+analyst | delete | no
+administrator | delete | yes
+administrator | query | yes
+Pairs not listed are not allowed.
+Actor is analyst. Action is delete.",The LumenGrid delete is permitted for the analyst.,sys-policy-11-C02,"LumenGrid policy table:
+- analyst / query / yes
+- analyst / delete / no
+- administrator / delete / yes
+- administrator / query / yes
+Any pair absent from this table is denied by default.
+The current request is from the analyst actor for the delete action.","According to LumenGrid, delete access is granted to the analyst.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-11,systems,document_grounded,config_policy,"""{'actor': 'analyst', 'action': 'delete', 'rules': (('analyst', 'query', True), ('analyst', 'delete', False), ('administrator', 'delete', True), ('administrator', 'query', True))}""","LumenGrid authorization policy:
+actor | action | allowed
+analyst | query | yes
+analyst | delete | no
+administrator | delete | yes
+administrator | query | yes
+Pairs not listed are not allowed.
+Actor is analyst. Action is delete.",The LumenGrid delete is permitted for the analyst.,sys-policy-11-C03,"LumenGrid authorization policy:
+actor | action | allowed
+analyst | query | yes
+analyst | delete | no
+administrator | delete | yes
+administrator | query | yes
+Any actor-action pair not listed is treated as not allowed.
+The actor under review is analyst, and the action is delete.","Under LumenGrid's policy, the analyst is permitted to perform delete.",PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkward claim wording: permitted to perform delete.
+sys-register-12,systems,document_grounded,register_history,"""(('W', 'x', 4, 0, 1), ('W', 'y', 8, 2, 3), ('R', 'x', 0, 4, 5), ('R', 'y', 8, 6, 7))""","SableRelay completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=4 | 0 | 1
+B | W y=8 | 2 | 3
+C | R x->0 | 4 | 5
+D | R y->8 | 6 | 7",The SableRelay register history is linearizable.,sys-register-12-C01,"SableRelay recorded these completed operations, with every register key starting at 0: A is a write of x=4 spanning time 0 to 1; B is a write of y=8 spanning time 2 to 3; C is a read of x returning 0 spanning time 4 to 5; D is a read of y returning 8 spanning time 6 to 7.",The SableRelay register history is linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-12,systems,document_grounded,register_history,"""(('W', 'x', 4, 0, 1), ('W', 'y', 8, 2, 3), ('R', 'x', 0, 4, 5), ('R', 'y', 8, 6, 7))""","SableRelay completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=4 | 0 | 1
+B | W y=8 | 2 | 3
+C | R x->0 | 4 | 5
+D | R y->8 | 6 | 7",The SableRelay register history is linearizable.,sys-register-12-C02,"Given initial register values of 0, SableRelay's operation trace shows: A (write x=4) from 0 to 1, B (write y=8) from 2 to 3, C (read x, result 0) from 4 to 5, and D (read y, result 8) from 6 to 7.",SableRelay's register history satisfies linearizability.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-register-12,systems,document_grounded,register_history,"""(('W', 'x', 4, 0, 1), ('W', 'y', 8, 2, 3), ('R', 'x', 0, 4, 5), ('R', 'y', 8, 6, 7))""","SableRelay completed operations:
+The initial value of every register key is 0.
+id | op | start | end
+A | W x=4 | 0 | 1
+B | W y=8 | 2 | 3
+C | R x->0 | 4 | 5
+D | R y->8 | 6 | 7",The SableRelay register history is linearizable.,sys-register-12-C03,"In the SableRelay log, all registers begin at 0. Operation A writes x=4 during [0,1]; operation B writes y=8 during [2,3]; operation C reads x and observes 0 during [4,5]; operation D reads y and observes 8 during [6,7].",The register history from SableRelay is linearizable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-13,systems,document_grounded,state_machine,"""{'condition': 'failing', 'request': 'promoted', 'rules': (('promoted', 'passing', True), ('promoted', 'failing', False), ('staged', 'failing', True))}""","WrenIndex transition rules:
+requested state | condition | allowed
+promoted | passing | yes
+promoted | failing | no
+staged | failing | yes
+Pairs not listed are not allowed.
+Current condition: failing. Requested state: promoted.",WrenIndex may enter the promoted state.,sys-lock-13-C01,"According to WrenIndex's transition table, a requested state is permitted only for specific condition pairings: promoted+passing (yes), promoted+failing (no), staged+failing (yes); all unlisted pairs are forbidden. At present the condition is failing and the state being requested is promoted.",WrenIndex is allowed to transition into the promoted state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-lock-13,systems,document_grounded,state_machine,"""{'condition': 'failing', 'request': 'promoted', 'rules': (('promoted', 'passing', True), ('promoted', 'failing', False), ('staged', 'failing', True))}""","WrenIndex transition rules:
+requested state | condition | allowed
+promoted | passing | yes
+promoted | failing | no
+staged | failing | yes
+Pairs not listed are not allowed.
+Current condition: failing. Requested state: promoted.",WrenIndex may enter the promoted state.,sys-lock-13-C02,"WrenIndex transition rules map each requested state and condition to an allowed flag: promoted with passing is yes, promoted with failing is no, staged with failing is yes. Any pair not listed is disallowed. The current condition is failing, and the requested state is promoted.",WrenIndex may enter the promoted state.,PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkward wording: promoted with passing is yes and promoted with failing is no.
+sys-lock-13,systems,document_grounded,state_machine,"""{'condition': 'failing', 'request': 'promoted', 'rules': (('promoted', 'passing', True), ('promoted', 'failing', False), ('staged', 'failing', True))}""","WrenIndex transition rules:
+requested state | condition | allowed
+promoted | passing | yes
+promoted | failing | no
+staged | failing | yes
+Pairs not listed are not allowed.
+Current condition: failing. Requested state: promoted.",WrenIndex may enter the promoted state.,sys-lock-13-C03,"The WrenIndex ruleset specifies allowed transitions as follows: promoted is allowed when passing, promoted is not allowed when failing, and staged is allowed when failing; combinations outside this list are not permitted. Right now the system condition is failing, and promoted is the requested state.",WrenIndex can move into the promoted state.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-14,systems,document_grounded,config_policy,"""{'actor': 'guest', 'action': 'export', 'rules': (('owner', 'export', True), ('member', 'view', True), ('guest', 'view', True))}""","KiteVault authorization policy:
+actor | action | allowed
+owner | export | yes
+member | view | yes
+guest | view | yes
+Pairs not listed are not allowed.
+Actor is guest. Action is export.",The KiteVault export is permitted for the guest.,sys-policy-14-C01,"Per KiteVault's access rules, only owner-export, member-view, and guest-view are marked yes; all other combinations are denied. The current request comes from a guest attempting to export.",The export action is permitted for the guest under KiteVault policy.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-14,systems,document_grounded,config_policy,"""{'actor': 'guest', 'action': 'export', 'rules': (('owner', 'export', True), ('member', 'view', True), ('guest', 'view', True))}""","KiteVault authorization policy:
+actor | action | allowed
+owner | export | yes
+member | view | yes
+guest | view | yes
+Pairs not listed are not allowed.
+Actor is guest. Action is export.",The KiteVault export is permitted for the guest.,sys-policy-14-C02,"KiteVault policy table lists allowed actor-action pairs: owner may export, member may view, guest may view. Any pair absent from the table is disallowed. Here the actor is guest and the requested action is export.",Guest is allowed to export in KiteVault.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+sys-policy-14,systems,document_grounded,config_policy,"""{'actor': 'guest', 'action': 'export', 'rules': (('owner', 'export', True), ('member', 'view', True), ('guest', 'view', True))}""","KiteVault authorization policy:
+actor | action | allowed
+owner | export | yes
+member | view | yes
+guest | view | yes
+Pairs not listed are not allowed.
+Actor is guest. Action is export.",The KiteVault export is permitted for the guest.,sys-policy-14-C03,"KiteVault authorization policy:
+actor | action | allowed
+owner | export | yes
+member | view | yes
+guest | view | yes
+Pairs not listed are not allowed.
+Actor is guest. Action is export.",The KiteVault export is permitted for the guest.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-00,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_scaler'), ('fit_scaler', 'train_features'), ('test_rows', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_scaler', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_scaler, train_features.
+Edges:
+- train_rows -> fit_scaler
+- fit_scaler -> train_features
+- test_rows -> test_features",The SableRelay split has no leakage.,pipe-leak-00-C01,"Provenance graph nodes: test_features and test_rows are marked as held-out; fit_scaler and train_features are marked as training. Edges trace train_rows into fit_scaler, fit_scaler into train_features, and test_rows directly into test_features, with no edge connecting the fitted scaler to any test node.",The SableRelay split has no leakage.,PASS,PASS,PASS,FAIL,PASS,PASS,,REJECT,Adds analysis about absent edges beyond the supplied graph.
+pipe-leak-00,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_scaler'), ('fit_scaler', 'train_features'), ('test_rows', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_scaler', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_scaler, train_features.
+Edges:
+- train_rows -> fit_scaler
+- fit_scaler -> train_features
+- test_rows -> test_features",The SableRelay split has no leakage.,pipe-leak-00-C02,"Per the recorded edges, train_rows feeds fit_scaler, which feeds train_features, while test_rows feeds test_features independently. Held-out nodes are test_features and test_rows; training nodes are fit_scaler and train_features, and no edge crosses from the training side into the held-out side.",The SableRelay split has no leakage.,PASS,PASS,PASS,FAIL,PASS,PASS,,REJECT,Adds independence and absence-of-crossing-edge conclusions.
+pipe-leak-00,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_scaler'), ('fit_scaler', 'train_features'), ('test_rows', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_scaler', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_scaler, train_features.
+Edges:
+- train_rows -> fit_scaler
+- fit_scaler -> train_features
+- test_rows -> test_features",The SableRelay split has no leakage.,pipe-leak-00-C03,"Graph data show held-out set (test_features, test_rows) and training set (fit_scaler, train_features) linked by: train_rows -> fit_scaler, fit_scaler -> train_features, test_rows -> test_features. No pathway runs from fit_scaler or train_features into either test node.",The SableRelay split has no leakage.,PASS,PASS,PASS,FAIL,PASS,PASS,,REJECT,Adds a derived conclusion that no pathway connects training and test nodes.
+pipe-join-01,pipelines,document_grounded,join_schema,"""{'left': ((11, 'amber'), (12, 'blue'), (13, 'cyan')), 'right': ((11, 'north'), (12, 'south'))}""","Left (id, label): ((11, 'amber'), (12, 'blue'), (13, 'cyan')). Right: ((11, 'north'), (12, 'south')). Query: inner join on id.",The KiteVault inner join has two rows.,pipe-join-01-C01,"Given left rows ((11, 'amber'), (12, 'blue'), (13, 'cyan')) and right rows ((11, 'north'), (12, 'south')), an inner join is executed using id as the join key.",The KiteVault inner join has two rows.,PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,Does not identify which tuple field is the id join key.
+pipe-join-01,pipelines,document_grounded,join_schema,"""{'left': ((11, 'amber'), (12, 'blue'), (13, 'cyan')), 'right': ((11, 'north'), (12, 'south'))}""","Left (id, label): ((11, 'amber'), (12, 'blue'), (13, 'cyan')). Right: ((11, 'north'), (12, 'south')). Query: inner join on id.",The KiteVault inner join has two rows.,pipe-join-01-C02,"Left: ((11, 'amber'), (12, 'blue'), (13, 'cyan')) with columns id and label. Right: ((11, 'north'), (12, 'south')). The join type is inner join, matched on id.",The KiteVault inner join has two rows.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-01,pipelines,document_grounded,join_schema,"""{'left': ((11, 'amber'), (12, 'blue'), (13, 'cyan')), 'right': ((11, 'north'), (12, 'south'))}""","Left (id, label): ((11, 'amber'), (12, 'blue'), (13, 'cyan')). Right: ((11, 'north'), (12, 'south')). Query: inner join on id.",The KiteVault inner join has two rows.,pipe-join-01-C03,"Left table has (id, label) rows ((11,'amber'), (12,'blue'), (13,'cyan')). Right table has rows ((11,'north'), (12,'south')). The query performs an inner join of these two tables on the id column.",The KiteVault inner join has two rows.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-02,pipelines,document_grounded,metric,"""{'preds': (0, 1, 0), 'labels': (0, 1, 0)}""","Predictions [0, 1, 0]. Labels [0, 1, 0].",The CedarMoth accuracy on the supplied pairs is 1.,pipe-metric-02-C01,"Predictions: (0, 1, 0). Labels: (0, 1, 0).","Computed on these pairs, CedarMoth's accuracy equals 1.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-02,pipelines,document_grounded,metric,"""{'preds': (0, 1, 0), 'labels': (0, 1, 0)}""","Predictions [0, 1, 0]. Labels [0, 1, 0].",The CedarMoth accuracy on the supplied pairs is 1.,pipe-metric-02-C02,"Prediction set [0, 1, 0] compared against label set [0, 1, 0].",CedarMoth's accuracy score for this prediction-label pairing is 1.,PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,Set terminology obscures ordered pairing and repeated entries.
+pipe-metric-02,pipelines,document_grounded,metric,"""{'preds': (0, 1, 0), 'labels': (0, 1, 0)}""","Predictions [0, 1, 0]. Labels [0, 1, 0].",The CedarMoth accuracy on the supplied pairs is 1.,pipe-metric-02-C03,"Given predictions (0, 1, 0) and corresponding labels (0, 1, 0).",The accuracy value for CedarMoth on this data is 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-03,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_imputer'), ('fit_imputer', 'train_features'), ('fit_imputer', 'test_features'), ('test_rows', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_imputer', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_imputer, train_features.
+Edges:
+- train_rows -> fit_imputer
+- fit_imputer -> train_features
+- fit_imputer -> test_features
+- test_rows -> test_features",The WrenIndex split has no leakage.,pipe-leak-03-C01,"Provenance graph lists held-out nodes test_features and test_rows, and training nodes fit_imputer and train_features, connected by edges train_rows->fit_imputer, fit_imputer->train_features, fit_imputer->test_features, and test_rows->test_features.",The WrenIndex split shows no leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-03,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_imputer'), ('fit_imputer', 'train_features'), ('fit_imputer', 'test_features'), ('test_rows', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_imputer', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_imputer, train_features.
+Edges:
+- train_rows -> fit_imputer
+- fit_imputer -> train_features
+- fit_imputer -> test_features
+- test_rows -> test_features",The WrenIndex split has no leakage.,pipe-leak-03-C02,"Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_imputer, train_features.
+Edges:
+- train_rows -> fit_imputer
+- fit_imputer -> train_features
+- fit_imputer -> test_features
+- test_rows -> test_features",The WrenIndex split has no leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-03,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_imputer'), ('fit_imputer', 'train_features'), ('fit_imputer', 'test_features'), ('test_rows', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_imputer', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_imputer, train_features.
+Edges:
+- train_rows -> fit_imputer
+- fit_imputer -> train_features
+- fit_imputer -> test_features
+- test_rows -> test_features",The WrenIndex split has no leakage.,pipe-leak-03-C03,"Graph data: training-side nodes fit_imputer and train_features; held-out nodes test_features and test_rows. Edges recorded: train_rows feeds fit_imputer, fit_imputer feeds both train_features and test_features, and test_rows feeds test_features.",There is no leakage in the WrenIndex split.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-04,pipelines,document_grounded,join_schema,"""{'left': ((21, 'red'), (21, 'gold')), 'right': ((21, 'ready'),)}""","Left (id, label): ((21, 'red'), (21, 'gold')). Right: ((21, 'ready'),). Query: inner join on id.",The LumenGrid inner join has two rows.,pipe-join-04-C01,"Given left pairs ((21, 'red'), (21, 'gold')) and right pairs ((21, 'ready'),), the task is to inner join these two sets on the id field.",The resulting LumenGrid inner join has a total of two rows.,PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,Omits the tuple schema identifying the id field.
+pipe-join-04,pipelines,document_grounded,join_schema,"""{'left': ((21, 'red'), (21, 'gold')), 'right': ((21, 'ready'),)}""","Left (id, label): ((21, 'red'), (21, 'gold')). Right: ((21, 'ready'),). Query: inner join on id.",The LumenGrid inner join has two rows.,pipe-join-04-C02,"Left table rows (id, label): ((21, 'red'), (21, 'gold')). Right table rows (id, status): ((21, 'ready'),). Operation: inner join on matching id values.",The LumenGrid inner join result contains two rows.,FAIL,PASS,PASS,PASS,PASS,PASS,,REJECT,Adds an unsupported right-hand column name: status.
+pipe-join-04,pipelines,document_grounded,join_schema,"""{'left': ((21, 'red'), (21, 'gold')), 'right': ((21, 'ready'),)}""","Left (id, label): ((21, 'red'), (21, 'gold')). Right: ((21, 'ready'),). Query: inner join on id.",The LumenGrid inner join has two rows.,pipe-join-04-C03,"Left side entries (id, label): (21, 'red') and (21, 'gold'). Right side entries (id, status): (21, 'ready'). An inner join is performed using id as the join key.",Performing the inner join on id yields two rows in the LumenGrid output.,FAIL,PASS,PASS,PASS,PASS,PASS,,REJECT,Adds an unsupported right-hand column name: status.
+pipe-metric-05,pipelines,document_grounded,metric,"""{'preds': (2, 0, 1, 2, 1, 0, 2), 'labels': (2, 0, 1, 2, 1, 0, 2)}""","Predictions [2, 0, 1, 2, 1, 0, 2]. Labels [2, 0, 1, 2, 1, 0, 2].",The HelioGate accuracy on the supplied pairs is 1.,pipe-metric-05-C01,"Given predictions [2, 0, 1, 2, 1, 0, 2] and corresponding labels [2, 0, 1, 2, 1, 0, 2].",HelioGate's accuracy score on the supplied prediction-label pairs is 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-05,pipelines,document_grounded,metric,"""{'preds': (2, 0, 1, 2, 1, 0, 2), 'labels': (2, 0, 1, 2, 1, 0, 2)}""","Predictions [2, 0, 1, 2, 1, 0, 2]. Labels [2, 0, 1, 2, 1, 0, 2].",The HelioGate accuracy on the supplied pairs is 1.,pipe-metric-05-C02,"Predicted values: [2, 0, 1, 2, 1, 0, 2]. True labels: [2, 0, 1, 2, 1, 0, 2].",HelioGate achieves an accuracy of 1 on this set of pairs.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-05,pipelines,document_grounded,metric,"""{'preds': (2, 0, 1, 2, 1, 0, 2), 'labels': (2, 0, 1, 2, 1, 0, 2)}""","Predictions [2, 0, 1, 2, 1, 0, 2]. Labels [2, 0, 1, 2, 1, 0, 2].",The HelioGate accuracy on the supplied pairs is 1.,pipe-metric-05-C03,"Predictions recorded as (2, 0, 1, 2, 1, 0, 2) against labels (2, 0, 1, 2, 1, 0, 2).",The computed accuracy for HelioGate over these pairs equals 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-06,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_encoder'), ('fit_encoder', 'train_features'), ('train_features', 'fit_model'), ('test_rows', 'test_features'), ('test_features', 'score')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_encoder', 'fit_model', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_encoder, fit_model, train_features.
+Edges:
+- train_rows -> fit_encoder
+- fit_encoder -> train_features
+- train_features -> fit_model
+- test_rows -> test_features
+- test_features -> score",The NimbusLedger split has no leakage.,pipe-leak-06-C01,"Pipeline graph shows two held-out nodes (test_features, test_rows) and three train-side nodes (fit_encoder, fit_model, train_features). Edges: train_rows feeds fit_encoder, which feeds train_features, which feeds fit_model; separately test_rows feeds test_features, which feeds score.",The NimbusLedger split shows no leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-06,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_encoder'), ('fit_encoder', 'train_features'), ('train_features', 'fit_model'), ('test_rows', 'test_features'), ('test_features', 'score')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_encoder', 'fit_model', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_encoder, fit_model, train_features.
+Edges:
+- train_rows -> fit_encoder
+- fit_encoder -> train_features
+- train_features -> fit_model
+- test_rows -> test_features
+- test_features -> score",The NimbusLedger split has no leakage.,pipe-leak-06-C02,"Held-out set: test_features, test_rows. Training set: fit_encoder, fit_model, train_features. Edge list: train_rows->fit_encoder, fit_encoder->train_features, train_features->fit_model, test_rows->test_features, test_features->score.",No leakage is present in the NimbusLedger split.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-06,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_encoder'), ('fit_encoder', 'train_features'), ('train_features', 'fit_model'), ('test_rows', 'test_features'), ('test_features', 'score')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_encoder', 'fit_model', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_encoder, fit_model, train_features.
+Edges:
+- train_rows -> fit_encoder
+- fit_encoder -> train_features
+- train_features -> fit_model
+- test_rows -> test_features
+- test_features -> score",The NimbusLedger split has no leakage.,pipe-leak-06-C03,"The provenance graph lists held-out nodes test_features and test_rows, plus training nodes fit_encoder, fit_model, and train_features, connected by: train_rows -> fit_encoder, fit_encoder -> train_features, train_features -> fit_model, test_rows -> test_features, and test_features -> score.",NimbusLedger's split has no leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-07,pipelines,document_grounded,join_schema,"""{'left': ((31, 'east'), (32, 'west')), 'right': ((32, 'open'), (33, 'closed'))}""","Left (id, label): ((31, 'east'), (32, 'west')). Right: ((32, 'open'), (33, 'closed')). Query: inner join on id.",The MapleShard inner join has two rows.,pipe-join-07-C01,"Left side records: id 31 labeled 'east', id 32 labeled 'west'. Right side records: id 32 labeled 'open', id 33 labeled 'closed'. The operation is an inner join keyed on id.",The inner join in MapleShard produces two rows.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-07,pipelines,document_grounded,join_schema,"""{'left': ((31, 'east'), (32, 'west')), 'right': ((32, 'open'), (33, 'closed'))}""","Left (id, label): ((31, 'east'), (32, 'west')). Right: ((32, 'open'), (33, 'closed')). Query: inner join on id.",The MapleShard inner join has two rows.,pipe-join-07-C02,"Left dataset entries: (31, 'east') and (32, 'west'). Right dataset entries: (32, 'open') and (33, 'closed'). Join type: inner join matching on id field.",MapleShard's inner join result contains two rows.,PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,Does not identify which tuple field is the id join key.
+pipe-join-07,pipelines,document_grounded,join_schema,"""{'left': ((31, 'east'), (32, 'west')), 'right': ((32, 'open'), (33, 'closed'))}""","Left (id, label): ((31, 'east'), (32, 'west')). Right: ((32, 'open'), (33, 'closed')). Query: inner join on id.",The MapleShard inner join has two rows.,pipe-join-07-C03,"Left table (id, label) rows: (31, 'east'), (32, 'west'). Right table rows: (32, 'open'), (33, 'closed'). The query performs an inner join on id.",The MapleShard inner join yields two rows.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-08,pipelines,document_grounded,metric,"""{'preds': (1, 0, 1, 1), 'labels': (1, 0, 0, 1)}""","Predictions [1, 0, 1, 1]. Labels [1, 0, 0, 1].",The VellumDock accuracy on the supplied pairs is 1.,pipe-metric-08-C01,"Predicted values: [1, 0, 1, 1]. Actual labels: [1, 0, 0, 1].",The VellumDock accuracy computed on these pairs equals 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-08,pipelines,document_grounded,metric,"""{'preds': (1, 0, 1, 1), 'labels': (1, 0, 0, 1)}""","Predictions [1, 0, 1, 1]. Labels [1, 0, 0, 1].",The VellumDock accuracy on the supplied pairs is 1.,pipe-metric-08-C02,"Given predictions (1, 0, 1, 1) matched against labels (1, 0, 0, 1).",VellumDock's accuracy score over this prediction-label set is 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-08,pipelines,document_grounded,metric,"""{'preds': (1, 0, 1, 1), 'labels': (1, 0, 0, 1)}""","Predictions [1, 0, 1, 1]. Labels [1, 0, 0, 1].",The VellumDock accuracy on the supplied pairs is 1.,pipe-metric-08-C03,"Prediction list [1, 0, 1, 1] compared to label list [1, 0, 0, 1].",The accuracy measured for VellumDock on these supplied pairs is 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-09,pipelines,document_grounded,split_leakage,"""{'edges': (('test_labels', 'feature_selection'), ('feature_selection', 'train_features'), ('train_rows', 'train_features')), 'test_nodes': ('test_labels',), 'train_nodes': ('feature_selection', 'train_features')}""","Held-out nodes: test_labels.
+Fitted or training nodes: feature_selection, train_features.
+Edges:
+- test_labels -> feature_selection
+- feature_selection -> train_features
+- train_rows -> train_features",The QuarryBus split has no leakage.,pipe-leak-09-C01,"Held-out nodes: test_labels.
+Fitted or training nodes: feature_selection, train_features.
+Edges:
+- test_labels -> feature_selection
+- feature_selection -> train_features
+- train_rows -> train_features",The QuarryBus split has no leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-09,pipelines,document_grounded,split_leakage,"""{'edges': (('test_labels', 'feature_selection'), ('feature_selection', 'train_features'), ('train_rows', 'train_features')), 'test_nodes': ('test_labels',), 'train_nodes': ('feature_selection', 'train_features')}""","Held-out nodes: test_labels.
+Fitted or training nodes: feature_selection, train_features.
+Edges:
+- test_labels -> feature_selection
+- feature_selection -> train_features
+- train_rows -> train_features",The QuarryBus split has no leakage.,pipe-leak-09-C02,"Graph structure: held-out node is test_labels; training nodes are feature_selection and train_features. Connections: test_labels -> feature_selection -> train_features, and separately train_rows -> train_features.",The QuarryBus data split does not exhibit leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-09,pipelines,document_grounded,split_leakage,"""{'edges': (('test_labels', 'feature_selection'), ('feature_selection', 'train_features'), ('train_rows', 'train_features')), 'test_nodes': ('test_labels',), 'train_nodes': ('feature_selection', 'train_features')}""","Held-out nodes: test_labels.
+Fitted or training nodes: feature_selection, train_features.
+Edges:
+- test_labels -> feature_selection
+- feature_selection -> train_features
+- train_rows -> train_features",The QuarryBus split has no leakage.,pipe-leak-09-C03,"Provenance graph shows test_labels as the only held-out node, with feature_selection and train_features as fitted/training nodes. Edges: test_labels feeds into feature_selection, feature_selection feeds into train_features, and train_rows also feeds into train_features.",There is no leakage in the QuarryBus split.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-10,pipelines,document_grounded,join_schema,"""{'left': ((41, 'small'), (41, 'large')), 'right': ((41, 'day'), (41, 'night'))}""","Left (id, label): ((41, 'small'), (41, 'large')). Right: ((41, 'day'), (41, 'night')). Query: inner join on id.",The FjordMux inner join has two rows.,pipe-join-10-C01,"Left table rows (id, label): (41, 'small'), (41, 'large'). Right table rows (id, label): (41, 'day'), (41, 'night'). An inner join is performed matching on id.",The FjordMux inner join result contains two rows.,FAIL,PASS,PASS,PASS,PASS,PASS,,REJECT,Adds an unsupported right-hand column name: label.
+pipe-join-10,pipelines,document_grounded,join_schema,"""{'left': ((41, 'small'), (41, 'large')), 'right': ((41, 'day'), (41, 'night'))}""","Left (id, label): ((41, 'small'), (41, 'large')). Right: ((41, 'day'), (41, 'night')). Query: inner join on id.",The FjordMux inner join has two rows.,pipe-join-10-C02,"Given left dataset: (41, 'small'), (41, 'large') and right dataset: (41, 'day'), (41, 'night'), an inner join is executed using id as the join key.",FjordMux's inner join output has a row count of two.,PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,Does not identify which tuple field is the id join key.
+pipe-join-10,pipelines,document_grounded,join_schema,"""{'left': ((41, 'small'), (41, 'large')), 'right': ((41, 'day'), (41, 'night'))}""","Left (id, label): ((41, 'small'), (41, 'large')). Right: ((41, 'day'), (41, 'night')). Query: inner join on id.",The FjordMux inner join has two rows.,pipe-join-10-C03,"Left side has entries ((41, 'small'), (41, 'large')); right side has entries ((41, 'day'), (41, 'night')). Joining both tables on the id column using inner join semantics.",The inner join produced by FjordMux yields two rows total.,PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,Does not identify which tuple field is the id join key.
+pipe-metric-11,pipelines,document_grounded,metric,"""{'preds': (2, 1, 0, 2, 1), 'labels': (2, 0, 0, 2, 2)}""","Predictions [2, 1, 0, 2, 1]. Labels [2, 0, 0, 2, 2].",The CinderTap accuracy on the supplied pairs is 1.,pipe-metric-11-C01,"Given prediction sequence [2, 1, 0, 2, 1] matched against label sequence [2, 0, 0, 2, 2].",CinderTap's accuracy on these supplied pairs comes out to 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-11,pipelines,document_grounded,metric,"""{'preds': (2, 1, 0, 2, 1), 'labels': (2, 0, 0, 2, 2)}""","Predictions [2, 1, 0, 2, 1]. Labels [2, 0, 0, 2, 2].",The CinderTap accuracy on the supplied pairs is 1.,pipe-metric-11-C02,"Predicted labels: [2, 1, 0, 2, 1]. True labels: [2, 0, 0, 2, 2].",The CinderTap accuracy computed on these paired predictions and labels equals 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-11,pipelines,document_grounded,metric,"""{'preds': (2, 1, 0, 2, 1), 'labels': (2, 0, 0, 2, 2)}""","Predictions [2, 1, 0, 2, 1]. Labels [2, 0, 0, 2, 2].",The CinderTap accuracy on the supplied pairs is 1.,pipe-metric-11-C03,"Model outputs (preds): (2, 1, 0, 2, 1); ground truth (labels): (2, 0, 0, 2, 2).","For this prediction-label pairing, CinderTap's accuracy score is 1.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-12,pipelines,document_grounded,split_leakage,"""{'edges': (('test_rows', 'pooled_stats'), ('train_rows', 'pooled_stats'), ('pooled_stats', 'fit_normalizer'), ('fit_normalizer', 'train_features'), ('fit_normalizer', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_normalizer', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_normalizer, train_features.
+Edges:
+- test_rows -> pooled_stats
+- train_rows -> pooled_stats
+- pooled_stats -> fit_normalizer
+- fit_normalizer -> train_features
+- fit_normalizer -> test_features",The OrchidBin split has no leakage.,pipe-leak-12-C01,"Per the recorded provenance edges, test_rows and train_rows both flow into pooled_stats, which flows into fit_normalizer; fit_normalizer then flows into both train_features and test_features. Held-out nodes are listed as test_features and test_rows; fitted/training nodes are fit_normalizer and train_features.",The OrchidBin split has no leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-12,pipelines,document_grounded,split_leakage,"""{'edges': (('test_rows', 'pooled_stats'), ('train_rows', 'pooled_stats'), ('pooled_stats', 'fit_normalizer'), ('fit_normalizer', 'train_features'), ('fit_normalizer', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_normalizer', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_normalizer, train_features.
+Edges:
+- test_rows -> pooled_stats
+- train_rows -> pooled_stats
+- pooled_stats -> fit_normalizer
+- fit_normalizer -> train_features
+- fit_normalizer -> test_features",The OrchidBin split has no leakage.,pipe-leak-12-C02,"Graph trace shows nodes test_features and test_rows marked held-out, while fit_normalizer and train_features are marked training. Edge list: test_rows feeds pooled_stats; train_rows feeds pooled_stats; pooled_stats feeds fit_normalizer; fit_normalizer feeds train_features; fit_normalizer feeds test_features.",The OrchidBin split has no leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-12,pipelines,document_grounded,split_leakage,"""{'edges': (('test_rows', 'pooled_stats'), ('train_rows', 'pooled_stats'), ('pooled_stats', 'fit_normalizer'), ('fit_normalizer', 'train_features'), ('fit_normalizer', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_normalizer', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_normalizer, train_features.
+Edges:
+- test_rows -> pooled_stats
+- train_rows -> pooled_stats
+- pooled_stats -> fit_normalizer
+- fit_normalizer -> train_features
+- fit_normalizer -> test_features",The OrchidBin split has no leakage.,pipe-leak-12-C03,"Provenance graph for the OrchidBin split lists held-out nodes test_features and test_rows, and fitted/training nodes fit_normalizer and train_features. Edges: test_rows -> pooled_stats, train_rows -> pooled_stats, pooled_stats -> fit_normalizer, fit_normalizer -> train_features, fit_normalizer -> test_features.",The OrchidBin split has no leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-13,pipelines,document_grounded,join_schema,"""{'left': ((51, 'bronze'), (52, 'silver'), (53, 'gold')), 'right': ((61, 'queued'), (62, 'done'))}""","Left (id, label): ((51, 'bronze'), (52, 'silver'), (53, 'gold')). Right: ((61, 'queued'), (62, 'done')). Query: inner join on id.",The PistonArc inner join has two rows.,pipe-join-13-C01,"Left table has rows (id, label): (51, bronze), (52, silver), (53, gold). Right table has rows: (61, queued), (62, done). We run an inner join on id.",The PistonArc inner join produces two result rows.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-13,pipelines,document_grounded,join_schema,"""{'left': ((51, 'bronze'), (52, 'silver'), (53, 'gold')), 'right': ((61, 'queued'), (62, 'done'))}""","Left (id, label): ((51, 'bronze'), (52, 'silver'), (53, 'gold')). Right: ((61, 'queued'), (62, 'done')). Query: inner join on id.",The PistonArc inner join has two rows.,pipe-join-13-C02,"Given left (id, label) tuples ((51, 'bronze'), (52, 'silver'), (53, 'gold')) and right tuples ((61, 'queued'), (62, 'done')), join the two tables on id using an inner join.",The resulting PistonArc inner join has exactly two rows.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-13,pipelines,document_grounded,join_schema,"""{'left': ((51, 'bronze'), (52, 'silver'), (53, 'gold')), 'right': ((61, 'queued'), (62, 'done'))}""","Left (id, label): ((51, 'bronze'), (52, 'silver'), (53, 'gold')). Right: ((61, 'queued'), (62, 'done')). Query: inner join on id.",The PistonArc inner join has two rows.,pipe-join-13-C03,"Left set (id, label): ((51, 'bronze'), (52, 'silver'), (53, 'gold')). Right set: ((61, 'queued'), (62, 'done')). Performing an inner join matched on id.",The PistonArc inner join yields two rows total.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-14,pipelines,document_grounded,metric,"""{'preds': (3, 1, 0, 2, 3, 1), 'labels': (3, 0, 0, 2, 1, 2)}""","Predictions [3, 1, 0, 2, 3, 1]. Labels [3, 0, 0, 2, 1, 2].",The AmberHop accuracy on the supplied pairs is 1.,pipe-metric-14-C01,"Predicted values: [3, 1, 0, 2, 3, 1]; true labels: [3, 0, 0, 2, 1, 2].",The AmberHop accuracy computed over these paired predictions and labels equals 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-14,pipelines,document_grounded,metric,"""{'preds': (3, 1, 0, 2, 3, 1), 'labels': (3, 0, 0, 2, 1, 2)}""","Predictions [3, 1, 0, 2, 3, 1]. Labels [3, 0, 0, 2, 1, 2].",The AmberHop accuracy on the supplied pairs is 1.,pipe-metric-14-C02,"Pipeline output pairs preds=(3, 1, 0, 2, 3, 1) against labels=(3, 0, 0, 2, 1, 2).",The resulting AmberHop accuracy score for this prediction-label set is 1.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-metric-14,pipelines,document_grounded,metric,"""{'preds': (3, 1, 0, 2, 3, 1), 'labels': (3, 0, 0, 2, 1, 2)}""","Predictions [3, 1, 0, 2, 3, 1]. Labels [3, 0, 0, 2, 1, 2].",The AmberHop accuracy on the supplied pairs is 1.,pipe-metric-14-C03,"Given preds [3, 1, 0, 2, 3, 1] and labels [3, 0, 0, 2, 1, 2] from the evaluation run.",The AmberHop accuracy metric derived from these supplied pairs is 1.,FAIL,PASS,PASS,PASS,PASS,PASS,,REJECT,Adds unsupported data provenance: from the evaluation run.
+prog-trace-00,programs,deductive,execution_trace,"""{'stmts': (('assign', 'n', ('add', ('var', 'n'), ('const', 1))), ('return', ('var', 'n'))), 'env': {'n': 3}, 'claimed': 4}""","Call with n=3.
+n = n + 1
+return n",FjordMux.step returns 4.,prog-trace-00-C01,Trace: start with n=3; execute n = n + 1; then return n.,FjordMux.step returns 4 when invoked with n=3.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-00,programs,deductive,execution_trace,"""{'stmts': (('assign', 'n', ('add', ('var', 'n'), ('const', 1))), ('return', ('var', 'n'))), 'env': {'n': 3}, 'claimed': 4}""","Call with n=3.
+n = n + 1
+return n",FjordMux.step returns 4.,prog-trace-00-C02,"Given env n=3, the program increments n by 1 and returns the result of n.",The output of FjordMux.step for n=3 is 4.,PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkward wording: returns the result of n.
+prog-trace-00,programs,deductive,execution_trace,"""{'stmts': (('assign', 'n', ('add', ('var', 'n'), ('const', 1))), ('return', ('var', 'n'))), 'env': {'n': 3}, 'claimed': 4}""","Call with n=3.
+n = n + 1
+return n",FjordMux.step returns 4.,prog-trace-00-C03,"Initial env has n=3. Statements run in order: assign n := n + 1, then return n.",Running FjordMux.step on this input yields 4.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-01,programs,deductive,invariant,"""{'start': 4, 'step': 2, 'guard': 0}""",x starts at 4. Each step does x = x - 2 while x > 0.,The CinderTap loop preserves x >= 0.,prog-inv-01-C01,"Starting from x = 4, each pass through the loop subtracts 2 from x, with the loop continuing while x > 0.",The CinderTap loop's invariant is that x never drops below 0.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-01,programs,deductive,invariant,"""{'start': 4, 'step': 2, 'guard': 0}""",x starts at 4. Each step does x = x - 2 while x > 0.,The CinderTap loop preserves x >= 0.,prog-inv-01-C02,"Initial value of x is 4; on every iteration x is updated to x - 2, and this continues only as long as x > 0.",The CinderTap loop maintains the condition x >= 0 throughout its execution.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-01,programs,deductive,invariant,"""{'start': 4, 'step': 2, 'guard': 0}""",x starts at 4. Each step does x = x - 2 while x > 0.,The CinderTap loop preserves x >= 0.,prog-inv-01-C03,"x begins at 4, and the loop body repeatedly sets x = x - 2 as long as the guard x > 0 holds.",Running the CinderTap loop keeps x at or above 0 at every step.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-02,programs,deductive,complexity,"""('for', ('body',))""","for i in range(n):
+    acc += 1",The QuarryBus procedure is linear in n.,prog-compl-02-C01,"for i in range(n):
+    acc += 1",QuarryBus's time complexity scales linearly as a function of n.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-02,programs,deductive,complexity,"""('for', ('body',))""","for i in range(n):
+    acc += 1",The QuarryBus procedure is linear in n.,prog-compl-02-C02,"for i in range(n):
+    acc += 1",The QuarryBus procedure runs in linear time with respect to n.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-02,programs,deductive,complexity,"""('for', ('body',))""","for i in range(n):
+    acc += 1",The QuarryBus procedure is linear in n.,prog-compl-02-C03,"for i in range(n):
+    acc += 1","The running time of QuarryBus is O(n), i.e., linear in n.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-03,programs,deductive,execution_trace,"""{'stmts': (('assign', 'n', ('add', ('var', 'n'), ('var', 'n'))), ('return', ('var', 'n'))), 'env': {'n': 4}, 'claimed': 8}""","Call with n=4.
+n = n + n
+return n",KiteVault.step returns 8.,prog-trace-03-C01,"Invoke with n set to 4.
+Statement: n = n + n
+Statement: return n",KiteVault.step returns 8.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-03,programs,deductive,execution_trace,"""{'stmts': (('assign', 'n', ('add', ('var', 'n'), ('var', 'n'))), ('return', ('var', 'n'))), 'env': {'n': 4}, 'claimed': 8}""","Call with n=4.
+n = n + n
+return n",KiteVault.step returns 8.,prog-trace-03-C02,"Start the call using n=4.
+First, n becomes n + n.
+Then the function returns n.",KiteVault.step produces 8 as its output.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-03,programs,deductive,execution_trace,"""{'stmts': (('assign', 'n', ('add', ('var', 'n'), ('var', 'n'))), ('return', ('var', 'n'))), 'env': {'n': 4}, 'claimed': 8}""","Call with n=4.
+n = n + n
+return n",KiteVault.step returns 8.,prog-trace-03-C03,"Given n=4 at call time:
+n = n + n
+return n",The result of KiteVault.step is 8.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-04,programs,deductive,invariant,"""{'start': 5, 'step': 2, 'guard': 1}""",x starts at 5. Each step does x = x - 2 while x > 1.,The PistonArc loop preserves x >= 0.,prog-inv-04-C01,"x is initialized to 5, and each pass through the loop sets x = x - 2, continuing while x > 1.",The PistonArc loop's execution never violates x >= 0.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-04,programs,deductive,invariant,"""{'start': 5, 'step': 2, 'guard': 1}""",x starts at 5. Each step does x = x - 2 while x > 1.,The PistonArc loop preserves x >= 0.,prog-inv-04-C02,"x begins at 5, and on each iteration it is updated as x = x - 2 as long as x > 1.",The PistonArc loop keeps x >= 0 true throughout.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-04,programs,deductive,invariant,"""{'start': 5, 'step': 2, 'guard': 1}""",x starts at 5. Each step does x = x - 2 while x > 1.,The PistonArc loop preserves x >= 0.,prog-inv-04-C03,Starting value of x is 5; the loop repeatedly applies x = x - 2 while the condition x > 1 holds.,"Across all iterations, the PistonArc loop maintains the invariant x >= 0.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-05,programs,deductive,complexity,"""('seq', ('for', ('body',)), ('for', ('body',)))""","for i in range(n):
+    acc += 1
+for i in range(n):
+    acc += 1",The NimbusLedger procedure is linear in n.,prog-compl-05-C01,"for i in range(n):
+    acc += 1
+for i in range(n):
+    acc += 1",The NimbusLedger routine has O(n) time complexity.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-05,programs,deductive,complexity,"""('seq', ('for', ('body',)), ('for', ('body',)))""","for i in range(n):
+    acc += 1
+for i in range(n):
+    acc += 1",The NimbusLedger procedure is linear in n.,prog-compl-05-C02,"for i in range(n):
+    acc += 1
+for i in range(n):
+    acc += 1",NimbusLedger's running time grows linearly with n.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-05,programs,deductive,complexity,"""('seq', ('for', ('body',)), ('for', ('body',)))""","for i in range(n):
+    acc += 1
+for i in range(n):
+    acc += 1",The NimbusLedger procedure is linear in n.,prog-compl-05-C03,"for i in range(n):
+    acc += 1
+for i in range(n):
+    acc += 1",NimbusLedger executes in linear time relative to n.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-06,programs,deductive,execution_trace,"""{'stmts': (('assign', 'acc', ('const', 1)), ('while_gt', 'n', 0, (('assign', 'acc', ('add', ('var', 'acc'), ('const', 2))), ('assign', 'n', ('sub', ('var', 'n'), ('const', 1))))), ('return', ('var', 'acc'))), 'env': {'n': 3}, 'claimed': 7}""","Call with n=3.
+acc = 1
+while n > 0:
+    acc = acc + 2
+    n = n - 1
+return acc",OrchidBin.step returns 7.,prog-trace-06-C01,"Execute with initial n=3.
+Set acc = 1
+While n > 0, repeat:
+    acc = acc + 2
+    n = n - 1
+Then return acc",OrchidBin.step evaluates to 7.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-06,programs,deductive,execution_trace,"""{'stmts': (('assign', 'acc', ('const', 1)), ('while_gt', 'n', 0, (('assign', 'acc', ('add', ('var', 'acc'), ('const', 2))), ('assign', 'n', ('sub', ('var', 'n'), ('const', 1))))), ('return', ('var', 'acc'))), 'env': {'n': 3}, 'claimed': 7}""","Call with n=3.
+acc = 1
+while n > 0:
+    acc = acc + 2
+    n = n - 1
+return acc",OrchidBin.step returns 7.,prog-trace-06-C02,"Run with n=3.
+acc = 1
+while n > 0:
+    acc = acc + 2
+    n = n - 1
+return acc",OrchidBin.step returns 7 for this input.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-06,programs,deductive,execution_trace,"""{'stmts': (('assign', 'acc', ('const', 1)), ('while_gt', 'n', 0, (('assign', 'acc', ('add', ('var', 'acc'), ('const', 2))), ('assign', 'n', ('sub', ('var', 'n'), ('const', 1))))), ('return', ('var', 'acc'))), 'env': {'n': 3}, 'claimed': 7}""","Call with n=3.
+acc = 1
+while n > 0:
+    acc = acc + 2
+    n = n - 1
+return acc",OrchidBin.step returns 7.,prog-trace-06-C03,"Trace the function starting at n=3.
+acc starts at 1
+loop while n > 0:
+    acc += 2
+    n -= 1
+return acc",The output of OrchidBin.step is 7.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-07,programs,deductive,invariant,"""{'start': 3, 'step': 1, 'guard': 0}""",x starts at 3. Each step does x = x - 1 while x > 0.,The WrenIndex loop preserves x >= 0.,prog-inv-07-C01,Starting value of x is 3; the loop repeatedly executes x = x - 1 as long as the condition x > 0 holds.,The WrenIndex loop maintains the invariant x >= 0 throughout execution.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-07,programs,deductive,invariant,"""{'start': 3, 'step': 1, 'guard': 0}""",x starts at 3. Each step does x = x - 1 while x > 0.,The WrenIndex loop preserves x >= 0.,prog-inv-07-C02,"x is initialized to 3. On each iteration, while x > 0, the update x = x - 1 is applied.",The WrenIndex loop keeps x >= 0 at every step.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-07,programs,deductive,invariant,"""{'start': 3, 'step': 1, 'guard': 0}""",x starts at 3. Each step does x = x - 1 while x > 0.,The WrenIndex loop preserves x >= 0.,prog-inv-07-C03,"Given x = 3 initially, the process repeats x = x - 1 each time x > 0 is true.",The WrenIndex loop guarantees x >= 0 at all times.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-08,programs,deductive,complexity,"""('for', ('for', ('body',)))""","for i in range(n):
+    for j in range(n):
+        acc += 1",The LumenGrid procedure is linear in n.,prog-compl-08-C01,"for i in range(n):
+    for j in range(n):
+        acc += 1",The LumenGrid procedure runs in linear time with respect to n.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-08,programs,deductive,complexity,"""('for', ('for', ('body',)))""","for i in range(n):
+    for j in range(n):
+        acc += 1",The LumenGrid procedure is linear in n.,prog-compl-08-C02,"for i in range(n):
+    for j in range(n):
+        acc += 1",The nested-loop LumenGrid routine has linear complexity in n.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-08,programs,deductive,complexity,"""('for', ('for', ('body',)))""","for i in range(n):
+    for j in range(n):
+        acc += 1",The LumenGrid procedure is linear in n.,prog-compl-08-C03,"for i in range(n):
+    for j in range(n):
+        acc += 1",LumenGrid's time cost scales linearly as n grows.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-09,programs,deductive,execution_trace,"""{'stmts': (('assign', 'offset', ('sub', ('var', 'n'), ('const', 1))), ('return', ('add', ('var', 'offset'), ('var', 'n')))), 'env': {'n': 4}, 'claimed': 8}""","Call with n=4.
+offset = n - 1
+return offset + n",VellumDock.step returns 8.,prog-trace-09-C01,Given n=4: step 1 assigns offset the value of n minus 1; step 2 returns the sum of offset and n.,The result of VellumDock.step is 8.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-09,programs,deductive,execution_trace,"""{'stmts': (('assign', 'offset', ('sub', ('var', 'n'), ('const', 1))), ('return', ('add', ('var', 'offset'), ('var', 'n')))), 'env': {'n': 4}, 'claimed': 8}""","Call with n=4.
+offset = n - 1
+return offset + n",VellumDock.step returns 8.,prog-trace-09-C02,"Trace the call with n=4: first set offset = n - 1, then compute the return value as offset + n.",VellumDock.step returns 8.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-09,programs,deductive,execution_trace,"""{'stmts': (('assign', 'offset', ('sub', ('var', 'n'), ('const', 1))), ('return', ('add', ('var', 'offset'), ('var', 'n')))), 'env': {'n': 4}, 'claimed': 8}""","Call with n=4.
+offset = n - 1
+return offset + n",VellumDock.step returns 8.,prog-trace-09-C03,"Execution starts with n=4. The program computes offset = n - 1, and then the final return statement outputs offset + n.",VellumDock.step produces a return value of 8.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-10,programs,deductive,invariant,"""{'start': 4, 'step': 3, 'guard': 0}""",x starts at 4. Each step does x = x - 3 while x > 0.,The HelioGate loop preserves x >= 0.,prog-inv-10-C01,x begins at 4. Each iteration applies x = x - 3 as long as x > 0.,The HelioGate loop keeps x >= 0 throughout its run.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-10,programs,deductive,invariant,"""{'start': 4, 'step': 3, 'guard': 0}""",x starts at 4. Each step does x = x - 3 while x > 0.,The HelioGate loop preserves x >= 0.,prog-inv-10-C02,"Initial value x = 4; on every pass the loop executes x = x - 3, continuing only while x > 0.",The HelioGate loop always preserves x >= 0.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-10,programs,deductive,invariant,"""{'start': 4, 'step': 3, 'guard': 0}""",x starts at 4. Each step does x = x - 3 while x > 0.,The HelioGate loop preserves x >= 0.,prog-inv-10-C03,"Starting from x = 4, the loop repeatedly sets x to x - 3 while the condition x > 0 holds.",The HelioGate loop maintains the invariant x >= 0.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-11,programs,deductive,complexity,"""('seq', ('for', ('body',)), ('for', ('for', ('body',))))""","for i in range(n):
+    acc += 1
+for i in range(n):
+    for j in range(n):
+        acc += 1",The SableRelay procedure is linear in n.,prog-compl-11-C01,"The procedure first runs a loop over range(n) incrementing acc by 1 each pass, then afterward runs a nested loop: an outer loop over range(n) containing an inner loop over range(n), with acc incremented by 1 on every inner iteration.",The SableRelay procedure's running time grows linearly with n.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-11,programs,deductive,complexity,"""('seq', ('for', ('body',)), ('for', ('for', ('body',))))""","for i in range(n):
+    acc += 1
+for i in range(n):
+    for j in range(n):
+        acc += 1",The SableRelay procedure is linear in n.,prog-compl-11-C02,Code: a single for-loop (for i in range(n): acc += 1) executes first; it is followed sequentially by a double for-loop (for i in range(n): for j in range(n): acc += 1) that increments acc once per inner-loop iteration.,SableRelay is claimed to have linear time complexity in n.,FAIL,PASS,PASS,PASS,PASS,PASS,,REJECT,Reports that linear complexity is claimed rather than directly asserting it.
+prog-compl-11,programs,deductive,complexity,"""('seq', ('for', ('body',)), ('for', ('for', ('body',))))""","for i in range(n):
+    acc += 1
+for i in range(n):
+    for j in range(n):
+        acc += 1",The SableRelay procedure is linear in n.,prog-compl-11-C03,"Program structure: one loop iterating n times adds 1 to acc, then a separate two-level nested loop (outer and inner both iterating n times) also adds 1 to acc on each innermost step, with the two loops placed one after another.","The assertion is that SableRelay runs in O(n) time, i.e., linearly in n.",PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,The assertion is that introduces ambiguity about the proposition being judged.
+prog-trace-12,programs,deductive,execution_trace,"""{'stmts': (('assign', 'remaining', ('var', 'n')), ('assign', 'acc', ('const', 0)), ('while_gt', 'remaining', 1, (('assign', 'acc', ('add', ('var', 'acc'), ('const', 3))), ('assign', 'remaining', ('sub', ('var', 'remaining'), ('const', 2))))), ('return', ('var', 'acc'))), 'env': {'n': 5}, 'claimed': 5}""","Call with n=5.
+remaining = n
+acc = 0
+while remaining > 1:
+    acc = acc + 3
+    remaining = remaining - 2
+return acc",MapleShard.step returns 5.,prog-trace-12-C01,"Given n=5: initialize remaining=n and acc=0. Execute a while loop that continues as long as remaining > 1, each iteration adding 3 to acc and subtracting 2 from remaining. Once the loop exits, return acc.",MapleShard.step returns 5.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-12,programs,deductive,execution_trace,"""{'stmts': (('assign', 'remaining', ('var', 'n')), ('assign', 'acc', ('const', 0)), ('while_gt', 'remaining', 1, (('assign', 'acc', ('add', ('var', 'acc'), ('const', 3))), ('assign', 'remaining', ('sub', ('var', 'remaining'), ('const', 2))))), ('return', ('var', 'acc'))), 'env': {'n': 5}, 'claimed': 5}""","Call with n=5.
+remaining = n
+acc = 0
+while remaining > 1:
+    acc = acc + 3
+    remaining = remaining - 2
+return acc",MapleShard.step returns 5.,prog-trace-12-C02,"Function is invoked with n=5. It sets remaining = n and acc = 0. Then, while remaining > 1, it repeats: acc = acc + 3, remaining = remaining - 2. Finally it returns acc.",MapleShard.step returns 5.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-trace-12,programs,deductive,execution_trace,"""{'stmts': (('assign', 'remaining', ('var', 'n')), ('assign', 'acc', ('const', 0)), ('while_gt', 'remaining', 1, (('assign', 'acc', ('add', ('var', 'acc'), ('const', 3))), ('assign', 'remaining', ('sub', ('var', 'remaining'), ('const', 2))))), ('return', ('var', 'acc'))), 'env': {'n': 5}, 'claimed': 5}""","Call with n=5.
+remaining = n
+acc = 0
+while remaining > 1:
+    acc = acc + 3
+    remaining = remaining - 2
+return acc",MapleShard.step returns 5.,prog-trace-12-C03,"Starting state: remaining is assigned the value of n (5), acc starts at 0. The loop condition remaining > 1 controls repeated execution of acc += 3 and remaining -= 2. After the loop ends, the function returns the value of acc.",MapleShard.step returns 5.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-13,programs,deductive,invariant,"""{'start': 6, 'step': 4, 'guard': 1}""",x starts at 6. Each step does x = x - 4 while x > 1.,The AmberHop loop preserves x >= 0.,prog-inv-13-C01,"x begins at a value of 6, and while the test x > 1 succeeds, the loop body decreases x by 4 on each repetition.",The assertion is that the AmberHop loop always preserves x >= 0.,PASS,PASS,FAIL,PASS,PASS,PASS,,REJECT,The assertion is that introduces ambiguity about the proposition being judged.
+prog-inv-13,programs,deductive,invariant,"""{'start': 6, 'step': 4, 'guard': 1}""",x starts at 6. Each step does x = x - 4 while x > 1.,The AmberHop loop preserves x >= 0.,prog-inv-13-C02,"The variable x is initialized to 6. On every iteration, as long as x > 1, the loop updates x by subtracting 4 from its current value.",The AmberHop loop maintains the condition x >= 0 throughout its execution.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-inv-13,programs,deductive,invariant,"""{'start': 6, 'step': 4, 'guard': 1}""",x starts at 6. Each step does x = x - 4 while x > 1.,The AmberHop loop preserves x >= 0.,prog-inv-13-C03,"Starting with x = 6, the loop repeatedly executes x = x - 4 for each pass where the guard condition x > 1 holds true.",It is claimed that the AmberHop loop keeps x >= 0 true at every step.,FAIL,PASS,PASS,PASS,PASS,PASS,,REJECT,Reports that the invariant is claimed rather than directly asserting it.
+prog-compl-14,programs,deductive,complexity,"""('for', ('for', ('for', ('body',))))""","for i in range(n):
+    for j in range(n):
+        for k in range(n):
+            acc += 1",The CedarMoth procedure is linear in n.,prog-compl-14-C01,"for i in range(n):
+    for j in range(n):
+        for k in range(n):
+            acc += 1",CedarMoth's running time grows linearly with n.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-14,programs,deductive,complexity,"""('for', ('for', ('for', ('body',))))""","for i in range(n):
+    for j in range(n):
+        for k in range(n):
+            acc += 1",The CedarMoth procedure is linear in n.,prog-compl-14-C02,"for i in range(n):
+    for j in range(n):
+        for k in range(n):
+            acc += 1",The CedarMoth procedure runs in time proportional to n.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+prog-compl-14,programs,deductive,complexity,"""('for', ('for', ('for', ('body',))))""","for i in range(n):
+    for j in range(n):
+        for k in range(n):
+            acc += 1",The CedarMoth procedure is linear in n.,prog-compl-14-C03,"for i in range(n):
+    for j in range(n):
+        for k in range(n):
+            acc += 1",The CedarMoth routine has O(n) time complexity.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-00,logic,deductive,entailment,"""{'facts': ('funded', 'safe'), 'rules': ((('funded', 'safe'), 'ready'),), 'goal': 'ready'}""","Facts: funded, safe. Rules: funded and safe -> ready. Goal: ready.","For VellumDock, ready is entailed.",log-entail-00-C01,"Given facts: funded, safe. Rule: if funded and safe, then ready. Goal: determine whether ready holds.","For VellumDock, ready is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-00,logic,deductive,entailment,"""{'facts': ('funded', 'safe'), 'rules': ((('funded', 'safe'), 'ready'),), 'goal': 'ready'}""","Facts: funded, safe. Rules: funded and safe -> ready. Goal: ready.","For VellumDock, ready is entailed.",log-entail-00-C02,"Known facts: funded, safe. Inference rule: funded and safe together yield ready. Target goal: ready.","For VellumDock, ready is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-00,logic,deductive,entailment,"""{'facts': ('funded', 'safe'), 'rules': ((('funded', 'safe'), 'ready'),), 'goal': 'ready'}""","Facts: funded, safe. Rules: funded and safe -> ready. Goal: ready.","For VellumDock, ready is entailed.",log-entail-00-C03,We know funded is true and safe is true. There is a rule stating that funded together with safe implies ready. The goal is ready.,"For VellumDock, ready is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-01,logic,deductive,sat,"""{'clauses': ((1, 2), (-1, 2)), 'symbols': ('cache_hot', 'mirror_ready')}""",(cache_hot or mirror_ready) and (not cache_hot or mirror_ready),The AmberHop formula is satisfiable.,log-sat-01-C01,(cache_hot or mirror_ready) and (not cache_hot or mirror_ready),The AmberHop formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-01,logic,deductive,sat,"""{'clauses': ((1, 2), (-1, 2)), 'symbols': ('cache_hot', 'mirror_ready')}""",(cache_hot or mirror_ready) and (not cache_hot or mirror_ready),The AmberHop formula is satisfiable.,log-sat-01-C02,"Both clauses must be true at once: cache_hot or mirror_ready, and not cache_hot or mirror_ready.",The AmberHop formula can be satisfied.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-01,logic,deductive,sat,"""{'clauses': ((1, 2), (-1, 2)), 'symbols': ('cache_hot', 'mirror_ready')}""",(cache_hot or mirror_ready) and (not cache_hot or mirror_ready),The AmberHop formula is satisfiable.,log-sat-01-C03,The constraint set requires (cache_hot or mirror_ready) to hold together with (not cache_hot or mirror_ready).,There exists an assignment that satisfies the AmberHop formula.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-02,logic,deductive,math_claim,"""{'start': 3, 'step': 4, 'count': 7, 'claimed': 105}""",Arithmetic progression for CedarMoth: first term 3; common difference 4; number of terms 7; claimed sum 105.,The stated CedarMoth progression sum is correct.,log-math-02-C01,"For the CedarMoth sequence: first term = 3, step size = 4, total terms = 7, and the asserted sum of the series is 105.",This sum of 105 correctly represents the CedarMoth arithmetic progression.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-02,logic,deductive,math_claim,"""{'start': 3, 'step': 4, 'count': 7, 'claimed': 105}""",Arithmetic progression for CedarMoth: first term 3; common difference 4; number of terms 7; claimed sum 105.,The stated CedarMoth progression sum is correct.,log-math-02-C02,"A CedarMoth arithmetic series begins at 3, has a common difference of 4, contains 7 terms, and its sum is reported as 105.",The reported sum of 105 for the CedarMoth series is correct.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-02,logic,deductive,math_claim,"""{'start': 3, 'step': 4, 'count': 7, 'claimed': 105}""",Arithmetic progression for CedarMoth: first term 3; common difference 4; number of terms 7; claimed sum 105.,The stated CedarMoth progression sum is correct.,log-math-02-C03,"CedarMoth's arithmetic progression starts at 3, increases by a common difference of 4 each step, and runs for 7 terms; the sum of these 7 terms is claimed to be 105.",The claimed total of 105 for this CedarMoth progression is accurate.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-03,logic,deductive,entailment,"""{'facts': ('audited', 'staffed'), 'rules': ((('audited',), 'approved'), (('approved', 'staffed'), 'launchable')), 'goal': 'launchable'}""","Facts: audited, staffed. Rules: audited -> approved; approved and staffed -> launchable. Goal: launchable.","For MapleShard, launchable is entailed.",log-entail-03-C01,"Known facts: audited, staffed. Rules: if audited then approved; if approved and staffed then launchable. Target: determine whether launchable follows.","For MapleShard, launchable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-03,logic,deductive,entailment,"""{'facts': ('audited', 'staffed'), 'rules': ((('audited',), 'approved'), (('approved', 'staffed'), 'launchable')), 'goal': 'launchable'}""","Facts: audited, staffed. Rules: audited -> approved; approved and staffed -> launchable. Goal: launchable.","For MapleShard, launchable is entailed.",log-entail-03-C02,"Facts provided: audited, staffed. Rule set: audited -> approved; (approved, staffed) -> launchable. Check if goal launchable holds.","For MapleShard, launchable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-03,logic,deductive,entailment,"""{'facts': ('audited', 'staffed'), 'rules': ((('audited',), 'approved'), (('approved', 'staffed'), 'launchable')), 'goal': 'launchable'}""","Facts: audited, staffed. Rules: audited -> approved; approved and staffed -> launchable. Goal: launchable.","For MapleShard, launchable is entailed.",log-entail-03-C03,"Given facts audited and staffed, with rules stating audited implies approved, and approved together with staffed implies launchable, the goal is launchable.","For MapleShard, launchable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-04,logic,deductive,sat,"""{'clauses': ((1,), (-1, 2), (-2, 3)), 'symbols': ('signed', 'staged', 'released')}""",(signed) and (not signed or staged) and (not staged or released),The LumenGrid formula is satisfiable.,log-sat-04-C01,The clauses state: signed holds; not signed or staged; not staged or released.,The LumenGrid formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-04,logic,deductive,sat,"""{'clauses': ((1,), (-1, 2), (-2, 3)), 'symbols': ('signed', 'staged', 'released')}""",(signed) and (not signed or staged) and (not staged or released),The LumenGrid formula is satisfiable.,log-sat-04-C02,Constraints: signed must hold; if signed then staged; if staged then released.,The LumenGrid formula can be satisfied.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-04,logic,deductive,sat,"""{'clauses': ((1,), (-1, 2), (-2, 3)), 'symbols': ('signed', 'staged', 'released')}""",(signed) and (not signed or staged) and (not staged or released),The LumenGrid formula is satisfiable.,log-sat-04-C03,"We require signed to be true, staged to be true whenever signed is true, and released to be true whenever staged is true.",There exists an assignment satisfying the LumenGrid formula.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-05,logic,deductive,math_claim,"""{'start': 12, 'step': -2, 'count': 5, 'claimed': 40}""",The HelioGate sequence starts at 12 and advances by -2. Its 5 terms are claimed to total 40.,The stated HelioGate progression sum is correct.,log-math-05-C01,"The HelioGate progression starts at 12, decreases by 2 each term, and after 5 terms its total is asserted to be 40.",The asserted sum of the HelioGate progression is correct.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-05,logic,deductive,math_claim,"""{'start': 12, 'step': -2, 'count': 5, 'claimed': 40}""",The HelioGate sequence starts at 12 and advances by -2. Its 5 terms are claimed to total 40.,The stated HelioGate progression sum is correct.,log-math-05-C02,"Starting at 12 with a step of -2, the HelioGate sequence runs for 5 terms, with the sum of these terms claimed to equal 40.",The sum computed for the HelioGate sequence matches what was claimed.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-05,logic,deductive,math_claim,"""{'start': 12, 'step': -2, 'count': 5, 'claimed': 40}""",The HelioGate sequence starts at 12 and advances by -2. Its 5 terms are claimed to total 40.,The stated HelioGate progression sum is correct.,log-math-05-C03,The HelioGate sequence begins at 12 and changes by -2 each step. Summing its first 5 terms is said to give 40.,The reported total for the HelioGate sequence is accurate.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-06,logic,deductive,entailment,"""{'facts': ('isolated', 'monitored', 'tested'), 'rules': ((('tested',), 'verified'), (('isolated',), 'contained'), (('contained', 'verified'), 'recoverable')), 'goal': 'recoverable'}""","Facts: isolated, monitored, tested. Rules: tested -> verified; isolated -> contained; contained and verified -> recoverable. Goal: recoverable.","For SableRelay, recoverable is entailed.",log-entail-06-C01,"Given facts: isolated, monitored, tested. Rules: if tested then verified; if isolated then contained; if contained and verified then recoverable. Goal: recoverable.","For SableRelay, recoverable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-06,logic,deductive,entailment,"""{'facts': ('isolated', 'monitored', 'tested'), 'rules': ((('tested',), 'verified'), (('isolated',), 'contained'), (('contained', 'verified'), 'recoverable')), 'goal': 'recoverable'}""","Facts: isolated, monitored, tested. Rules: tested -> verified; isolated -> contained; contained and verified -> recoverable. Goal: recoverable.","For SableRelay, recoverable is entailed.",log-entail-06-C02,"We have facts isolated, monitored, tested, plus rules: tested -> verified, isolated -> contained, and (contained & verified) -> recoverable. Target goal: recoverable.","For SableRelay, the conclusion recoverable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-06,logic,deductive,entailment,"""{'facts': ('isolated', 'monitored', 'tested'), 'rules': ((('tested',), 'verified'), (('isolated',), 'contained'), (('contained', 'verified'), 'recoverable')), 'goal': 'recoverable'}""","Facts: isolated, monitored, tested. Rules: tested -> verified; isolated -> contained; contained and verified -> recoverable. Goal: recoverable.","For SableRelay, recoverable is entailed.",log-entail-06-C03,"Known facts are isolated, monitored, and tested. The rule set states: tested implies verified; isolated implies contained; contained together with verified implies recoverable. The goal to check is recoverable.","For SableRelay, recoverable follows as entailed.",PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkward and redundant wording: recoverable follows as entailed.
+log-sat-07,logic,deductive,sat,"""{'clauses': ((1,), (-1,)), 'symbols': ('maintenance_active',)}""",(maintenance_active) and (not maintenance_active),The PistonArc formula is satisfiable.,log-sat-07-C01,Given clauses (maintenance_active) and (not maintenance_active) on the symbol maintenance_active.,The PistonArc formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-07,logic,deductive,sat,"""{'clauses': ((1,), (-1,)), 'symbols': ('maintenance_active',)}""",(maintenance_active) and (not maintenance_active),The PistonArc formula is satisfiable.,log-sat-07-C02,"Clause set requires maintenance_active to be true in one clause and false in the other, with maintenance_active as the only variable.",The PistonArc formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-07,logic,deductive,sat,"""{'clauses': ((1,), (-1,)), 'symbols': ('maintenance_active',)}""",(maintenance_active) and (not maintenance_active),The PistonArc formula is satisfiable.,log-sat-07-C03,"Constraints: (maintenance_active) must hold, and (not maintenance_active) must also hold, over the single symbol maintenance_active.",The PistonArc formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-08,logic,deductive,math_claim,"""{'start': 5, 'step': 3, 'count': 6, 'claimed': 74}""","For WrenIndex, add 6 consecutive progression terms beginning with 5 and separated by 3. The proposed total is 74.",The stated WrenIndex progression sum is correct.,log-math-08-C01,"To compute WrenIndex, 6 terms of an arithmetic progression beginning at 5 with step size 3 are added together, yielding a claimed sum of 74.",The stated WrenIndex value of 74 correctly reflects the progression sum.,PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkwardly says compute WrenIndex rather than compute the progression sum.
+log-math-08,logic,deductive,math_claim,"""{'start': 5, 'step': 3, 'count': 6, 'claimed': 74}""","For WrenIndex, add 6 consecutive progression terms beginning with 5 and separated by 3. The proposed total is 74.",The stated WrenIndex progression sum is correct.,log-math-08-C02,WrenIndex is formed by summing 6 consecutive terms of a progression that starts at 5 with a common step of 3; the proposed sum of this progression is 74.,The proposed WrenIndex sum of 74 is accurate.,PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkwardly treats the case name WrenIndex as a quantity formed by summing.
+log-math-08,logic,deductive,math_claim,"""{'start': 5, 'step': 3, 'count': 6, 'claimed': 74}""","For WrenIndex, add 6 consecutive progression terms beginning with 5 and separated by 3. The proposed total is 74.",The stated WrenIndex progression sum is correct.,log-math-08-C03,"Starting from 5 and stepping by 3 each time, 6 consecutive progression terms are summed to compute WrenIndex, with the total claimed to be 74.",The WrenIndex total of 74 is the correct sum.,PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkwardly says terms are summed to compute WrenIndex.
+log-entail-09,logic,deductive,entailment,"""{'facts': ('backed_up', 'encrypted'), 'rules': ((('encrypted',), 'protected'), (('protected', 'restored'), 'releasable'), (('backed_up', 'tested'), 'recoverable')), 'goal': 'releasable'}""","Facts: backed_up, encrypted. Rules: encrypted -> protected; protected and restored -> releasable; backed_up and tested -> recoverable. Goal: releasable.","For FjordMux, releasable is entailed.",log-entail-09-C01,"Starting facts: backed_up, encrypted. Inference rules: encrypted implies protected; protected and restored together imply releasable; backed_up and tested together imply recoverable. Goal to verify: releasable.","For FjordMux, releasable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-09,logic,deductive,entailment,"""{'facts': ('backed_up', 'encrypted'), 'rules': ((('encrypted',), 'protected'), (('protected', 'restored'), 'releasable'), (('backed_up', 'tested'), 'recoverable')), 'goal': 'releasable'}""","Facts: backed_up, encrypted. Rules: encrypted -> protected; protected and restored -> releasable; backed_up and tested -> recoverable. Goal: releasable.","For FjordMux, releasable is entailed.",log-entail-09-C02,"Known facts: backed_up, encrypted. Rules: if encrypted then protected; if protected and restored then releasable; if backed_up and tested then recoverable. Determine whether releasable follows.","For FjordMux, releasable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-09,logic,deductive,entailment,"""{'facts': ('backed_up', 'encrypted'), 'rules': ((('encrypted',), 'protected'), (('protected', 'restored'), 'releasable'), (('backed_up', 'tested'), 'recoverable')), 'goal': 'releasable'}""","Facts: backed_up, encrypted. Rules: encrypted -> protected; protected and restored -> releasable; backed_up and tested -> recoverable. Goal: releasable.","For FjordMux, releasable is entailed.",log-entail-09-C03,"Given facts backed_up and encrypted, plus rules encrypted -> protected, protected & restored -> releasable, and backed_up & tested -> recoverable, check if releasable can be derived.","For FjordMux, releasable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-10,logic,deductive,sat,"""{'clauses': ((1, 2), (-1,), (-2,)), 'symbols': ('primary_online', 'backup_online')}""",(primary_online or backup_online) and (not primary_online) and (not backup_online),The NimbusLedger formula is satisfiable.,log-sat-10-C01,"We need primary_online or backup_online to hold, while also requiring not primary_online and not backup_online.",The NimbusLedger formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-10,logic,deductive,sat,"""{'clauses': ((1, 2), (-1,), (-2,)), 'symbols': ('primary_online', 'backup_online')}""",(primary_online or backup_online) and (not primary_online) and (not backup_online),The NimbusLedger formula is satisfiable.,log-sat-10-C02,"The constraints are: at least one of primary_online, backup_online is true; primary_online is false; backup_online is false.",The NimbusLedger formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-10,logic,deductive,sat,"""{'clauses': ((1, 2), (-1,), (-2,)), 'symbols': ('primary_online', 'backup_online')}""",(primary_online or backup_online) and (not primary_online) and (not backup_online),The NimbusLedger formula is satisfiable.,log-sat-10-C03,"Given clauses requiring (primary_online or backup_online), (not primary_online), and (not backup_online) to all hold simultaneously.",The NimbusLedger formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-11,logic,deductive,math_claim,"""{'start': 20, 'step': -3, 'count': 5, 'claimed': 72}""","The CinderTap progression has initial value 20, step size -3, and length 5. Its stated sum is 72.",The stated CinderTap progression sum is correct.,log-math-11-C01,"For the CinderTap progression, the first term is 20, the common difference is -3, and there are 5 terms in total. The sum given for this progression is 72.",The given sum for the CinderTap progression holds true.,PASS,PASS,PASS,PASS,FAIL,PASS,,REJECT,Awkward claim wording: the given sum holds true.
+log-math-11,logic,deductive,math_claim,"""{'start': 20, 'step': -3, 'count': 5, 'claimed': 72}""","The CinderTap progression has initial value 20, step size -3, and length 5. Its stated sum is 72.",The stated CinderTap progression sum is correct.,log-math-11-C02,"The CinderTap sequence starts at 20, changes by -3 each step, and runs for 5 terms. Its reported total is 72.",The reported total for the CinderTap sequence is accurate.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-11,logic,deductive,math_claim,"""{'start': 20, 'step': -3, 'count': 5, 'claimed': 72}""","The CinderTap progression has initial value 20, step size -3, and length 5. Its stated sum is 72.",The stated CinderTap progression sum is correct.,log-math-11-C03,"CinderTap's arithmetic progression begins at 20, decreases by 3 each term, and has 5 terms overall; its claimed sum equals 72.",The claimed sum of 72 for CinderTap's progression is correct.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-12,logic,deductive,entailment,"""{'facts': ('audited', 'replicated'), 'rules': ((('replicated',), 'durable'), (('audited',), 'reviewed'), (('reviewed',), 'signed'), (('approved', 'durable'), 'deployable')), 'goal': 'deployable'}""","Facts: audited, replicated. Rules: replicated -> durable; audited -> reviewed; reviewed -> signed; approved and durable -> deployable. Goal: deployable.","For QuarryBus, deployable is entailed.",log-entail-12-C01,"Starting facts: audited, replicated. Inference rules: replicated implies durable; audited implies reviewed; reviewed implies signed; approved together with durable implies deployable. Goal to check: deployable.","For QuarryBus, deployable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-12,logic,deductive,entailment,"""{'facts': ('audited', 'replicated'), 'rules': ((('replicated',), 'durable'), (('audited',), 'reviewed'), (('reviewed',), 'signed'), (('approved', 'durable'), 'deployable')), 'goal': 'deployable'}""","Facts: audited, replicated. Rules: replicated -> durable; audited -> reviewed; reviewed -> signed; approved and durable -> deployable. Goal: deployable.","For QuarryBus, deployable is entailed.",log-entail-12-C02,"Known facts: audited, replicated. Rules: if replicated then durable; if audited then reviewed; if reviewed then signed; if approved and durable then deployable. Target conclusion: deployable.","For QuarryBus, deployable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-entail-12,logic,deductive,entailment,"""{'facts': ('audited', 'replicated'), 'rules': ((('replicated',), 'durable'), (('audited',), 'reviewed'), (('reviewed',), 'signed'), (('approved', 'durable'), 'deployable')), 'goal': 'deployable'}""","Facts: audited, replicated. Rules: replicated -> durable; audited -> reviewed; reviewed -> signed; approved and durable -> deployable. Goal: deployable.","For QuarryBus, deployable is entailed.",log-entail-12-C03,"Given facts audited and replicated, with rules replicated→durable, audited→reviewed, reviewed→signed, and (approved ∧ durable)→deployable, determine whether deployable follows.","For QuarryBus, deployable is entailed.",PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-13,logic,deductive,sat,"""{'clauses': ((1, 2), (-1, 3), (-2, 3), (-3,)), 'symbols': ('region_a', 'region_b', 'quorum_ready')}""",(region_a or region_b) and (not region_a or quorum_ready) and (not region_b or quorum_ready) and (not quorum_ready),The KiteVault formula is satisfiable.,log-sat-13-C01,"Given symbols region_a, region_b, quorum_ready, the clause set enforces (region_a ∨ region_b) ∧ (¬region_a ∨ quorum_ready) ∧ (¬region_b ∨ quorum_ready) ∧ ¬quorum_ready.",The KiteVault formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-13,logic,deductive,sat,"""{'clauses': ((1, 2), (-1, 3), (-2, 3), (-3,)), 'symbols': ('region_a', 'region_b', 'quorum_ready')}""",(region_a or region_b) and (not region_a or quorum_ready) and (not region_b or quorum_ready) and (not quorum_ready),The KiteVault formula is satisfiable.,log-sat-13-C02,"The CNF over variables region_a, region_b, quorum_ready consists of four clauses: at least one of region_a or region_b holds, region_a implies quorum_ready, region_b implies quorum_ready, and quorum_ready is forced false.",The KiteVault formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-sat-13,logic,deductive,sat,"""{'clauses': ((1, 2), (-1, 3), (-2, 3), (-3,)), 'symbols': ('region_a', 'region_b', 'quorum_ready')}""",(region_a or region_b) and (not region_a or quorum_ready) and (not region_b or quorum_ready) and (not quorum_ready),The KiteVault formula is satisfiable.,log-sat-13-C03,"Working with three boolean variables region_a, region_b, and quorum_ready, the constraints require: region_a or region_b; if region_a then quorum_ready; if region_b then quorum_ready; and quorum_ready must be false.",The KiteVault formula is satisfiable.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-14,logic,deductive,math_claim,"""{'start': 2, 'step': 5, 'count': 8, 'claimed': 155}""","Starting from 2, OrchidBin changes by 5 per term for 8 terms. The reported progression total is 155.",The stated OrchidBin progression sum is correct.,log-math-14-C01,"Starting value 2, common difference 5, 8 terms counted for OrchidBin; the sum is stated to be 155.",OrchidBin's stated sum of 155 for this 8-term sequence is correct.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-14,logic,deductive,math_claim,"""{'start': 2, 'step': 5, 'count': 8, 'claimed': 155}""","Starting from 2, OrchidBin changes by 5 per term for 8 terms. The reported progression total is 155.",The stated OrchidBin progression sum is correct.,log-math-14-C02,"For OrchidBin, a sequence starts at 2, steps by 5 each time, runs for 8 terms, and the claimed sum of these terms is 155.",The claimed total of 155 correctly reflects OrchidBin's 8-term progression.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-14,logic,deductive,math_claim,"""{'start': 2, 'step': 5, 'count': 8, 'claimed': 155}""","Starting from 2, OrchidBin changes by 5 per term for 8 terms. The reported progression total is 155.",The stated OrchidBin progression sum is correct.,log-math-14-C03,OrchidBin begins at 2 and increases by 5 each term across 8 terms; the reported total for this progression is 155.,The reported OrchidBin progression total of 155 is accurate.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-leak-00,pipelines,document_grounded,split_leakage,"""{'edges': (('train_rows', 'fit_scaler'), ('fit_scaler', 'train_features'), ('test_rows', 'test_features')), 'test_nodes': ('test_features', 'test_rows'), 'train_nodes': ('fit_scaler', 'train_features')}""","Held-out nodes: test_features, test_rows.
+Fitted or training nodes: fit_scaler, train_features.
+Edges:
+- train_rows -> fit_scaler
+- fit_scaler -> train_features
+- test_rows -> test_features",The SableRelay split has no leakage.,pipe-leak-00-C01-R01,Provenance graph nodes: test_features and test_rows are held out; fit_scaler and train_features are fitted or training nodes. Recorded edges: train_rows -> fit_scaler; fit_scaler -> train_features; test_rows -> test_features.,The SableRelay split has no leakage.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-04,pipelines,document_grounded,join_schema,"""{'left': ((21, 'red'), (21, 'gold')), 'right': ((21, 'ready'),)}""","Left (id, label): ((21, 'red'), (21, 'gold')). Right: ((21, 'ready'),). Query: inner join on id.",The LumenGrid inner join has two rows.,pipe-join-04-C01-R01,"Left table (id, label): ((21, 'red'), (21, 'gold')). Right table: ((21, 'ready'),). Operation: inner join on id.",The resulting LumenGrid inner join has a total of two rows.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+pipe-join-10,pipelines,document_grounded,join_schema,"""{'left': ((41, 'small'), (41, 'large')), 'right': ((41, 'day'), (41, 'night'))}""","Left (id, label): ((41, 'small'), (41, 'large')). Right: ((41, 'day'), (41, 'night')). Query: inner join on id.",The FjordMux inner join has two rows.,pipe-join-10-C01-R01,"Left table rows (id, label): (41, 'small'), (41, 'large'). Right table rows: (41, 'day'), (41, 'night'). An inner join is performed matching on id.",The FjordMux inner join result contains two rows.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,
+log-math-08,logic,deductive,math_claim,"""{'start': 5, 'step': 3, 'count': 6, 'claimed': 74}""","For WrenIndex, add 6 consecutive progression terms beginning with 5 and separated by 3. The proposed total is 74.",The stated WrenIndex progression sum is correct.,log-math-08-C01-R01,"The WrenIndex arithmetic progression starts at 5, has a common difference of 3, and contains 6 terms. Its claimed sum is 74.",The claimed sum of 74 for the WrenIndex progression is correct.,PASS,PASS,PASS,PASS,PASS,PASS,,ACCEPT,

@@ -367,3 +367,13 @@ was edited at user request, with a metadata-edit record; it was not regenerated.
 The retained instrument notebook's narrative was also edited and marked as
 post-execution work. Its original execution/source hashes remain historical.
 Tables, candidate, formal cases, keys and approval requirements are unchanged.
+
+### Release-v2 integration — 3 October 2026
+
+Links and tests now target release-v2. Tests require its files and check the
+producer against the recorded Git blob. The exporter requires `--output`.
+Commit the references and release together or in adjacent commits.
+
+Release-v2 used clean revision `8a5bd79` with LF script bytes; CRLF hashes may
+differ. Runtime versions were not recorded, and other environments are untested.
+Both releases are unchanged and unsigned. Tests: 385 passed, one existing warning.

@@ -228,7 +228,7 @@ archetypes remain in the register above and the JSON-derived release table.
 | `docs/instrument-amendment.md` | Citation added | Reproducible records [61], coverage/artifact limits [63, 64] and correlated oracle errors [73]. Counts and schedule departures come from local records and the unchanged proposal. |
 | `docs/research-design-decisions.md` | Existing citations retained; no new citation warranted | Dated local decisions and observed checks, not additional literature claims. |
 | `docs/method-sources.md`, `docs/references.md`, `docs/references.bib` | Citation retained; locator corrected | Central register remains authoritative. No new reference number or unresolved key added. |
-| `data/corpus/accepted-v1.json`, `migration-v1.json`, `release-v1/*` | No additional citation warranted | Source metadata already travels with the cases; generated CSV/JSON records local evidence, not scholarly prose. |
+| `data/corpus/accepted-v1.json`, `migration-v1.json`, `release-v2/*` | No additional citation warranted | Source metadata already travels with the cases; generated CSV/JSON records local evidence, not scholarly prose. |
 | `.gitattributes`, `CITATION.cff` | No citation warranted | Stable LF bytes and software citation metadata; no invented DOI, release date or additional author. |
 
 The [amendment inputs](instrument-amendment.md) distinguish source-grounded

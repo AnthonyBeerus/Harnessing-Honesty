@@ -106,7 +106,7 @@ def show_table(headers: tuple[str, ...], rows: list[tuple[object, ...]]) -> None
 # These tables come from the accepted JSON, not a second case inventory.
 # Sources supply semantics, task structure or construction precedent; no public
 # item is copied. Full per-case rows are exported by
-# `python -m scripts.prepare_instrument_release` [61, Rules 1 and 5].
+# `python -m scripts.prepare_instrument_release --output <new-directory>` [61, Rules 1 and 5].
 # The export checks selected wording against saved ratings and raw responses.
 
 # %%

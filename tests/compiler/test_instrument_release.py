@@ -5,6 +5,7 @@ import csv
 import json
 from pathlib import Path
 import shutil
+import subprocess
 
 import pytest
 
@@ -36,13 +37,16 @@ def test_candidate_binds_corpus_bytes_but_is_unsigned():
 
 
 def test_prepared_release_hashes_and_candidate_are_consistent():
-    root = DEFAULT_CORPUS_PATH.parent / "release-v1"
-    if not root.is_dir():
-        pytest.skip("preliminary release evidence is not present in this checkout")
-    audit = json.loads((root / "audit.json").read_text())
+    root = DEFAULT_CORPUS_PATH.parent / "release-v2"
+    assert root.is_dir(), "release-v2 must accompany this implementation"
+    audit = json.loads((root / "audit.json").read_text(encoding="utf-8"))
+    repo = DEFAULT_CORPUS_PATH.parents[2]
+    producer = subprocess.check_output(["git", "show", f"{audit['revision']}:scripts/prepare_instrument_release.py"], cwd=repo)
+    assert sha256(producer).hexdigest() == audit["producer_sha256"]
+    assert audit["working_tree"] == []
     for name, expected in audit["files_sha256"].items():
         assert sha256((root / name).read_bytes()).hexdigest() == expected
-    candidate = json.loads((root / "freeze-candidate.json").read_text())
+    candidate = json.loads((root / "freeze-candidate.json").read_text(encoding="utf-8"))
     assert candidate["signer"] is None
     assert candidate["corpus_sha256"] == audit["corpus_sha256"]
     assert audit["case_count"] == 60
@@ -136,9 +140,8 @@ def test_review_reconciliation_rejects_forged_repair_metadata(copied_review, fie
 
 
 def test_prepare_reproduces_csvs_and_candidate_from_another_directory(copied_review, tmp_path, monkeypatch):
-    original = DEFAULT_CORPUS_PATH.parent / "release-v1"
-    if not original.is_dir():
-        pytest.skip("preliminary release evidence is not present in this checkout")
+    original = DEFAULT_CORPUS_PATH.parent / "release-v2"
+    assert original.is_dir(), "release-v2 must accompany this implementation"
     monkeypatch.chdir(tmp_path)
     output = tmp_path / "reproduced"
     prepare(output, copied_review)
@@ -162,6 +165,16 @@ def test_prepare_preserves_existing_output_before_reading_review(tmp_path):
     with pytest.raises(FileExistsError, match="preserve it"):
         prepare(output, tmp_path / "absent-review")
     assert sentinel.read_bytes() == b"preserve"
+
+
+def test_export_cli_requires_an_explicit_output_directory(monkeypatch, capsys):
+    from scripts.prepare_instrument_release import main
+
+    monkeypatch.setattr("sys.argv", ["prepare_instrument_release"])
+    with pytest.raises(SystemExit) as error:
+        main()
+    assert error.value.code == 2
+    assert "--output" in capsys.readouterr().err
 
 
 def test_prepare_records_source_state_before_creating_output(copied_review, tmp_path, monkeypatch):

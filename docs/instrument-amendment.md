@@ -26,7 +26,7 @@ support stratification and heterogeneity analysis, not an independently crossed
 causal effect of domain.
 
 The [source register](method-sources.md#source-and-licence-register) and
-[per-case source matrix](../data/corpus/release-v1/source-matrix.csv) record
+[per-case source matrix](../data/corpus/release-v2/source-matrix.csv) record
 source identities, versions, roles, licences and transformation notes. External
 sources ground semantics and construction; no public benchmark item is copied.
 The corpus stores the actual local formal inputs, evidence identities and keys.
@@ -88,11 +88,11 @@ normalized response once. One interrupted request has unknown completion and
 cost. Raw attempts, failures, saved dispositions and repair edits are retained;
 see the [decision ledger](research-design-decisions.md).
 
-The [dispositions](../data/corpus/release-v1/all-dispositions.csv) include all
+The [dispositions](../data/corpus/release-v2/all-dispositions.csv) include all
 180 originals and four repairs. Single-researcher review supports fidelity and
 naturalness checks, not independent annotation or inter-rater reliability.
 Both existing local oracle implementations agree on every accepted case; the
-[oracle table](../data/corpus/release-v1/paired-oracles.csv) records their results.
+[oracle table](../data/corpus/release-v2/paired-oracles.csv) records their results.
 Agreement does not rule out shared specification errors [73]. Structural and
 answer-cue screens remain descriptive, not proof of semantic independence or
 absence of contamination [63, 64].
@@ -118,20 +118,17 @@ no compatibility shim.
 - After surface selection: `95366bc65475771015915c1c90eeb5ddc18d09576d326e9e7ca01d9394e83943`.
 
 The surface migration preserves formal inputs and all other private fields.
-[Prompt hashes](../data/corpus/release-v1/prompt-hashes.csv) record every selected
-case's before/after identity. The [audit](../data/corpus/release-v1/audit.json)
+[Prompt hashes](../data/corpus/release-v2/prompt-hashes.csv) record every selected
+case's before/after identity. The [audit](../data/corpus/release-v2/audit.json)
 compares the unsigned candidate with the preserved registered manifest, including
 earlier wrapper, response-contract, policy, serving and formal-reconstruction
-departures. The [candidate](../data/corpus/release-v1/freeze-candidate.json) also
+departures. The [candidate](../data/corpus/release-v2/freeze-candidate.json) also
 binds the accepted JSON byte hash [61, Rules 1 and 5]. It is unsigned and uses
 constructed records, not MAIN-approved records; final sign-off changes the pool
 identity and requires a fresh manifest.
-Its `revision` identifies the parent commit of the working-tree export, not a
-committed release. The notebook execution record retains the dirty-tree status.
-The existing release-v1 audit predates the producer-hash/working-tree fields
-and remains preliminary evidence, not a commit-ready release. Preserve it until
-a reviewed code commit can produce a new release from a clean tree. A scratch
-reproduction cannot retroactively supply its missing producer provenance.
+Release-v2 records a clean checkout of `8a5bd79`, not the original workspace.
+See [provenance limits](freeze-manifest.md#release-provenance). Release-v1 remains
+preliminary: later reproduction does not repair its missing producer record.
 
 This step does not change the registered 60 cases, 30/30 strata and keys, three
 pressures, three policies, K=1, pinned evaluation systems, or per-model reporting.
