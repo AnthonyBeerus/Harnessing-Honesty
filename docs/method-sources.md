@@ -35,6 +35,14 @@ serving metadata are recorded. Provider failures are protocol failures rather
 than silently imputed answers. The notebook entrypoints do not dispatch live
 requests by default.
 
+The serving path records every HTTP request and response beneath the SDK with
+a custom httpx transport [92]. SDK retries are disabled [93]; Pydantic AI
+accepts the prebuilt client [43]. Observed model, generation ID, finish reason
+and usage come from the documented response body [91]. The undocumented
+top-level `provider` field is recorded as returned. Missing fields stay empty
+and are never copied from the request. Router metadata [34] is not yet
+requested.
+
 ## Scoring, inference and records
 
 The adapter normalizes only surrounding whitespace and letter case to exact

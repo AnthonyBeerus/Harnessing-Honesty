@@ -332,3 +332,15 @@ The archived registration retains its original references.
 <a id="openrouter2026fable51"></a>
 
 [90] OpenRouter, “Anthropic: Claude Fable 5.1,” model slug, provider availability, price and data-retention notice. Accessed: Sep. 19, 2026. [Source](https://openrouter.ai/anthropic/claude-fable-5.1).
+
+<a id="openrouter2026apireference"></a>
+
+[91] OpenRouter, “API reference,” CompletionsResponse format. Accessed: Oct. 4, 2026. [Source](https://openrouter.ai/docs/api/reference/overview).
+
+<a id="httpx0281transports"></a>
+
+[92] Encode, “Transports,” *HTTPX documentation*, version 0.28.1. Accessed: Oct. 4, 2026. [Source](https://www.python-httpx.org/advanced/transports/).
+
+<a id="openaipython2530"></a>
+
+[93] OpenAI, “openai-python source code, version 2.53.0,” `src/openai/_constants.py`. Accessed: Oct. 4, 2026. [Source](https://github.com/openai/openai-python/blob/v2.53.0/src/openai/_constants.py).

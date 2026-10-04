@@ -101,6 +101,9 @@ class RequestFailed(_Event):
     detail: str
     observed_model: str | None = None
     observed_endpoint: str | None = None
+    generation_id: str | None = None
+    finish_reason: str | None = None
+    usage: UsageCounts | None = None
     attempt: int = 1
     envelope_ref: str | None = None
 

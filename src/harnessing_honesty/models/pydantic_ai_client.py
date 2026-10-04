@@ -1,7 +1,9 @@
 import os
 from typing import cast
 
+import httpx
 from dotenv import load_dotenv
+from openai import AsyncOpenAI
 from pydantic_ai import Agent
 from pydantic_ai.exceptions import ModelHTTPError, UnexpectedModelBehavior
 from pydantic_ai.messages import (
@@ -32,7 +34,9 @@ from harnessing_honesty.domain.results import (
     ProtocolFailure,
     ProviderFailure,
 )
+from harnessing_honesty.domain.evidence import CallEvidence
 from harnessing_honesty.models.routing import classify_envelope
+from harnessing_honesty.models.transport import CapturingTransport, call_evidence
 
 
 class DevelopmentModelConfigurationError(RuntimeError):
@@ -44,10 +48,13 @@ class PydanticAIModelClient:
         self,
         agent: Agent[None, str],
         manifest: ServingManifest | None = None,
+        capture: CapturingTransport | None = None,
     ) -> None:
         self._agent = agent
         self._manifest = manifest
+        self._capture = capture
         self.last_envelope: dict[str, object] | None = None
+        self.last_evidence: CallEvidence | None = None
         self.envelopes: list[dict[str, object]] = []
 
     @classmethod
@@ -62,8 +69,12 @@ class PydanticAIModelClient:
         cls,
         manifest: ServingManifest,
         api_key: str | None = None,
+        transport: httpx.AsyncBaseTransport | None = None,
     ) -> "PydanticAIModelClient":
-        """Build a fail-closed OpenRouter client from a serving card."""
+        """Build a fail-closed OpenRouter client from a serving card.
+
+        ``transport`` replaces the network in offline tests.
+        """
         # Provider selection and fallback controls follow OpenRouter's documented
         # request fields [32]. The installed SDK boundary is Pydantic AI 1.107.1 [43].
         settings: OpenRouterModelSettings = {
@@ -85,10 +96,24 @@ class PydanticAIModelClient:
             settings["extra_body"] = {"max_tokens": manifest.decoding.max_tokens}
         # Plain text avoids adding a response-format tool to every policy arm.
         # Pydantic AI 1.107.1 uses text output when ``str`` is requested [43].
-        agent = openrouter_text_agent(manifest.requested_model, settings, api_key)
-        return cls(agent, manifest=manifest)
+        capture = CapturingTransport(transport or httpx.AsyncHTTPTransport())
+        agent = openrouter_text_agent(
+            manifest.requested_model, settings, api_key, capture=capture
+        )
+        return cls(agent, manifest=manifest, capture=capture)
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
+        """Run one logical call. ``last_evidence`` covers this call only."""
+        self.last_envelope = None
+        self.last_evidence = None
+        start = len(self._capture.exchanges) if self._capture else 0
+        try:
+            return self._complete(messages)
+        finally:
+            if self._capture is not None:
+                self.last_evidence = call_evidence(self._capture.exchanges[start:])
+
+    def _complete(self, messages: tuple[Message, ...]) -> ModelResult:
         try:
             user_prompt, instructions, history = _to_provider_request(messages)
             result = self._agent.run_sync(
@@ -184,15 +209,31 @@ def openrouter_text_agent(
     model_name: str,
     settings: OpenRouterModelSettings,
     api_key: str | None = None,
+    capture: CapturingTransport | None = None,
 ) -> Agent[None, str]:
-    """Share the existing plain-text OpenRouter transport for construction."""
+    """Build the plain-text OpenRouter agent.
+
+    With ``capture``, SDK retries are off and every attempt is recorded.
+    Construction scripts omit it and keep SDK defaults.
+    """
     load_dotenv()
     key = api_key or os.getenv("OPENROUTER_API_KEY")
     if not key:
         raise DevelopmentModelConfigurationError(
             "Missing development model configuration: OPENROUTER_API_KEY"
         )
-    model = OpenRouterModel(model_name, provider=OpenRouterProvider(api_key=key))
+    provider = OpenRouterProvider(api_key=key)
+    if capture is not None:
+        # openai-python 2.53.0 retries twice by default [93]. Pydantic AI
+        # 1.107.1 accepts a prebuilt AsyncOpenAI client [43].
+        client = AsyncOpenAI(
+            base_url=provider.base_url,
+            api_key=key,
+            max_retries=0,
+            http_client=httpx.AsyncClient(transport=capture),
+        )
+        provider = OpenRouterProvider(openai_client=client)
+    model = OpenRouterModel(model_name, provider=provider)
     return Agent(model, output_type=str, model_settings=settings)
 
 

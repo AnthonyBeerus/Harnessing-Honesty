@@ -1,6 +1,7 @@
 """Wrap a model client so every complete() is an audit event."""
 
 from datetime import datetime
+from typing import TypedDict
 
 from harnessing_honesty.domain.enums import RecordStatus, Track
 from harnessing_honesty.domain.events import (
@@ -9,8 +10,11 @@ from harnessing_honesty.domain.events import (
     ResponseReceived,
     RunClosed,
     RunStarted,
+    UsageCounts,
 )
+from harnessing_honesty.domain.evidence import CallEvidence
 from harnessing_honesty.domain.messages import Message
+from harnessing_honesty.domain.protocols import Clock
 from harnessing_honesty.domain.records import RunRecord
 from harnessing_honesty.domain.results import (
     AnswerSuccess,
@@ -19,8 +23,18 @@ from harnessing_honesty.domain.results import (
 )
 from harnessing_honesty.observability.clock import SystemClock
 from harnessing_honesty.observability.hashing import request_hash
+from harnessing_honesty.observability.redact import redact_text
 from harnessing_honesty.observability.sink import JsonlEventSink, NullSink
 from harnessing_honesty.observability.store import FilesystemRecordStore
+
+
+class _Observed(TypedDict, total=False):
+    observed_model: str | None
+    observed_endpoint: str | None
+    generation_id: str | None
+    finish_reason: str | None
+    usage: UsageCounts | None
+    envelope_ref: str
 
 
 class RunSession:
@@ -33,7 +47,7 @@ class RunSession:
         requested_model: str,
         seed: int,
         *,
-        clock: object | None = None,
+        clock: Clock | None = None,
         config_hash: str | None = None,
         track: Track = Track.DEV,
         freeze_id: str | None = None,
@@ -88,6 +102,10 @@ class RunSession:
         self.record = self.record.model_copy(update={"status": status})
         self._store.replace_summary(self.run_id, self.record.model_dump_json())
 
+    def write_envelope(self, ref: str, payload: str) -> None:
+        """Write transport evidence, redacted like events."""
+        self._store.write_envelope(self.run_id, ref, redact_text(payload))
+
     def wrap(self, client: object) -> "RecordingModelClient":
         return RecordingModelClient(client, self)
 
@@ -105,6 +123,7 @@ class RecordingModelClient:
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
         digest = request_hash(messages)
+        request_sequence = self._session.sink.next_sequence
         self._session.sink.emit(
             RequestSent(
                 sequence=self._session.sink.next_sequence,
@@ -121,6 +140,8 @@ class RecordingModelClient:
             )
         )
         result: ModelResult = self._inner.complete(messages)  # type: ignore[attr-defined]
+        evidence: CallEvidence | None = getattr(self._inner, "last_evidence", None)
+        observed = self._observed(evidence, request_sequence)
         failure = failure_class(result)
         if failure is None:
             assert isinstance(result, AnswerSuccess)
@@ -130,10 +151,9 @@ class RecordingModelClient:
                     run_id=self._session.run_id,
                     occurred_at=self._session._now(),
                     observed_message_count=result.observed_message_count,
-                    observed_model=self._session.requested_model,
-                    observed_endpoint=self._session.requested_endpoint,
                     attempt=self.attempt,
                     verification_report_ids=self.verification_report_ids,
+                    **observed,
                 )
             )
         else:
@@ -144,12 +164,28 @@ class RecordingModelClient:
                     occurred_at=self._session._now(),
                     failure=failure,
                     detail=getattr(result, "detail", failure.value),
-                    observed_model=self._session.requested_model,
-                    observed_endpoint=self._session.requested_endpoint,
                     attempt=self.attempt,
+                    **observed,
                 )
             )
         return result
+
+    def _observed(
+        self, evidence: CallEvidence | None, request_sequence: int
+    ) -> _Observed:
+        """Observed fields from evidence; empty without it."""
+        if evidence is None:
+            return {}
+        ref = f"request-{request_sequence:06d}"
+        self._session.write_envelope(ref, evidence.model_dump_json(indent=2))
+        return {
+            "observed_model": evidence.observed_model,
+            "observed_endpoint": evidence.observed_endpoint,
+            "generation_id": evidence.generation_id,
+            "finish_reason": evidence.finish_reason,
+            "usage": evidence.usage,
+            "envelope_ref": ref,
+        }
 
 
 def maybe_wrap(
