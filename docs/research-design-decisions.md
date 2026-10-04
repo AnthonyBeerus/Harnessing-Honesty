@@ -446,3 +446,15 @@ failures from the recorded outcome, since these are serving facts rather than
 scores. An indeterminate draft or final fills no slot and is scored as
 missing; an indeterminate neutral leaves no matrix. The rebuilt record is
 scored by the same `score_matrix_episode`. No stored score is read.
+
+## 2026-10-04 — Run integrity checks
+
+`check_integrity` names each failure in a run directory: missing or unreadable
+files, sequence gaps or reorders, a foreign run id, a summary claiming more
+than its events, an outcome without its request, a repeated attempt, request
+or envelope content that no longer matches its recorded hash, a parent link
+the saved requests do not support, and unreferenced files. Outcome events now
+record `envelope_hash`. Reconstruction refuses a run with any failure. An
+interrupted history is not a failure: an attempt without an outcome, its
+envelope if written, and a leftover `.tmp` file are kept and reported as
+indeterminate. The first issue names the cause; later ones may follow from it.

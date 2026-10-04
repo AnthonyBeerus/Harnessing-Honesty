@@ -109,6 +109,7 @@ class ResponseReceived(_Event):
     latency_ms: int | None = None
     finish_reason: str | None = None
     envelope_ref: str | None = None
+    envelope_hash: str | None = None
     verification_report_ids: tuple[str, ...] = ()
 
 
@@ -133,6 +134,7 @@ class RequestFailed(_Event):
     cache_status: str | None = None
     attempt: int = 1
     envelope_ref: str | None = None
+    envelope_hash: str | None = None
 
 
 class AttemptInterrupted(_Event):

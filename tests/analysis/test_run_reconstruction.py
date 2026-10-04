@@ -134,16 +134,6 @@ def test_an_indeterminate_final_is_missing_and_the_run_is_open(tmp_path: Path) -
     assert [row.final_state for row in rows].count(ResponseState.MISSING) == 1
 
 
-def test_an_altered_request_is_refused(tmp_path: Path) -> None:
-    run_dir, _ = _record(tmp_path, [_answer(RIGHT)] * 13)
-    saved = next((run_dir / "requests").iterdir())
-    text = saved.read_text(encoding="utf-8")
-    saved.write_text(text.replace('"content":"', '"content":" ', 1), encoding="utf-8")
-
-    with pytest.raises(ValueError, match="does not match its hash"):
-        require_closed_matrix(run_dir)
-
-
 def test_an_unlabelled_call_is_refused(tmp_path: Path) -> None:
     store = FilesystemRecordStore(tmp_path)
     session = RunSession(store, "run-1", "m", 0, clock=FakeClock())

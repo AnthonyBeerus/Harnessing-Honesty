@@ -25,6 +25,11 @@ def request_hash(messages: tuple[Message, ...]) -> str:
     return digest_text(canonical_request(messages))
 
 
+def continuation_hash(messages: tuple[Message, ...], answer: str) -> str:
+    """Hash a request plus its parsed answer: the prefix a later turn extends."""
+    return request_hash(messages + (Message(role="assistant", content=answer),))
+
+
 def digest_text(payload: str) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 

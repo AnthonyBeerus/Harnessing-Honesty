@@ -5,7 +5,6 @@ labels. Scores are computed again by ``score_matrix_episode``; no stored score
 supplies a value.
 """
 
-import json
 from pathlib import Path
 
 from harnessing_honesty.analysis.rows import AnalysisRow, exclusion_reason
@@ -34,8 +33,8 @@ from harnessing_honesty.domain.events import (
     ResponseReceived,
 )
 from harnessing_honesty.domain.matrix import development_conditions
-from harnessing_honesty.observability.hashing import digest_text
-from harnessing_honesty.observability.reconstruct import reconstruct_run
+from harnessing_honesty.observability.integrity import require_integrity
+from harnessing_honesty.observability.reconstruct import reconstruct_run, saved_request
 from harnessing_honesty.scoring import MatrixEpisodeScore
 
 
@@ -46,11 +45,7 @@ def rows_from_matrix_score(
     *,
     task_stratum: str | None = None,
 ) -> tuple[AnalysisRow, ...]:
-    """Project a scored matrix onto analysis rows.
-
-    Events witness that the run closed and that the call count matches.
-    Scores remain the source of the booleans: events do not store answers.
-    """
+    """Project a scored matrix onto analysis rows."""
     return tuple(
         AnalysisRow(
             run_id=run_id,
@@ -79,9 +74,10 @@ def require_closed_matrix(
     run_dir: Path, block_id: str | None = None
 ) -> MatrixEpisodeRecord:
     """Rebuild the matrix of a run that closed; an open run is refused."""
+    require_integrity(run_dir)
     if reconstruct_run(run_dir).interrupted:
         raise ValueError("run is incomplete")
-    return matrix_record_from_run(run_dir, block_id)
+    return _matrix_record(run_dir, block_id)
 
 
 def matrix_record_from_run(
@@ -91,8 +87,14 @@ def matrix_record_from_run(
 
     Each logical call is read from its last attempt. A call whose last
     attempt is indeterminate fills no slot, so scoring reads it as missing;
-    an indeterminate neutral leaves no matrix to score.
+    an indeterminate neutral leaves no matrix to score. A run directory that
+    fails its integrity checks raises ``IntegrityError``.
     """
+    require_integrity(run_dir)
+    return _matrix_record(run_dir, block_id)
+
+
+def _matrix_record(run_dir: Path, block_id: str | None) -> MatrixEpisodeRecord:
     rebuilt = reconstruct_run(run_dir)
     events = rebuilt.events
     sent = [event for event in events if isinstance(event, RequestSent)]
@@ -162,14 +164,10 @@ def matrix_record_from_run(
 
 
 def _saved_request(run_dir: Path, request: RequestSent) -> tuple[Message, ...]:
-    """Load the saved messages and check them against the recorded hash."""
-    path = run_dir / "requests" / f"{request.request_hash}.json"
-    text = path.read_text(encoding="utf-8")
-    if digest_text(text) != request.request_hash:
-        raise ValueError(f"saved request {path.name} does not match its hash")
-    messages = tuple(Message.model_validate(item) for item in json.loads(text))
+    """Load the saved messages; ``require_integrity`` has checked their hash."""
+    messages = saved_request(run_dir, str(request.request_hash))
     if len(messages) != request.requested_message_count:
-        raise ValueError(f"saved request {path.name} has the wrong message count")
+        raise ValueError(f"request {request.request_hash} has the wrong message count")
     return messages
 
 

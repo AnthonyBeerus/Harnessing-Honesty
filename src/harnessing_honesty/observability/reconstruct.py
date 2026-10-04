@@ -13,6 +13,7 @@ from harnessing_honesty.domain.events import (
     RequestSent,
     ResponseReceived,
 )
+from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.records import RunRecord
 
 _EVENT_ADAPTER = TypeAdapter(DomainEvent)
@@ -99,6 +100,15 @@ class ReconstructedRun:
     @property
     def interrupted(self) -> bool:
         return self.record.status is RecordStatus.INCOMPLETE
+
+
+_MESSAGES = TypeAdapter(tuple[Message, ...])
+
+
+def saved_request(run_dir: Path, digest: str) -> tuple[Message, ...]:
+    """The messages saved before dispatch under ``requests/{digest}.json``."""
+    path = run_dir / "requests" / f"{digest}.json"
+    return _MESSAGES.validate_json(path.read_text(encoding="utf-8"))
 
 
 def reconstruct_run(run_dir: Path) -> ReconstructedRun:

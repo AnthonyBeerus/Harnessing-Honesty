@@ -24,7 +24,12 @@ from harnessing_honesty.domain.results import (
     failure_class,
 )
 from harnessing_honesty.observability.clock import SystemClock
-from harnessing_honesty.observability.hashing import canonical_request, request_hash
+from harnessing_honesty.observability.hashing import (
+    canonical_request,
+    continuation_hash,
+    digest_text,
+    request_hash,
+)
 from harnessing_honesty.observability.redact import redact_text
 from harnessing_honesty.observability.sink import JsonlEventSink, NullSink
 from harnessing_honesty.observability.store import FilesystemRecordStore
@@ -39,6 +44,7 @@ class _Observed(TypedDict, total=False):
     finish_reason: str | None
     usage: UsageCounts | None
     envelope_ref: str
+    envelope_hash: str
 
 
 class RunSession:
@@ -113,9 +119,11 @@ class RunSession:
         self.record = self.record.model_copy(update={"status": status})
         self._store.replace_summary(self.run_id, self.record.model_dump_json())
 
-    def write_envelope(self, ref: str, payload: str) -> None:
-        """Write transport evidence, redacted like events."""
-        self._store.write_envelope(self.run_id, ref, redact_text(payload))
+    def write_envelope(self, ref: str, payload: str) -> str:
+        """Write transport evidence, redacted like events; return its hash."""
+        redacted = redact_text(payload)
+        self._store.write_envelope(self.run_id, ref, redacted)
+        return digest_text(redacted)
 
     def save_request(self, messages: tuple[Message, ...]) -> str:
         """Save the exact messages before dispatch; return their hash.
@@ -141,8 +149,7 @@ class RunSession:
         self, call_id: str, messages: tuple[Message, ...], answer: str
     ) -> None:
         """Remember request plus answer, the prefix a later turn extends."""
-        continued = messages + (Message(role="assistant", content=answer),)
-        self._continuations[request_hash(continued)] = call_id
+        self._continuations[continuation_hash(messages, answer)] = call_id
 
     def parent_of(
         self, messages: tuple[Message, ...]
@@ -267,8 +274,9 @@ class RecordingModelClient:
         if evidence is None:
             return {}
         ref = f"request-{request_sequence:06d}"
-        self._session.write_envelope(ref, evidence.model_dump_json(indent=2))
+        digest = self._session.write_envelope(ref, evidence.model_dump_json(indent=2))
         return {
+            "envelope_hash": digest,
             "observed_model": evidence.observed_model,
             "observed_endpoint": evidence.observed_endpoint,
             "observed_snapshot": evidence.observed_snapshot,
