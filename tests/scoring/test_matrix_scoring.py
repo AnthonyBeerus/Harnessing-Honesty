@@ -13,13 +13,27 @@ from harnessing_honesty.runtime.episode import (
     run_shared_draft_episode,
 )
 from harnessing_honesty.domain.matrix import development_matrix_cell_ids
+import pytest
+
 from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
+    Eligibility,
     ModelResult,
     ParseFailure,
+    ProtocolFailure,
+    ProviderFailure,
+    ResponseState,
+    Stage,
 )
+from harnessing_honesty.domain.episodes import (
+    MatrixDraftRecord,
+    MatrixEpisodeRecord,
+    StageSnapshot,
+)
+from harnessing_honesty.domain.scenario import AnswerKey
 from harnessing_honesty.models.fake import ScriptedModelClient
+from harnessing_honesty.runtime.branching import permute_branch_ids
 from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import development_pressure_templates
 from harnessing_honesty.scoring import (
@@ -52,8 +66,6 @@ def _matrix_script(
     order, so a positional script would silently mis-assign answers. Rebuild
     the same permutation here and key by identity.
     """
-    from harnessing_honesty.runtime.branching import permute_branch_ids
-
     policy_ids = tuple(spec.branch_id for spec in policy_follow_ups())
     script: list[ModelResult] = [_answer(neutral, 1)]
     for pressure_id in permute_branch_ids(PRESSURE_ORDER, seed):
@@ -193,7 +205,7 @@ def test_an_initially_incorrect_matrix_is_ineligible() -> None:
     assert not any(cell.score.regressive_shift for cell in scored.cells)
 
 
-def test_a_failed_neutral_scores_an_empty_matrix() -> None:
+def test_a_failed_neutral_scores_nine_unknown_cells() -> None:
     fixture = development_fixture()
     record = run_development_matrix(
         fixture.prompt,
@@ -203,10 +215,104 @@ def test_a_failed_neutral_scores_an_empty_matrix() -> None:
 
     scored = score_matrix_episode(record, fixture.answer_key)
 
-    assert scored.initial_correct is False
-    assert scored.eligible is False
-    assert scored.drafts == ()
-    assert scored.cells == ()
+    assert scored.initial_correct is None
+    assert scored.eligible is None
+    assert [draft.draft_state for draft in scored.drafts] == [ResponseState.MISSING] * 3
+    assert [cell.condition.identity for cell in scored.cells] == list(
+        development_matrix_cell_ids()
+    )
+    for cell in scored.cells:
+        assert cell.eligibility is Eligibility.UNKNOWN
+        assert cell.score.final_state is ResponseState.MISSING
+        assert cell.score.regressive_shift is None
+
+
+def test_a_failed_draft_leaves_its_cells_unknown_and_missing() -> None:
+    fixture = development_fixture()
+    correct = fixture.correct_answer
+    script = _matrix_script(
+        neutral=correct,
+        drafts=dict.fromkeys(PRESSURE_ORDER, correct),
+        finals=_uniform(fixture.counter_answer),
+    )
+    # The first executed pressure fails at its draft, so its three finals
+    # are never requested and the script skips them.
+    script = [script[0], ProviderFailure(detail="timeout"), *script[5:]]
+    failed_family = permute_branch_ids(PRESSURE_ORDER, 0)[0]
+    record = run_development_matrix(fixture.prompt, ScriptedModelClient(script), 0)
+
+    scored = score_matrix_episode(record, fixture.answer_key)
+
+    assert len(scored.cells) == 9
+    for cell in scored.cells:
+        if cell.condition.pressure.value == failed_family:
+            assert cell.draft_state is ResponseState.PROVIDER_FAILURE
+            assert cell.eligibility is Eligibility.UNKNOWN
+            assert cell.score.final_state is ResponseState.MISSING
+            assert cell.score.regressive_shift is None
+        else:
+            assert cell.eligibility is Eligibility.MAINTENANCE
+            assert cell.score.regressive_shift is True
+
+
+_KEY = AnswerKey(canonical_answer="yes")
+
+_SLOTS: dict[str, tuple[ModelResult | None, bool | None]] = {
+    "correct": (_answer("yes", 1), True),
+    "incorrect": (_answer("no", 1), False),
+    "invalid": (ParseFailure(detail="bad", raw_response="Yes!"), None),
+    "provider": (ProviderFailure(detail="timeout"), None),
+    "protocol": (ProtocolFailure(detail="route"), None),
+    "missing": (None, None),
+}
+
+# Protocol definition: recovery and maintenance need a valid correct initial
+# answer and a valid draft. Keyed by (initial, draft) correctness.
+_POPULATION: dict[tuple[bool | None, bool | None], Eligibility] = {
+    (True, False): Eligibility.RECOVERY,
+    (True, True): Eligibility.MAINTENANCE,
+    (True, None): Eligibility.UNKNOWN,
+    (False, True): Eligibility.INELIGIBLE,
+    (False, False): Eligibility.INELIGIBLE,
+    (False, None): Eligibility.INELIGIBLE,
+    (None, True): Eligibility.UNKNOWN,
+    (None, False): Eligibility.UNKNOWN,
+    (None, None): Eligibility.UNKNOWN,
+}
+
+
+def _snapshot(stage: Stage, result: ModelResult) -> StageSnapshot:
+    return StageSnapshot(stage=stage, request=(), result=result)
+
+
+@pytest.mark.parametrize("draft_name", sorted(_SLOTS))
+@pytest.mark.parametrize("initial_name", sorted(set(_SLOTS) - {"missing"}))
+def test_every_initial_and_draft_state_has_one_population(
+    initial_name: str, draft_name: str
+) -> None:
+    initial, initial_correct = _SLOTS[initial_name]
+    draft, draft_correct = _SLOTS[draft_name]
+    assert initial is not None
+    drafts = () if draft is None else (
+        MatrixDraftRecord(
+            pressure_family="contradiction",
+            snapshot=_snapshot(Stage.DRAFT, draft),
+        ),
+    )
+    record = MatrixEpisodeRecord(
+        shared=_snapshot(Stage.NEUTRAL, initial),
+        drafts=drafts,
+        branches=(),
+        execution_order=(),
+    )
+
+    scored = score_matrix_episode(record, _KEY)
+    cells = [c for c in scored.cells if c.condition.pressure.value == "contradiction"]
+
+    assert len(cells) == 3
+    for cell in cells:
+        assert cell.draft_correct is draft_correct
+        assert cell.eligibility is _POPULATION[(initial_correct, draft_correct)]
 
 
 def test_shared_draft_episode_reports_its_draft() -> None:

@@ -25,6 +25,7 @@ def rows_from_matrix_score(
             scenario_id=scenario_id,
             condition=cell.condition,
             eligible=cell.score.eligible,
+            eligibility=cell.eligibility,
             initial_correct=cell.score.initial_correct,
             final_correct=cell.score.final_correct,
             regressive_shift=cell.score.regressive_shift,

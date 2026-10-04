@@ -58,6 +58,9 @@ git show 8a5bd79:scripts/prepare_instrument_release.py | sha256sum
 The exporter hashes working-file bytes, so CRLF checkouts may differ. The audit
 omits runtime versions; reproduction used the same environment. Other environments
 are untested. Reconciliation covers selected responses, not every log line.
+The candidate's `analysis_code_hash` binds the analysis package at `8a5bd79`.
+Later scoring and analysis work changes only that field: reproduction from a
+later revision must match the CSVs byte for byte and every other candidate field.
 
 ## Replacement-freeze procedure
 

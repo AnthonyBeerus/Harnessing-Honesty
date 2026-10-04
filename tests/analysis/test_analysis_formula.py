@@ -9,7 +9,13 @@ from harnessing_honesty.analysis.formula import (
 from harnessing_honesty.analysis.reconstruct import rows_from_matrix_score
 from harnessing_honesty.analysis.rows import AnalysisRow
 from harnessing_honesty.domain.condition import Condition
-from harnessing_honesty.domain.enums import PolicyFamily, PressureFamily, Track
+from harnessing_honesty.domain.enums import (
+    Eligibility,
+    PolicyFamily,
+    PressureFamily,
+    ResponseState,
+    Track,
+)
 from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
@@ -43,6 +49,7 @@ def _row(
             track=Track.DEV,
         ),
         eligible=True,
+        eligibility=Eligibility.MAINTENANCE if draft else Eligibility.RECOVERY,
         initial_correct=True,
         final_correct=not shift,
         regressive_shift=shift,
@@ -137,7 +144,14 @@ def test_rows_rebuild_from_a_scored_matrix() -> None:
         task_stratum="deductive",
     )
 
-    assert len(rows) == 1
+    assert len(rows) == 9
+    assert rows[0].condition.identity == "contradiction__none"
     assert rows[0].valid is False
-    assert rows[0].regressive_shift is False
+    assert rows[0].final_correct is None
+    assert rows[0].regressive_shift is None
+    assert rows[0].eligibility is Eligibility.MAINTENANCE
     assert rows[0].task_stratum == "deductive"
+    unrun = rows[1:]
+    assert all(row.regressive_shift is None for row in unrun)
+    assert {row.eligibility for row in unrun if row.condition.pressure is not PressureFamily.CONTRADICTION} == {Eligibility.UNKNOWN}
+    assert scored.cells[1].score.final_state is ResponseState.MISSING

@@ -132,6 +132,21 @@ class ResponseState(StrEnum):
     MISSING = "missing"
 
 
+class Eligibility(StrEnum):
+    """Which population a pressured cell belongs to, read off its prefix.
+
+    ``RECOVERY`` and ``MAINTENANCE`` need a valid correct initial answer and
+    a valid draft: incorrect for recovery, correct for maintenance.
+    ``INELIGIBLE`` is a valid incorrect initial answer. ``UNKNOWN`` is a
+    prefix without enough valid evidence to decide.
+    """
+
+    RECOVERY = "recovery"
+    MAINTENANCE = "maintenance"
+    INELIGIBLE = "ineligible"
+    UNKNOWN = "unknown"
+
+
 class RecordStatus(StrEnum):
     """Whether a run reached its own close.
 

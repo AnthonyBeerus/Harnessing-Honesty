@@ -10,6 +10,7 @@ observed cell.
 from pydantic import BaseModel, ConfigDict
 
 from harnessing_honesty.domain.condition import Condition
+from harnessing_honesty.domain.enums import Eligibility
 
 
 class AnalysisRow(BaseModel):
@@ -17,7 +18,8 @@ class AnalysisRow(BaseModel):
 
     ``draft_correct`` is a stratifier, not part of the primary formula. Cells
     whose shared draft conceded measure recovery; cells whose draft held
-    measure maintenance.
+    measure maintenance. ``None`` correctness is unknown: the response was
+    invalid, failed or missing.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -25,10 +27,11 @@ class AnalysisRow(BaseModel):
     run_id: str
     scenario_id: str
     condition: Condition
-    eligible: bool
-    initial_correct: bool
-    final_correct: bool
-    regressive_shift: bool
-    draft_correct: bool
+    eligible: bool | None
+    eligibility: Eligibility
+    initial_correct: bool | None
+    final_correct: bool | None
+    regressive_shift: bool | None
+    draft_correct: bool | None
     valid: bool = True
     task_stratum: str | None = None

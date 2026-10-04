@@ -10,7 +10,12 @@ import subprocess
 import pytest
 
 from harnessing_honesty.compiler.corpus import DEFAULT_CORPUS_PATH, load_corpus
-from harnessing_honesty.compiler.freeze import build_freeze, sign_freeze
+from harnessing_honesty.compiler.freeze import (
+    analysis_package_source,
+    analysis_source_hash,
+    build_freeze,
+    sign_freeze,
+)
 from harnessing_honesty.compiler.review import release_tables
 from harnessing_honesty.compiler.pool import confirmatory_pool, sign_off_pool
 from scripts.prepare_instrument_release import DEFAULT_REVIEW, prepare, read_csv, verify_review
@@ -145,10 +150,17 @@ def test_prepare_reproduces_csvs_and_candidate_from_another_directory(copied_rev
     monkeypatch.chdir(tmp_path)
     output = tmp_path / "reproduced"
     prepare(output, copied_review)
-    names = [path.name for path in original.glob("*.csv")] + ["freeze-candidate.json"]
-    assert len(names) == 6  # Five CSV tables and one unsigned candidate.
+    names = [path.name for path in original.glob("*.csv")]
+    assert len(names) == 5
     for name in names:
         assert (output / name).read_bytes() == (original / name).read_bytes(), name
+    # release-v2 binds the analysis package as of its source revision. Later
+    # analysis changes move only that hash; the final freeze is rebuilt.
+    candidate = json.loads((output / "freeze-candidate.json").read_text(encoding="utf-8"))
+    recorded = json.loads((original / "freeze-candidate.json").read_text(encoding="utf-8"))
+    assert candidate.pop("analysis_code_hash") == analysis_source_hash(analysis_package_source())
+    recorded.pop("analysis_code_hash")
+    assert candidate == recorded
     audit = json.loads((output / "audit.json").read_text(encoding="utf-8"))
     assert isinstance(audit["working_tree"], list)
     script = DEFAULT_CORPUS_PATH.parents[2] / "scripts/prepare_instrument_release.py"

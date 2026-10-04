@@ -8,6 +8,7 @@ that happens to satisfy it today.
 from harnessing_honesty.domain.enums import (
     Category,
     CompilerStage,
+    Eligibility,
     Failure,
     OracleStatus,
     PolicyFamily,
@@ -80,6 +81,7 @@ __all__ = [
     "Condition",
     "DependencyRecord",
     "DomainEvent",
+    "Eligibility",
     "EventSink",
     "Failure",
     "InstrumentItem",

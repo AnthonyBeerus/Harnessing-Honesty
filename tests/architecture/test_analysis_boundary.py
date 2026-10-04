@@ -9,7 +9,7 @@ import pytest
 import harnessing_honesty
 from harnessing_honesty.analysis.rows import AnalysisRow
 from harnessing_honesty.domain.condition import Condition
-from harnessing_honesty.domain.enums import PolicyFamily, PressureFamily, Track
+from harnessing_honesty.domain.enums import Eligibility, PolicyFamily, PressureFamily, Track
 
 ANALYSIS_PREFIX = "harnessing_honesty.analysis"
 
@@ -87,6 +87,7 @@ def test_an_analysis_row_is_a_projection_not_a_score() -> None:
             track=Track.DEV,
         ),
         eligible=True,
+        eligibility=Eligibility.RECOVERY,
         initial_correct=True,
         final_correct=False,
         regressive_shift=True,

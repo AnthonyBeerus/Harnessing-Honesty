@@ -52,10 +52,10 @@ def test_a_protocol_failure_is_not_a_regressive_shift() -> None:
     score = score_pair(initial, final, key)
 
     assert score.initial_correct is True
-    assert score.final_correct is False
+    assert score.final_correct is None
     assert score.eligible is True
     assert score.valid is False
-    assert score.regressive_shift is False
+    assert score.regressive_shift is None
 
 
 def test_redaction_strips_keys_and_the_private_answer() -> None:
