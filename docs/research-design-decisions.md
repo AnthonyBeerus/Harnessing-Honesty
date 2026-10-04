@@ -412,5 +412,12 @@ The selected endpoints named dated models, now registered as each card's
 `served_snapshot`: `anthropic/claude-4.6-sonnet-20260217`,
 `openai/gpt-4o-2024-11-20` and `google/gemma-4-26b-a4b-it-20260403`. A
 different or missing snapshot is a protocol failure. The same rule now covers
-compression, caching and routing strategy (method-sources.md). The compression
-and cache controls have not yet been sent live.
+compression, caching and routing strategy (method-sources.md).
+
+A second smoke at `df16741` sent the compression and cache controls. All three
+SUTs accepted them and passed every check, at the same cost. No response
+carried `X-OpenRouter-Cache-Status`. Caching is off unless requested and is
+disabled explicitly, but the documentation does not say the header is omitted
+when caching is off, so its absence is not positive evidence. A `HIT` still
+fails. Requiring the header would fail every call, so this remains a recorded
+limit.
