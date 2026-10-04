@@ -1,4 +1,5 @@
 import argparse
+from pathlib import Path
 
 from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.compiler.pool import confirmatory_pool
@@ -8,6 +9,7 @@ from harnessing_honesty.domain.episodes import (
 from harnessing_honesty.runtime.episode import (
     run_confirmatory_matrix,
     run_development_matrix,
+    run_episode,
     run_multi_turn_episode,
     run_pressured_episode,
     run_shared_draft_episode,
@@ -455,12 +457,14 @@ def _checked_live_family_scenario(family: str) -> ScenarioRecord:
 
 
 def run_live_policy_path(
-    config_paths: list[str], confirmed_requests: int, family: str = "systems",
+    config_paths: list[str],
+    confirmed_requests: int,
+    family: str = "systems",
+    runs_root: Path | None = None,
 ) -> None:
     """Run one excluded family pressure through all policies and SUTs."""
-    from pathlib import Path
-
     from harnessing_honesty.models.config import load_run_config
+    from harnessing_honesty.runtime.live import RUNS_ROOT, open_recorded_client, run_id
     from harnessing_honesty.runtime.policies import policy_follow_ups
 
     expected_requests = 5 * len(config_paths)
@@ -512,7 +516,12 @@ def run_live_policy_path(
     for config_path in config_paths:
         path = Path(config_path)
         config = load_run_config(path)
-        client = PydanticAIModelClient.from_manifest(config.serving)
+        client, session = open_recorded_client(
+            config,
+            runs_root or RUNS_ROOT,
+            run_id("policy-path", path),
+            PydanticAIModelClient.from_manifest,
+        )
         record = run_shared_draft_episode(
             scenario.prompt,
             pressure,
@@ -533,11 +542,49 @@ def run_live_policy_path(
         ):
             print(f"{label}: ", end="")
             _print_result(result)
-        print(f"classified envelopes: {len(client.envelopes)}/5")
-        if len(results) != 5 or len(client.envelopes) != 5:
+        session.close()
+        print(f"recorded: {session.run_dir}")
+        if len(results) != 5:
             raise SystemExit(1)
         if not all(isinstance(result, AnswerSuccess) for result in results):
             raise SystemExit(1)
+
+
+def run_serving_smoke(
+    config_paths: list[str],
+    confirmed_requests: int,
+    runs_root: Path | None = None,
+) -> None:
+    """Send one excluded development request per SUT and record every attempt."""
+    from harnessing_honesty.models.config import load_run_config
+    from harnessing_honesty.models.retries import PARSE_RETRIES, PROVIDER_RETRIES
+    from harnessing_honesty.runtime.live import RUNS_ROOT, open_recorded_client, run_id
+
+    if confirmed_requests != len(config_paths):
+        raise SystemExit(
+            f"refusing live run: pass --confirm-paid-requests {len(config_paths)}"
+        )
+    ceiling = len(config_paths) * (1 + PARSE_RETRIES + PROVIDER_RETRIES)
+    print(f"{len(config_paths)} logical calls; at most {ceiling} HTTP attempts")
+    prompt = _checked_live_family_scenario("systems").prompt
+    failed = False
+    for config_path in config_paths:
+        path = Path(config_path)
+        config = load_run_config(path)
+        client, session = open_recorded_client(
+            config,
+            runs_root or RUNS_ROOT,
+            run_id("serving-smoke", path),
+            PydanticAIModelClient.from_manifest,
+        )
+        result = run_episode(prompt, client)
+        session.close()
+        print(f"=== {config.serving.requested_model} ===")
+        _print_result(result)
+        print(f"attempts: {len(client.attempts)}; recorded: {session.run_dir}")
+        failed = failed or not isinstance(result, AnswerSuccess)
+    if failed:
+        raise SystemExit(1)
 
 
 def main() -> None:
@@ -580,6 +627,14 @@ def main() -> None:
     policy_path_parser.add_argument("--confirm-paid-requests", type=int, required=True)
     policy_path_parser.set_defaults(command=run_live_policy_path)
 
+    smoke_parser = subcommands.add_parser("run-serving-smoke")
+    smoke_parser.add_argument(
+        "--config", action="append", default=None,
+        help="serving card; repeat once per SUT",
+    )
+    smoke_parser.add_argument("--confirm-paid-requests", type=int, required=True)
+    smoke_parser.set_defaults(command=run_serving_smoke)
+
     arguments = parser.parse_args()
     command = arguments.command
     if command is run_live_policy_path:
@@ -587,6 +642,11 @@ def main() -> None:
             arguments.config or list(PRIMARY_LIVE_CONFIGS),
             arguments.confirm_paid_requests,
             arguments.family,
+        )
+    elif command is run_serving_smoke:
+        command(
+            arguments.config or list(PRIMARY_LIVE_CONFIGS),
+            arguments.confirm_paid_requests,
         )
     elif command is qualify_live:
         command(arguments.config)

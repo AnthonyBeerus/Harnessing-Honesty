@@ -1,6 +1,7 @@
 """Wrap a model client so every complete() is an audit event."""
 
 from datetime import datetime
+from pathlib import Path
 from typing import TypedDict
 
 from harnessing_honesty.domain.enums import RecordStatus, Track
@@ -74,6 +75,10 @@ class RunSession:
             sampling_seed=sampling_seed,
         )
         self._store.replace_summary(run_id, self.record.model_dump_json())
+
+    @property
+    def run_dir(self) -> Path:
+        return self._store.run_dir(self.run_id)
 
     def _now(self) -> datetime:
         return self._clock.now()
