@@ -30,8 +30,10 @@ from harnessing_honesty.runtime.episode import run_confirmatory_matrix
 from harnessing_honesty.runtime.live import open_recorded_client
 from harnessing_honesty.runtime.policies import TOOL_TEXT, confirmatory_ceiling_output
 
+SNAPSHOT = "anthropic/claude-4.6-sonnet-20260217"
 MANIFEST = ServingManifest(
     requested_model="anthropic/claude-sonnet-4.6",
+    served_snapshot=SNAPSHOT,
     routing=RoutingCard(provider_only=("anthropic",), provider_order=("anthropic",)),
     decoding=DecodingCard(
         temperature=0.0, seed=None, max_tokens=1024,
@@ -41,7 +43,9 @@ MANIFEST = ServingManifest(
 REQUEST = (Message(role="user", content="Is 2 even? Answer yes or no."),)
 
 
-def _metadata(provider: str = "Anthropic", **overrides: object) -> dict[str, object]:
+def _metadata(
+    provider: str = "Anthropic", model: str = SNAPSHOT, **overrides: object
+) -> dict[str, object]:
     """Router metadata in the documented response shape [34]."""
     metadata: dict[str, object] = {
         "requested": "anthropic/claude-sonnet-4.6",
@@ -50,7 +54,7 @@ def _metadata(provider: str = "Anthropic", **overrides: object) -> dict[str, obj
         "endpoints": {
             "total": 1,
             "available": [
-                {"provider": provider, "model": "anthropic/claude-sonnet-4.6", "selected": True}
+                {"provider": provider, "model": model, "selected": True}
             ],
         },
         "attempts": [{"provider": provider, "status": 200}],
@@ -111,7 +115,13 @@ def test_a_success_records_the_wire_and_observes_from_the_body() -> None:
     assert sent["provider"]["only"] == ["anthropic"]
     assert sent["messages"][-1]["content"] == REQUEST[0].content
     assert sent["reasoning"] == {"enabled": False}
-    assert exchange.request_headers == {"x-openrouter-metadata": "enabled"}
+    assert exchange.request_headers == {
+        "x-openrouter-metadata": "enabled",
+        "x-openrouter-cache": "false",
+    }
+    assert sent["plugins"] == [{"id": "context-compression", "enabled": False}]
+    assert evidence.observed_snapshot == SNAPSHOT
+    assert evidence.routing_strategy == "direct"
     assert exchange.status_code == 200
     assert evidence.observed_model == "anthropic/claude-sonnet-4.6"
     assert evidence.observed_endpoint == "Anthropic"
@@ -197,6 +207,12 @@ def test_absent_or_malformed_identity_is_not_an_observation() -> None:
             "router retried or fell back",
         ),
         (_metadata(pipeline=[{"type": "context_compression"}]), "pipeline"),
+        (_metadata(strategy="fallback"), "routing strategy"),
+        (_metadata(model="anthropic/claude-4.6-sonnet-20260901"), "snapshot"),
+        (
+            {k: v for k, v in _metadata().items() if k not in {"attempt", "attempts"}},
+            "router retried or fell back",
+        ),
     ],
 )
 def test_router_metadata_fails_closed(metadata: object, detail: str) -> None:
@@ -260,6 +276,8 @@ FORBIDDEN_KEYS = {"tools", "tool_choice", "functions", "function_call", "respons
 
 def _wire_client(card: str, bodies: list[dict[str, Any]]) -> PydanticAIModelClient:
     serving = load_run_config(Path(card)).serving
+    snapshot = serving.served_snapshot
+    assert snapshot is not None
 
     def provider(request: httpx.Request) -> httpx.Response:
         bodies.append(json.loads(request.content))
@@ -267,7 +285,7 @@ def _wire_client(card: str, bodies: list[dict[str, Any]]) -> PydanticAIModelClie
         return httpx.Response(200, json=_completion(
             model=serving.requested_model,
             provider=pinned,
-            openrouter_metadata=_metadata(provider=pinned),
+            openrouter_metadata=_metadata(provider=pinned, model=snapshot),
         ))
 
     return PydanticAIModelClient.from_manifest(
@@ -380,3 +398,24 @@ def test_retries_on_the_wire_are_recorded_attempt_by_attempt(tmp_path: Path) -> 
     assert [e["failure"] for e in failed] == ["provider", "parse"]
     assert failed[1]["raw_response"] == "Yes."
     assert len(list((session.run_dir / "envelopes").iterdir())) == 3
+
+
+def test_a_cache_hit_is_a_protocol_failure() -> None:
+    hit = httpx.Response(
+        200, json=_completion(), headers={"X-OpenRouter-Cache-Status": "HIT"}
+    )
+    client = _replies(hit)
+
+    result = client.complete(REQUEST)
+
+    assert isinstance(result, ProtocolFailure)
+    assert "cache" in result.detail
+    assert client.last_evidence is not None
+    assert client.last_evidence.cache_status == "HIT"
+
+
+def test_a_card_without_a_served_snapshot_cannot_dispatch() -> None:
+    unpinned = MANIFEST.model_copy(update={"served_snapshot": None})
+
+    with pytest.raises(DevelopmentModelConfigurationError, match="snapshot"):
+        PydanticAIModelClient.from_manifest(unpinned, api_key="sk-or-v1-offline")

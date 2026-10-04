@@ -79,6 +79,10 @@ class PydanticAIModelClient:
             raise DevelopmentModelConfigurationError(
                 "reasoning state is unresolved for this card; it cannot dispatch"
             )
+        if manifest.served_snapshot is None:
+            raise DevelopmentModelConfigurationError(
+                "served snapshot is not established for this card; it cannot dispatch"
+            )
         # Provider selection and fallback controls follow OpenRouter's documented
         # request fields [32]. The installed SDK boundary is Pydantic AI 1.107.1 [43].
         settings: OpenRouterModelSettings = {
@@ -96,11 +100,16 @@ class PydanticAIModelClient:
             settings["openrouter_reasoning"] = {"enabled": False}
         if manifest.decoding.seed is not None:
             settings["seed"] = manifest.decoding.seed
+        # Disable context compression explicitly [96].
+        extra_body: dict[str, object] = {
+            "plugins": [{"id": "context-compression", "enabled": False}]
+        }
         if manifest.decoding.max_tokens is not None:
             # OpenAI SDK emits max_completion_tokens; OpenRouter's
             # require_parameters check uses the pin's list, which names
             # max_tokens (Anthropic, GPT-4o). extra_body keeps the cap.
-            settings["extra_body"] = {"max_tokens": manifest.decoding.max_tokens}
+            extra_body["max_tokens"] = manifest.decoding.max_tokens
+        settings["extra_body"] = extra_body
         # Plain text avoids adding a response-format tool to every policy arm.
         # Pydantic AI 1.107.1 uses text output when ``str`` is requested [43].
         capture = CapturingTransport(transport or httpx.AsyncHTTPTransport())
@@ -243,8 +252,11 @@ def openrouter_text_agent(
             api_key=key,
             max_retries=0,
             http_client=httpx.AsyncClient(transport=capture),
-            # Opt in to router metadata, the documented serving evidence [34].
-            default_headers={"X-OpenRouter-Metadata": "enabled"},
+            # Opt in to router metadata [34]; keep response caching off [33].
+            default_headers={
+                "X-OpenRouter-Metadata": "enabled",
+                "X-OpenRouter-Cache": "false",
+            },
         )
         provider = OpenRouterProvider(openai_client=client)
     model = OpenRouterModel(model_name, provider=provider)

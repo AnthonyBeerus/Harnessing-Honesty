@@ -65,8 +65,12 @@ def classify_evidence(
     evidence: CallEvidence,
     manifest: ServingManifest,
 ) -> ProtocolFailure | None:
-    """Fail closed unless router metadata shows one direct attempt on the pin [34]
-    and usage reports no reasoning tokens."""
+    """Fail closed unless the evidence matches the card.
+
+    Router metadata: one direct attempt on the pinned endpoint, the registered
+    snapshot and no pipeline stage [34]. No cache hit [33]. Zero reported
+    reasoning tokens [94].
+    """
     if evidence.observed_endpoint is None:
         return ProtocolFailure(detail="router metadata has no selected endpoint")
     observed = evidence.observed_endpoint.lower().replace(" ", "-")
@@ -76,6 +80,10 @@ def classify_evidence(
             detail=f"route mismatch: selected {evidence.observed_endpoint!r}, "
             f"pinned {sorted(allowed)}"
         )
+    if evidence.routing_strategy != "direct":
+        return ProtocolFailure(
+            detail=f"routing strategy is {evidence.routing_strategy!r}, not 'direct'"
+        )
     if evidence.router_attempts != 1:
         return ProtocolFailure(
             detail=f"router retried or fell back: {evidence.router_attempts} attempts"
@@ -83,6 +91,13 @@ def classify_evidence(
     if evidence.pipeline_stages:
         return ProtocolFailure(
             detail=f"router pipeline stages: {list(evidence.pipeline_stages)}"
+        )
+    if evidence.cache_status is not None and evidence.cache_status.upper() == "HIT":
+        return ProtocolFailure(detail="response cache HIT")
+    if evidence.observed_snapshot != manifest.served_snapshot:
+        return ProtocolFailure(
+            detail=f"served snapshot {evidence.observed_snapshot!r} "
+            f"!= registered {manifest.served_snapshot!r}"
         )
     # Reasoning-off must be observed, not assumed from the request [94].
     reasoning = evidence.usage.reasoning_tokens if evidence.usage else None

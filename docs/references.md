@@ -135,7 +135,7 @@ The archived registration retains its original references.
 
 <a id="openroutercaching"></a>
 
-[33] OpenRouter, “Response caching,” Accessed: Sep. 4, 2026. [Online]. [Available](https://openrouter.ai/docs/guides/features/response-caching).
+[33] OpenRouter, “Response caching,” Accessed: Oct. 4, 2026. [Online]. [Available](https://openrouter.ai/docs/guides/features/response-caching).
 
 <a id="openroutermetadata"></a>
 
@@ -352,3 +352,7 @@ The archived registration retains its original references.
 <a id="openrouter2026endpoints"></a>
 
 [95] OpenRouter, “List endpoints for a model,” `supported_parameters` for `anthropic/claude-sonnet-4.6`, `openai/gpt-4o-2024-11-20` and `google/gemma-4-26b-a4b-it`. Retrieved: Oct. 4, 2026. [Source](https://openrouter.ai/api/v1/models/anthropic/claude-sonnet-4.6/endpoints).
+
+<a id="openrouter2026compression"></a>
+
+[96] OpenRouter, “Context compression,” default for endpoints with 8,192 or fewer context tokens; `plugins` disable control. Accessed: Oct. 4, 2026. [Source](https://openrouter.ai/docs/guides/features/message-transforms).

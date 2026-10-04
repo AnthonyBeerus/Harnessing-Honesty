@@ -398,3 +398,19 @@ a reasoning field is not evidence: each response must report zero reasoning
 tokens. The 3 October smoke reported zero for all three SUTs but did not send
 the control, so it does not establish the state. The card change moves the
 primary serving hash recorded in release-v2 (see freeze-manifest.md).
+
+## 2026-10-04 — Serving smoke and snapshots
+
+The approved excluded development smoke at `8f2a2d1` sent one request per
+primary SUT: one attempt each, valid answers, $0.000921 recorded cost. Each
+response showed the pinned endpoint, strategy `direct`, `attempt` 1, no
+`attempts` or `pipeline` field and zero reasoning tokens. This smoke
+establishes the reasoning-off state. Evidence is git-ignored under
+`data/runs/dev/serving-smoke-*-20261004T0712*`.
+
+The selected endpoints named dated models, now registered as each card's
+`served_snapshot`: `anthropic/claude-4.6-sonnet-20260217`,
+`openai/gpt-4o-2024-11-20` and `google/gemma-4-26b-a4b-it-20260403`. A
+different or missing snapshot is a protocol failure. The same rule now covers
+compression, caching and routing strategy (method-sources.md). The compression
+and cache controls have not yet been sent live.

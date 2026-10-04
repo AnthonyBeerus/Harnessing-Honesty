@@ -82,6 +82,7 @@ class ResponseReceived(_Event):
     observed_message_count: int | None = None
     observed_model: str | None = None
     observed_endpoint: str | None = None
+    observed_snapshot: str | None = None
     generation_id: str | None = None
     attempt: int = 1
     cache_status: str | None = None
@@ -106,9 +107,11 @@ class RequestFailed(_Event):
     raw_response: str | None = None
     observed_model: str | None = None
     observed_endpoint: str | None = None
+    observed_snapshot: str | None = None
     generation_id: str | None = None
     finish_reason: str | None = None
     usage: UsageCounts | None = None
+    cache_status: str | None = None
     attempt: int = 1
     envelope_ref: str | None = None
 

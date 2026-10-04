@@ -63,6 +63,9 @@ class ServingManifest(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     requested_model: str
+    # Dated model of the selected endpoint in recorded router metadata.
+    # ``None``: not established, so the card cannot dispatch.
+    served_snapshot: str | None = None
     routing: RoutingCard
     decoding: DecodingCard
     output_contract: str = "plain_yes_no"
@@ -88,6 +91,7 @@ class ServingManifest(BaseModel):
     def material(self) -> dict[str, object]:
         return {
             "requested_model": self.requested_model,
+            "served_snapshot": self.served_snapshot,
             "routing": self.routing.model_dump(mode="json"),
             "decoding": self.decoding.model_dump(mode="json"),
             "output_contract": self.output_contract,

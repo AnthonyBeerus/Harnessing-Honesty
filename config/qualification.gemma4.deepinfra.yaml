@@ -1,6 +1,8 @@
 track: dev
 serving:
   requested_model: google/gemma-4-26b-a4b-it
+  # Selected endpoint model in router metadata, serving smoke 4 Oct 2026.
+  served_snapshot: google/gemma-4-26b-a4b-it-20260403
   routing:
     provider_only:
       - deepinfra

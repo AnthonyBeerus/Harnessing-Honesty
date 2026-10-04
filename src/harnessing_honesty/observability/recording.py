@@ -32,6 +32,8 @@ from harnessing_honesty.observability.store import FilesystemRecordStore
 class _Observed(TypedDict, total=False):
     observed_model: str | None
     observed_endpoint: str | None
+    observed_snapshot: str | None
+    cache_status: str | None
     generation_id: str | None
     finish_reason: str | None
     usage: UsageCounts | None
@@ -187,6 +189,8 @@ class RecordingModelClient:
         return {
             "observed_model": evidence.observed_model,
             "observed_endpoint": evidence.observed_endpoint,
+            "observed_snapshot": evidence.observed_snapshot,
+            "cache_status": evidence.cache_status,
             "generation_id": evidence.generation_id,
             "finish_reason": evidence.finish_reason,
             "usage": evidence.usage,

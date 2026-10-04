@@ -39,12 +39,17 @@ The serving path records every HTTP request and response beneath the SDK with
 a custom httpx transport [92]. SDK retries are disabled [93]; Pydantic AI
 accepts the prebuilt client [43]. Permitted retries are explicit and recorded
 (research-design-decisions.md, 2026-10-04). Observed model, generation ID,
-finish reason and usage come from the documented response body [91]. Every
-request opts in to router metadata [34]; the serving endpoint is its selected
-endpoint. A response without it, outside `provider_only`, with more than one
-router attempt or with a pipeline stage is a protocol failure. The routing
-strategy is recorded in the raw body but not yet enforced. Missing fields stay
-empty and are never copied from the request.
+finish reason and usage come from the documented response body [91].
+
+Each serving property is requested with its explicit control and checked
+against documented response evidence. A missing field is evidence only where
+the documentation defines its absence. Requests opt in to router metadata [34]
+and disable response caching (`X-OpenRouter-Cache: false`) [33] and context
+compression (`plugins`) [96]. The response must show one selected endpoint in
+`provider_only`, its dated model equal to the card's `served_snapshot`,
+strategy `direct` and `attempt` 1. `pipeline` and `attempts` appear only when a
+stage ran or the router retried [34]. A `HIT` cache status fails [33]. Cards
+without a snapshot cannot dispatch. Missing fields stay empty.
 
 Enhanced reasoning is off by design and every card must say so. Where the
 endpoint lists a `reasoning` parameter [95], the request sends

@@ -9,7 +9,8 @@ import httpx
 from harnessing_honesty.domain.events import UsageCounts
 from harnessing_honesty.domain.evidence import CallEvidence, TransportExchange
 
-RECORDED_HEADERS = ("x-openrouter-metadata",)
+RECORDED_HEADERS = ("x-openrouter-metadata", "x-openrouter-cache")
+RECORDED_RESPONSE_HEADERS = ("x-openrouter-cache-status",)
 
 
 class CapturingTransport(httpx.AsyncBaseTransport):
@@ -46,6 +47,11 @@ class CapturingTransport(httpx.AsyncBaseTransport):
                 request_body=sent,
                 request_headers=headers,
                 status_code=response.status_code,
+                response_headers={
+                    k: response.headers[k]
+                    for k in RECORDED_RESPONSE_HEADERS
+                    if k in response.headers
+                },
                 response_body=body.decode("utf-8", errors="replace"),
             )
         )
@@ -59,22 +65,28 @@ def call_evidence(exchanges: Sequence[TransportExchange]) -> CallEvidence:
     """Read observed fields from the last response body.
 
     ``id``, ``model``, ``finish_reason`` and ``usage`` are documented [91].
-    The serving endpoint is the selected endpoint in router metadata [34]; the
-    undocumented top-level ``provider`` stays in the raw body only.
+    Endpoint and dated model come from the selected endpoint in router
+    metadata [34]; top-level ``provider`` is undocumented and not used. Cache
+    status is a response header [33].
     """
     body = _last_body(exchanges)
     choices = body.get("choices")
     first = choices[0] if isinstance(choices, list) and choices else {}
     metadata = _mapping(body.get("openrouter_metadata"))
+    selected = _selected_endpoint(metadata)
+    headers = exchanges[-1].response_headers if exchanges else {}
     return CallEvidence(
         exchanges=tuple(exchanges),
         observed_model=_text(body.get("model")),
-        observed_endpoint=_text(_selected_endpoint(metadata).get("provider")),
+        observed_endpoint=_text(selected.get("provider")),
         generation_id=_text(body.get("id")),
         finish_reason=_text(first.get("finish_reason")) if isinstance(first, dict) else None,
         usage=_usage(body.get("usage")),
         router_attempts=_router_attempts(metadata),
         pipeline_stages=_pipeline_stages(metadata),
+        routing_strategy=_text(metadata.get("strategy")),
+        observed_snapshot=_text(selected.get("model")),
+        cache_status=_text(headers.get("x-openrouter-cache-status")),
     )
 
 
@@ -94,12 +106,13 @@ def _pipeline_stages(metadata: dict[str, Any]) -> tuple[str, ...]:
 
 
 def _router_attempts(metadata: dict[str, Any]) -> int | None:
-    """Count router attempts from ``attempt`` and the ``attempts`` list [34]."""
+    """``attempt`` is always reported; ``attempts`` appears only after a
+    router retry [34]. Without ``attempt`` the count is unknown."""
     attempt = _count(metadata, "attempt")
+    if attempt is None:
+        return None
     attempts = metadata.get("attempts")
-    listed = len(attempts) if isinstance(attempts, list) else None
-    known = [n for n in (attempt, listed) if n is not None]
-    return max(known) if known else None
+    return max(attempt, len(attempts)) if isinstance(attempts, list) else attempt
 
 
 def _mapping(value: object) -> dict[str, Any]:

@@ -21,6 +21,7 @@ class TransportExchange(BaseModel):
     url: str
     request_body: str
     request_headers: dict[str, str] = {}
+    response_headers: dict[str, str] = {}
     status_code: int | None = None
     response_body: str | None = None
     error: str | None = None
@@ -39,3 +40,6 @@ class CallEvidence(BaseModel):
     usage: UsageCounts | None = None
     router_attempts: int | None = None
     pipeline_stages: tuple[str, ...] = ()
+    routing_strategy: str | None = None
+    observed_snapshot: str | None = None
+    cache_status: str | None = None

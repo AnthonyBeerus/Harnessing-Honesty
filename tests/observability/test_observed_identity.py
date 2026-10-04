@@ -27,6 +27,7 @@ EVIDENCE = CallEvidence(
     exchanges=(EXCHANGE,),
     observed_model="anthropic/claude-sonnet-4.6",
     observed_endpoint="Anthropic",
+    observed_snapshot="anthropic/claude-4.6-sonnet-20260217",
     generation_id="gen-1",
     finish_reason="stop",
     usage=UsageCounts(input_tokens=159, output_tokens=4),
@@ -69,6 +70,7 @@ def test_observed_fields_and_envelope_come_from_evidence(tmp_path: Path) -> None
     received = ResponseReceived.model_validate(events[-1])
     assert received.observed_model == "anthropic/claude-sonnet-4.6"
     assert received.observed_endpoint == "Anthropic"
+    assert received.observed_snapshot == "anthropic/claude-4.6-sonnet-20260217"
     assert received.generation_id == "gen-1"
     assert received.finish_reason == "stop"
     assert received.usage == UsageCounts(input_tokens=159, output_tokens=4)

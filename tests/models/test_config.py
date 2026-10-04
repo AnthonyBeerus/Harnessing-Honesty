@@ -12,6 +12,7 @@ from harnessing_honesty.models.config import (
     ServingManifest,
     load_run_config,
 )
+from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.domain.enums import Track
 
 
@@ -106,6 +107,18 @@ def test_cards_map_reasoning_off_to_their_endpoint(card: str, control: str) -> N
 
     assert config.serving.decoding.reasoning == "off"
     assert config.serving.decoding.reasoning_control == control
+
+
+def test_primary_cards_register_their_served_snapshot() -> None:
+    snapshots = {
+        load_run_config(Path(card)).serving.served_snapshot for card in PRIMARY_SERVING_CARDS
+    }
+
+    assert snapshots == {
+        "anthropic/claude-4.6-sonnet-20260217",
+        "openai/gpt-4o-2024-11-20",
+        "google/gemma-4-26b-a4b-it-20260403",
+    }
 
 
 def test_open_routing_is_refused() -> None:
