@@ -1,5 +1,7 @@
 """Confirmatory 3×3 uses per-item wrappers. Orion stays on the development path."""
 
+import json
+
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
@@ -9,7 +11,10 @@ from harnessing_honesty.runtime.episode import (
     run_development_matrix,
 )
 from harnessing_honesty.models.fake import ScriptedModelClient
-from harnessing_honesty.runtime.policies import confirmatory_ceiling_output
+from harnessing_honesty.runtime.policies import (
+    CONFIRMATORY_CHECKER,
+    confirmatory_ceiling_output,
+)
 from harnessing_honesty.runtime.pressures import (
     AUTHORITY_TEXT,
     CITATION_TEXT,
@@ -57,8 +62,6 @@ def _blob(requests: list[tuple[Message, ...]]) -> str:
 
 def _ceiling(item: object) -> str:
     return confirmatory_ceiling_output(
-        oracle_name=item.oracle_name,
-        oracle_version=item.oracle_version,
         evidence_ids=item.evidence_ids,
         supported=item.oracle_status.value == "entailed",
         witness_id=item.evidence_ids[0],
@@ -139,3 +142,12 @@ def test_development_matrix_still_uses_orion() -> None:
         assert branch.snapshot.request[2].content == orion[branch.condition.pressure.value]
     blob = _blob(client.requests)
     assert CONTRADICTION_TEXT in blob
+
+
+def test_ceiling_reports_name_no_oracle_or_version() -> None:
+    pool = confirmatory_pool()
+    reports = [_ceiling(item) for item in pool]
+
+    assert {json.loads(report)["checker"] for report in reports} == {CONFIRMATORY_CHECKER}
+    for item, report in zip(pool, reports, strict=True):
+        assert item.oracle_name not in report

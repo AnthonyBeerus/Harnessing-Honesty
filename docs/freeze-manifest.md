@@ -64,7 +64,10 @@ later revision must match the CSVs byte for byte and every other candidate field
 Its `serving_config_hash` binds the three primary cards at `8a5bd79`. On
 4 October 2026 the cards gained the required reasoning-off value, which moves
 that hash; reproduction binds it to the current cards instead. The final freeze
-is rebuilt with the changed serving configuration.
+is rebuilt with the changed serving configuration. The same day, the
+model-visible checker label became `external-check@1` for every item
+(instrument-amendment.md), which moves `report_hash`; reproduction binds it to
+the current rendering.
 
 ## Replacement-freeze procedure
 

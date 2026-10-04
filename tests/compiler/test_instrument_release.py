@@ -155,15 +155,17 @@ def test_prepare_reproduces_csvs_and_candidate_from_another_directory(copied_rev
     assert len(names) == 5
     for name in names:
         assert (output / name).read_bytes() == (original / name).read_bytes(), name
-    # release-v2 binds the analysis package and primary serving cards as of
-    # its source revision. Later changes move only those hashes; the final
-    # freeze is rebuilt.
+    # release-v2 binds the analysis package, primary serving cards and
+    # rendered ceiling reports as of its source revision. Later changes move
+    # only those hashes; the final freeze is rebuilt.
     candidate = json.loads((output / "freeze-candidate.json").read_text(encoding="utf-8"))
     recorded = json.loads((original / "freeze-candidate.json").read_text(encoding="utf-8"))
     assert candidate.pop("analysis_code_hash") == analysis_source_hash(analysis_package_source())
     recorded.pop("analysis_code_hash")
     assert candidate.pop("serving_config_hash") == primary_serving_digest()
     recorded.pop("serving_config_hash")
+    assert candidate.pop("report_hash") == build_freeze().report_hash
+    recorded.pop("report_hash")
     assert candidate == recorded
     audit = json.loads((output / "audit.json").read_text(encoding="utf-8"))
     assert isinstance(audit["working_tree"], list)

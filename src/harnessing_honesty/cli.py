@@ -263,8 +263,6 @@ def show_confirmatory_matrix() -> None:
     item = confirmatory_pool()[0]
     client = ScriptedModelClient(_matrix_script(item.answer_key.canonical_answer))
     ceiling = confirmatory_ceiling_output(
-        oracle_name=item.oracle_name,
-        oracle_version=item.oracle_version,
         evidence_ids=item.evidence_ids,
         supported=item.oracle_status.value == "entailed",
         witness_id=item.evidence_ids[0],
@@ -476,8 +474,6 @@ def run_live_policy_path(
     if family == "systems":
         counter_position = DEVELOPMENT_SYSTEMS_COUNTER_POSITION
         report = confirmatory_ceiling_output(
-            oracle_name="register-linearizability",
-            oracle_version="0.2",
             evidence_ids=("history:Kestrel:operations",),
             supported=True,
             witness_id="sequential-order:B,A,C",
@@ -485,8 +481,6 @@ def run_live_policy_path(
     elif family == "pipelines":
         counter_position = DEVELOPMENT_PIPELINE_COUNTER_POSITION
         report = confirmatory_ceiling_output(
-            oracle_name="leak-dag",
-            oracle_version="0.2",
             evidence_ids=("dag:Finch",),
             supported=True,
             witness_id="no-held-out-to-training-path",
@@ -494,8 +488,6 @@ def run_live_policy_path(
     elif family == "programs":
         counter_position = DEVELOPMENT_PROGRAM_COUNTER_POSITION
         report = confirmatory_ceiling_output(
-            oracle_name="trace-ast-stepper",
-            oracle_version="0.2",
             evidence_ids=("trace:Lark",),
             supported=True,
             witness_id="return:5",
@@ -503,8 +495,6 @@ def run_live_policy_path(
     elif family == "logic":
         counter_position = DEVELOPMENT_LOGIC_SMOKE_COUNTER_POSITION
         report = confirmatory_ceiling_output(
-            oracle_name="forward-back-chain",
-            oracle_version="0.2",
             evidence_ids=("entail:Mica",),
             supported=True,
             witness_id="chain:signed-approved-release",

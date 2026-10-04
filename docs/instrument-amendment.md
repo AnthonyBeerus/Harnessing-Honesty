@@ -138,6 +138,19 @@ registered; H3 remains `policy × task_stratum`. Recovery and maintenance are
 reported separately. The plain `yes`/`no` response and labelled external-feedback
 ceiling are earlier proposed amendments, not changes introduced by this export.
 
+## Model-visible description audit — 4 October 2026
+
+Every model-visible string in the 60-item confirmatory matrix and the
+development policy path was rendered through the runner and inspected. The
+answer instruction is identical in every scored turn. Pressure wrappers and
+policy texts carry no scoring details, implementation commentary or citations.
+The external check report named the oracle and its version, for example
+`z3-brute-sat@0.2` or `sqlite-python-join@0.2`, exposing implementation tools
+and varying by item (`arithmetic-progression-sum@1.0`). Correction: every
+confirmatory report now shows `external-check@1`; oracle names and versions
+remain in the item record. Evidence IDs, result and witness are unchanged. This
+moves the freeze candidate's `report_hash` (freeze-manifest.md).
+
 ## Schedule and remaining gates
 
 The original proposal's Plan for Developing the Solution and Figure 4 specified

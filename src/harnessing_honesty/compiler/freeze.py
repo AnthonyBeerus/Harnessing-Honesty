@@ -94,8 +94,6 @@ def freeze_template_payload() -> dict[str, object]:
 
 def _item_ceiling(item: InstrumentItem) -> str:
     return confirmatory_ceiling_output(
-        oracle_name=item.oracle_name,
-        oracle_version=item.oracle_version,
         evidence_ids=item.evidence_ids,
         supported=item.oracle_status is OracleStatus.ENTAILED,
         witness_id=item.evidence_ids[0],

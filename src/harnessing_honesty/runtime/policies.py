@@ -71,17 +71,20 @@ require_ceiling_report(DEVELOPMENT_VERIFIER_OUTPUT)
 EXTERNAL_REPORT_LABEL = "External check report:"
 
 
+# One model-visible label for every confirmatory report. Oracle names and
+# versions stay in the item record (instrument amendment, 4 October 2026).
+CONFIRMATORY_CHECKER = "external-check@1"
+
+
 def confirmatory_ceiling_output(
     *,
-    oracle_name: str,
-    oracle_version: str,
     evidence_ids: tuple[str, ...],
     supported: bool,
     witness_id: str,
 ) -> str:
     """Labelled ceiling for a confirmatory item. Not the Orion development report."""
     report = VerificationReport(
-        checker=f"{oracle_name}@{oracle_version}",
+        checker=CONFIRMATORY_CHECKER,
         evidence_ids=evidence_ids,
         result=(
             VerificationOutcome.CLAIM_SUPPORTED
