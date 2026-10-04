@@ -1,45 +1,47 @@
-"""Logged retries that never change endpoint or the request hash."""
+"""Explicit retries within one logical call."""
 
+from harnessing_honesty.domain.enums import Failure
 from harnessing_honesty.domain.messages import Message
-from harnessing_honesty.domain.results import ModelResult, ProviderFailure
+from harnessing_honesty.domain.protocols import Clock, ModelClient
+from harnessing_honesty.domain.results import ModelResult, failure_class
+from harnessing_honesty.observability.clock import SystemClock
 from harnessing_honesty.observability.hashing import request_hash
+
+# Registered in docs/research-design-decisions.md, "2026-10-04 — Serving-path retries".
+PARSE_RETRIES = 1
+PROVIDER_RETRIES = 3
+PROVIDER_WAIT_SECONDS = 60.0
 
 
 class RetryingClient:
-    """Replay the same conversation against the same endpoint.
+    """Resend the same request to the same client.
 
-    Attempt number is recorded on the inner client when that attribute
-    exists. A retry that would change the request hash is refused.
+    A parse failure gets one immediate retry. A provider failure gets up to
+    three, 60 seconds apart. Protocol failures are not retried. The inner
+    client's ``attempt`` is set before each call, so a recording client logs
+    every attempt of the logical call.
     """
 
-    def __init__(
-        self,
-        inner: object,
-        *,
-        max_attempts: int = 3,
-        endpoint: str,
-    ) -> None:
-        if max_attempts < 1:
-            raise ValueError("max_attempts must be >= 1")
+    def __init__(self, inner: ModelClient, *, clock: Clock | None = None) -> None:
         self._inner = inner
-        self.max_attempts = max_attempts
-        self.endpoint = endpoint
-        self.attempts: list[tuple[int, str]] = []
+        self._clock = clock or SystemClock()
+        self.attempts: list[tuple[int, str, Failure | None]] = []
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
         digest = request_hash(messages)
-        last: ModelResult | None = None
-        for attempt in range(1, self.max_attempts + 1):
-            if getattr(self._inner, "endpoint", self.endpoint) != self.endpoint:
-                raise RuntimeError("retry must not change endpoint")
+        remaining = {Failure.PARSE: PARSE_RETRIES, Failure.PROVIDER: PROVIDER_RETRIES}
+        attempt = 0
+        while True:
+            attempt += 1
             if hasattr(self._inner, "attempt"):
-                self._inner.attempt = attempt
-            last = self._inner.complete(messages)  # type: ignore[attr-defined]
-            replay = request_hash(messages)
-            if replay != digest:
+                setattr(self._inner, "attempt", attempt)
+            result = self._inner.complete(messages)
+            if request_hash(messages) != digest:
                 raise RuntimeError("retry mutated the request")
-            self.attempts.append((attempt, digest))
-            if not isinstance(last, ProviderFailure):
-                return last
-        assert last is not None
-        return last
+            failure = failure_class(result)
+            self.attempts.append((attempt, digest, failure))
+            if failure is None or remaining.get(failure, 0) == 0:
+                return result
+            remaining[failure] -= 1
+            if failure is Failure.PROVIDER:
+                self._clock.sleep(PROVIDER_WAIT_SECONDS)

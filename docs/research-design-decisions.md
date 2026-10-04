@@ -377,3 +377,12 @@ Commit the references and release together or in adjacent commits.
 Release-v2 used clean revision `8a5bd79` with LF script bytes; CRLF hashes may
 differ. Runtime versions were not recorded, and other environments are untested.
 Both releases are unchanged and unsigned. Tests: 385 passed, one existing warning.
+
+## 2026-10-04 — Serving-path retries
+
+SDK retries are off; every attempt is a recorded request. One logical call
+allows one immediate retry after a response that is not exactly `yes` or `no`,
+and up to three retries after a provider failure, 60 seconds apart. Protocol
+failures are not retried. The final attempt is scored; earlier attempts keep
+their raw text and transport evidence. Approved by the researcher on
+4 October 2026, before any MAIN collection.

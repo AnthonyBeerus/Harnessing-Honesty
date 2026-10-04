@@ -37,7 +37,8 @@ requests by default.
 
 The serving path records every HTTP request and response beneath the SDK with
 a custom httpx transport [92]. SDK retries are disabled [93]; Pydantic AI
-accepts the prebuilt client [43]. Observed model, generation ID, finish reason
+accepts the prebuilt client [43]. Permitted retries are explicit and recorded
+(research-design-decisions.md, 2026-10-04). Observed model, generation ID, finish reason
 and usage come from the documented response body [91]. The undocumented
 top-level `provider` field is recorded as returned. Missing fields stay empty
 and are never copied from the request. Router metadata [34] is not yet

@@ -94,11 +94,16 @@ class ResponseReceived(_Event):
 
 
 class RequestFailed(_Event):
-    """The call produced no answer."""
+    """The call produced no answer.
+
+    ``raw_response`` keeps the text of a parse failure, so a retried call
+    retains both attempts.
+    """
 
     kind: Literal["request_failed"] = "request_failed"
     failure: Failure
     detail: str
+    raw_response: str | None = None
     observed_model: str | None = None
     observed_endpoint: str | None = None
     generation_id: str | None = None

@@ -164,6 +164,7 @@ class RecordingModelClient:
                     occurred_at=self._session._now(),
                     failure=failure,
                     detail=getattr(result, "detail", failure.value),
+                    raw_response=getattr(result, "raw_response", None),
                     attempt=self.attempt,
                     **observed,
                 )
