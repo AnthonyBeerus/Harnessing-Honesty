@@ -3,10 +3,15 @@
 import json
 
 import httpx
+import pytest
 
 from harnessing_honesty.domain import Message
 from harnessing_honesty.domain.evidence import TransportExchange
-from harnessing_honesty.domain.results import AnswerSuccess, ProviderFailure
+from harnessing_honesty.domain.results import (
+    AnswerSuccess,
+    ProtocolFailure,
+    ProviderFailure,
+)
 from harnessing_honesty.models.config import DecodingCard, RoutingCard, ServingManifest
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 from harnessing_honesty.models.transport import call_evidence
@@ -17,6 +22,24 @@ MANIFEST = ServingManifest(
     decoding=DecodingCard(temperature=0.0, seed=None, max_tokens=1024),
 )
 REQUEST = (Message(role="user", content="Is 2 even? Answer yes or no."),)
+
+
+def _metadata(provider: str = "Anthropic", **overrides: object) -> dict[str, object]:
+    """Router metadata in the documented response shape [34]."""
+    metadata: dict[str, object] = {
+        "requested": "anthropic/claude-sonnet-4.6",
+        "strategy": "direct",
+        "attempt": 1,
+        "endpoints": {
+            "total": 1,
+            "available": [
+                {"provider": provider, "model": "anthropic/claude-sonnet-4.6", "selected": True}
+            ],
+        },
+        "attempts": [{"provider": provider, "status": 200}],
+        "pipeline": [],
+    }
+    return metadata | overrides
 
 
 def _completion(**overrides: object) -> dict[str, object]:
@@ -41,6 +64,7 @@ def _completion(**overrides: object) -> dict[str, object]:
             "prompt_tokens_details": {"cached_tokens": 0},
             "completion_tokens_details": {"reasoning_tokens": 0},
         },
+        "openrouter_metadata": _metadata(),
     }
     return body | overrides
 
@@ -69,6 +93,7 @@ def test_a_success_records_the_wire_and_observes_from_the_body() -> None:
     assert sent["model"] == "anthropic/claude-sonnet-4.6"
     assert sent["provider"]["only"] == ["anthropic"]
     assert sent["messages"][-1]["content"] == REQUEST[0].content
+    assert exchange.request_headers == {"x-openrouter-metadata": "enabled"}
     assert exchange.status_code == 200
     assert evidence.observed_model == "anthropic/claude-sonnet-4.6"
     assert evidence.observed_endpoint == "Anthropic"
@@ -132,11 +157,34 @@ def _exchange(body: str) -> TransportExchange:
 
 
 def test_absent_or_malformed_identity_is_not_an_observation() -> None:
-    unnamed = {k: v for k, v in _completion().items() if k not in {"model", "provider"}}
-    typed = {"model": 7, "provider": {"name": "x"}}
+    hidden = {"model", "openrouter_metadata"}
+    unnamed = {k: v for k, v in _completion().items() if k not in hidden}
+    typed = {"model": 7, "openrouter_metadata": {"endpoints": {"available": [{}]}}}
 
     for body in (json.dumps(unnamed), json.dumps(typed), "<html>bad gateway</html>"):
         evidence = call_evidence([_exchange(body)])
         assert evidence.observed_model is None
         assert evidence.observed_endpoint is None
     assert call_evidence([]).exchanges == ()
+
+
+@pytest.mark.parametrize(
+    ("metadata", "detail"),
+    [
+        (None, "no selected endpoint"),
+        (_metadata(provider="Amazon Bedrock"), "route mismatch"),
+        (_metadata(attempt=2), "router retried or fell back"),
+        (
+            _metadata(attempts=[{"status": 503}, {"status": 200}]),
+            "router retried or fell back",
+        ),
+        (_metadata(pipeline=[{"type": "context_compression"}]), "pipeline"),
+    ],
+)
+def test_router_metadata_fails_closed(metadata: object, detail: str) -> None:
+    client = _replies(httpx.Response(200, json=_completion(openrouter_metadata=metadata)))
+
+    result = client.complete(REQUEST)
+
+    assert isinstance(result, ProtocolFailure)
+    assert detail in result.detail

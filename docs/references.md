@@ -139,7 +139,7 @@ The archived registration retains its original references.
 
 <a id="openroutermetadata"></a>
 
-[34] OpenRouter, “Router metadata,” Accessed: Sep. 4, 2026. [Online]. [Available](https://openrouter.ai/docs/guides/features/router-metadata).
+[34] OpenRouter, “Router metadata,” Accessed: Oct. 4, 2026. [Online]. [Available](https://openrouter.ai/docs/guides/features/router-metadata).
 
 <a id="gpboostgpmodel"></a>
 

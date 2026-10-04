@@ -2,6 +2,7 @@
 
 from typing import Any, Mapping
 
+from harnessing_honesty.domain.evidence import CallEvidence
 from harnessing_honesty.models.config import RoutingCard, ServingManifest
 from harnessing_honesty.domain.results import ProtocolFailure
 
@@ -56,6 +57,31 @@ def classify_envelope(
                 f"silent substitution: observed model {observed_model!r} "
                 f"!= requested {manifest.requested_model!r}"
             )
+        )
+    return None
+
+
+def classify_evidence(
+    evidence: CallEvidence,
+    manifest: ServingManifest,
+) -> ProtocolFailure | None:
+    """Fail closed unless router metadata shows one direct attempt on the pin [34]."""
+    if evidence.observed_endpoint is None:
+        return ProtocolFailure(detail="router metadata has no selected endpoint")
+    observed = evidence.observed_endpoint.lower().replace(" ", "-")
+    allowed = {name.lower() for name in manifest.routing.provider_only}
+    if observed not in allowed:
+        return ProtocolFailure(
+            detail=f"route mismatch: selected {evidence.observed_endpoint!r}, "
+            f"pinned {sorted(allowed)}"
+        )
+    if evidence.router_attempts != 1:
+        return ProtocolFailure(
+            detail=f"router retried or fell back: {evidence.router_attempts} attempts"
+        )
+    if evidence.pipeline_stages:
+        return ProtocolFailure(
+            detail=f"router pipeline stages: {list(evidence.pipeline_stages)}"
         )
     return None
 

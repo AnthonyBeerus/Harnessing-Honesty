@@ -12,7 +12,7 @@ from harnessing_honesty.domain.events import UsageCounts
 class TransportExchange(BaseModel):
     """One HTTP attempt. ``error`` is set when no response arrived.
 
-    Headers are not stored, so the API key never reaches a record.
+    Only allow-listed request headers are stored, never the API key.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -20,6 +20,7 @@ class TransportExchange(BaseModel):
     method: str
     url: str
     request_body: str
+    request_headers: dict[str, str] = {}
     status_code: int | None = None
     response_body: str | None = None
     error: str | None = None
@@ -36,3 +37,5 @@ class CallEvidence(BaseModel):
     generation_id: str | None = None
     finish_reason: str | None = None
     usage: UsageCounts | None = None
+    router_attempts: int | None = None
+    pipeline_stages: tuple[str, ...] = ()

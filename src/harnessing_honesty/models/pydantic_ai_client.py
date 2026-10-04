@@ -35,7 +35,7 @@ from harnessing_honesty.domain.results import (
     ProviderFailure,
 )
 from harnessing_honesty.domain.evidence import CallEvidence
-from harnessing_honesty.models.routing import classify_envelope
+from harnessing_honesty.models.routing import classify_envelope, classify_evidence
 from harnessing_honesty.models.transport import CapturingTransport, call_evidence
 
 
@@ -108,10 +108,15 @@ class PydanticAIModelClient:
         self.last_evidence = None
         start = len(self._capture.exchanges) if self._capture else 0
         try:
-            return self._complete(messages)
+            result = self._complete(messages)
         finally:
             if self._capture is not None:
                 self.last_evidence = call_evidence(self._capture.exchanges[start:])
+        if self.last_evidence is None or self._manifest is None:
+            return result
+        if isinstance(result, (ProviderFailure, ProtocolFailure)):
+            return result
+        return classify_evidence(self.last_evidence, self._manifest) or result
 
     def _complete(self, messages: tuple[Message, ...]) -> ModelResult:
         try:
@@ -231,6 +236,8 @@ def openrouter_text_agent(
             api_key=key,
             max_retries=0,
             http_client=httpx.AsyncClient(transport=capture),
+            # Opt in to router metadata, the documented serving evidence [34].
+            default_headers={"X-OpenRouter-Metadata": "enabled"},
         )
         provider = OpenRouterProvider(openai_client=client)
     model = OpenRouterModel(model_name, provider=provider)

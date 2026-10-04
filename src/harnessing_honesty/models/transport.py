@@ -9,6 +9,8 @@ import httpx
 from harnessing_honesty.domain.events import UsageCounts
 from harnessing_honesty.domain.evidence import CallEvidence, TransportExchange
 
+RECORDED_HEADERS = ("x-openrouter-metadata",)
+
 
 class CapturingTransport(httpx.AsyncBaseTransport):
     """Record the request and response body of every attempt, SDK retries included.
@@ -22,6 +24,7 @@ class CapturingTransport(httpx.AsyncBaseTransport):
 
     async def handle_async_request(self, request: httpx.Request) -> httpx.Response:
         sent = (await request.aread()).decode("utf-8", errors="replace")
+        headers = {k: request.headers[k] for k in RECORDED_HEADERS if k in request.headers}
         try:
             response = await self._inner.handle_async_request(request)
             body = await response.aread()
@@ -31,6 +34,7 @@ class CapturingTransport(httpx.AsyncBaseTransport):
                     method=request.method,
                     url=str(request.url),
                     request_body=sent,
+                    request_headers=headers,
                     error=f"{type(exc).__name__}: {exc}",
                 )
             )
@@ -40,6 +44,7 @@ class CapturingTransport(httpx.AsyncBaseTransport):
                 method=request.method,
                 url=str(request.url),
                 request_body=sent,
+                request_headers=headers,
                 status_code=response.status_code,
                 response_body=body.decode("utf-8", errors="replace"),
             )
@@ -54,20 +59,51 @@ def call_evidence(exchanges: Sequence[TransportExchange]) -> CallEvidence:
     """Read observed fields from the last response body.
 
     ``id``, ``model``, ``finish_reason`` and ``usage`` are documented [91].
-    Top-level ``provider`` is not, but all three SUTs returned it in the
-    3 October smoke.
+    The serving endpoint is the selected endpoint in router metadata [34]; the
+    undocumented top-level ``provider`` stays in the raw body only.
     """
     body = _last_body(exchanges)
     choices = body.get("choices")
     first = choices[0] if isinstance(choices, list) and choices else {}
+    metadata = _mapping(body.get("openrouter_metadata"))
     return CallEvidence(
         exchanges=tuple(exchanges),
         observed_model=_text(body.get("model")),
-        observed_endpoint=_text(body.get("provider")),
+        observed_endpoint=_text(_selected_endpoint(metadata).get("provider")),
         generation_id=_text(body.get("id")),
         finish_reason=_text(first.get("finish_reason")) if isinstance(first, dict) else None,
         usage=_usage(body.get("usage")),
+        router_attempts=_router_attempts(metadata),
+        pipeline_stages=_pipeline_stages(metadata),
     )
+
+
+def _selected_endpoint(metadata: dict[str, Any]) -> dict[str, Any]:
+    available = _mapping(metadata.get("endpoints")).get("available")
+    if not isinstance(available, list):
+        return {}
+    selected = [e for e in available if isinstance(e, dict) and e.get("selected") is True]
+    return selected[0] if len(selected) == 1 else {}
+
+
+def _pipeline_stages(metadata: dict[str, Any]) -> tuple[str, ...]:
+    pipeline = metadata.get("pipeline")
+    if not isinstance(pipeline, list):
+        return ()
+    return tuple(_text(_mapping(stage).get("type")) or "unknown" for stage in pipeline)
+
+
+def _router_attempts(metadata: dict[str, Any]) -> int | None:
+    """Count router attempts from ``attempt`` and the ``attempts`` list [34]."""
+    attempt = _count(metadata, "attempt")
+    attempts = metadata.get("attempts")
+    listed = len(attempts) if isinstance(attempts, list) else None
+    known = [n for n in (attempt, listed) if n is not None]
+    return max(known) if known else None
+
+
+def _mapping(value: object) -> dict[str, Any]:
+    return value if isinstance(value, dict) else {}
 
 
 def _last_body(exchanges: Sequence[TransportExchange]) -> dict[str, Any]:
