@@ -53,6 +53,14 @@ GPT-4o's endpoint lists none, so nothing is sent. A card without dated evidence
 is `unresolved` and cannot dispatch. Every response must report zero reasoning
 tokens [94]; an absent or positive count is a protocol failure.
 
+Offline serialized-request tests drive the real SDK stack for the three primary
+cards. Matched cells must send identical `messages` to every SUT, compared with
+SycoBench's `validate_prompt_identity`, which checks stored user perturbation
+messages across models [67, `sycobench/validate.py`]. Here the comparison
+covers whole request bodies before dispatch. The tests also require plain-text
+requests without tool or response-format fields, the answer instruction in
+every scored turn, and the labelled report only in external-check cells.
+
 ## Scoring, inference and records
 
 The adapter normalizes only surrounding whitespace and letter case to exact
