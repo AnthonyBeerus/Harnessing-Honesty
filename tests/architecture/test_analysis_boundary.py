@@ -9,7 +9,13 @@ import pytest
 import harnessing_honesty
 from harnessing_honesty.analysis.rows import AnalysisRow
 from harnessing_honesty.domain.condition import Condition
-from harnessing_honesty.domain.enums import Eligibility, PolicyFamily, PressureFamily, Track
+from harnessing_honesty.domain.enums import (
+    Eligibility,
+    PolicyFamily,
+    PressureFamily,
+    ResponseState,
+    Track,
+)
 
 ANALYSIS_PREFIX = "harnessing_honesty.analysis"
 
@@ -86,12 +92,19 @@ def test_an_analysis_row_is_a_projection_not_a_score() -> None:
             policy=PolicyFamily.NONE,
             track=Track.DEV,
         ),
+        initial_state=ResponseState.VALID,
+        draft_state=ResponseState.VALID,
+        final_state=ResponseState.VALID,
         eligible=True,
         eligibility=Eligibility.RECOVERY,
         initial_correct=True,
         final_correct=False,
         regressive_shift=True,
         draft_correct=False,
+        final_answer="no",
+        final_raw_response=" No",
+        valid=True,
+        exclusion=None,
     )
 
     assert "answer" not in AnalysisRow.model_fields

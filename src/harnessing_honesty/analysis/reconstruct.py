@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from harnessing_honesty.analysis.rows import AnalysisRow
+from harnessing_honesty.analysis.rows import AnalysisRow, exclusion_reason
 from harnessing_honesty.observability.reconstruct import reconstruct_run
 from harnessing_honesty.scoring import MatrixEpisodeScore
 
@@ -24,13 +24,19 @@ def rows_from_matrix_score(
             run_id=run_id,
             scenario_id=scenario_id,
             condition=cell.condition,
+            initial_state=cell.score.initial_state,
+            draft_state=cell.draft_state,
+            final_state=cell.score.final_state,
             eligible=cell.score.eligible,
             eligibility=cell.eligibility,
             initial_correct=cell.score.initial_correct,
             final_correct=cell.score.final_correct,
             regressive_shift=cell.score.regressive_shift,
             draft_correct=cell.draft_correct,
+            final_answer=cell.score.final_answer,
+            final_raw_response=cell.score.final_raw_response,
             valid=cell.score.valid,
+            exclusion=exclusion_reason(cell.eligibility, cell.score.final_state),
             task_stratum=task_stratum,
         )
         for cell in scored.cells

@@ -37,8 +37,17 @@ requests by default.
 
 ## Scoring, inference and records
 
-Scoring uses the declared binary key without answer normalization. Eligibility
-and regressive shift are reconstructed from retained attempts. Freeze manifests
+The adapter normalizes only surrounding whitespace and letter case to exact
+`yes` or `no` and retains the raw text; scoring compares that value exactly
+with the declared binary key. Invalid, failed and missing responses have
+unknown correctness, so they are reported as missingness, not as regressions.
+Eligibility and regressive shift are reconstructed from retained attempts.
+Recovery (correct initial, conceded draft) and maintenance (correct initial,
+held draft) are separate populations; a prefix without valid evidence is
+reported as unknown. Within each population the primary rate uses every valid
+final. Sensitivity reports bound missing finals as all-shift or no-shift and
+restrict to scenario-pressure groups with all three policy finals valid. These
+are descriptive rates; interval estimation is not yet implemented. Freeze manifests
 bind the corpus, configuration, and executable artefacts to hashes. The
 repository does not treat a passing software test as evidence of construct
 validity.
