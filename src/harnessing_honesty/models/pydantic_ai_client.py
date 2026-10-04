@@ -75,6 +75,10 @@ class PydanticAIModelClient:
 
         ``transport`` replaces the network in offline tests.
         """
+        if manifest.decoding.reasoning_control == "unresolved":
+            raise DevelopmentModelConfigurationError(
+                "reasoning state is unresolved for this card; it cannot dispatch"
+            )
         # Provider selection and fallback controls follow OpenRouter's documented
         # request fields [32]. The installed SDK boundary is Pydantic AI 1.107.1 [43].
         settings: OpenRouterModelSettings = {
@@ -87,6 +91,9 @@ class PydanticAIModelClient:
             },
             "openrouter_usage": {"include": True},
         }
+        if manifest.decoding.reasoning_control == "disable":
+            # Disable, not exclude: exclude hides reasoning but leaves it on [94].
+            settings["openrouter_reasoning"] = {"enabled": False}
         if manifest.decoding.seed is not None:
             settings["seed"] = manifest.decoding.seed
         if manifest.decoding.max_tokens is not None:

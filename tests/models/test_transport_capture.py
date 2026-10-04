@@ -13,13 +13,19 @@ from harnessing_honesty.domain.results import (
     ProviderFailure,
 )
 from harnessing_honesty.models.config import DecodingCard, RoutingCard, ServingManifest
-from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
+from harnessing_honesty.models.pydantic_ai_client import (
+    DevelopmentModelConfigurationError,
+    PydanticAIModelClient,
+)
 from harnessing_honesty.models.transport import call_evidence
 
 MANIFEST = ServingManifest(
     requested_model="anthropic/claude-sonnet-4.6",
     routing=RoutingCard(provider_only=("anthropic",), provider_order=("anthropic",)),
-    decoding=DecodingCard(temperature=0.0, seed=None, max_tokens=1024),
+    decoding=DecodingCard(
+        temperature=0.0, seed=None, max_tokens=1024,
+        reasoning="off", reasoning_control="disable",
+    ),
 )
 REQUEST = (Message(role="user", content="Is 2 even? Answer yes or no."),)
 
@@ -93,6 +99,7 @@ def test_a_success_records_the_wire_and_observes_from_the_body() -> None:
     assert sent["model"] == "anthropic/claude-sonnet-4.6"
     assert sent["provider"]["only"] == ["anthropic"]
     assert sent["messages"][-1]["content"] == REQUEST[0].content
+    assert sent["reasoning"] == {"enabled": False}
     assert exchange.request_headers == {"x-openrouter-metadata": "enabled"}
     assert exchange.status_code == 200
     assert evidence.observed_model == "anthropic/claude-sonnet-4.6"
@@ -183,6 +190,50 @@ def test_absent_or_malformed_identity_is_not_an_observation() -> None:
 )
 def test_router_metadata_fails_closed(metadata: object, detail: str) -> None:
     client = _replies(httpx.Response(200, json=_completion(openrouter_metadata=metadata)))
+
+    result = client.complete(REQUEST)
+
+    assert isinstance(result, ProtocolFailure)
+    assert detail in result.detail
+
+
+def _with_control(control: str) -> ServingManifest:
+    decoding = MANIFEST.decoding.model_copy(update={"reasoning_control": control})
+    return MANIFEST.model_copy(update={"decoding": decoding})
+
+
+def test_an_endpoint_without_reasoning_gets_no_reasoning_field() -> None:
+    sent: list[dict[str, object]] = []
+
+    def provider(request: httpx.Request) -> httpx.Response:
+        sent.append(json.loads(request.content))
+        return httpx.Response(200, json=_completion())
+
+    client = PydanticAIModelClient.from_manifest(
+        _with_control("not_supported"),
+        api_key="sk-or-v1-offline",
+        transport=httpx.MockTransport(provider),
+    )
+    client.complete(REQUEST)
+
+    assert "reasoning" not in sent[0]
+
+
+def test_an_unresolved_reasoning_state_cannot_dispatch() -> None:
+    with pytest.raises(DevelopmentModelConfigurationError, match="reasoning"):
+        PydanticAIModelClient.from_manifest(
+            _with_control("unresolved"), api_key="sk-or-v1-offline"
+        )
+
+
+@pytest.mark.parametrize(
+    ("details", "detail"),
+    [({"reasoning_tokens": 12}, "reasoning tokens observed"), ({}, "reasoning usage")],
+)
+def test_observed_reasoning_fails_closed(details: object, detail: str) -> None:
+    usage = {"prompt_tokens": 159, "completion_tokens": 4, "total_tokens": 163,
+             "completion_tokens_details": details}
+    client = _replies(httpx.Response(200, json=_completion(usage=usage)))
 
     result = client.complete(REQUEST)
 

@@ -57,7 +57,7 @@ def _pinned_manifest() -> ServingManifest:
             provider_only=("deepinfra",),
             provider_order=("deepinfra",),
         ),
-        decoding=DecodingCard(),
+        decoding=DecodingCard(reasoning="off", reasoning_control="unresolved"),
     )
 
 

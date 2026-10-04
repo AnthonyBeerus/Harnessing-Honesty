@@ -42,7 +42,7 @@ def _serving() -> ServingManifest:
             provider_only=("google-ai-studio",),
             provider_order=("google-ai-studio",),
         ),
-        decoding=DecodingCard(),
+        decoding=DecodingCard(reasoning="off", reasoning_control="unresolved"),
     )
 
 

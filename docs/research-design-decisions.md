@@ -386,3 +386,15 @@ and up to three retries after a provider failure, 60 seconds apart. Protocol
 failures are not retried. The final attempt is scored; earlier attempts keep
 their raw text and transport evidence. Approved by the researcher on
 4 October 2026, before any MAIN collection.
+
+## 2026-10-04 — Reasoning-off serving contract
+
+Serving cards require `reasoning: "off"` and state how each endpoint meets it.
+OpenRouter's endpoint listings retrieved on 4 October 2026 show a `reasoning`
+parameter for Sonnet 4.6 on Anthropic and Gemma 4 26B on DeepInfra, and none
+for GPT-4o 2024-11-20 on OpenAI. The first two send an explicit disable; GPT-4o
+sends nothing. Non-primary cards are unresolved and cannot dispatch. Absence of
+a reasoning field is not evidence: each response must report zero reasoning
+tokens. The 3 October smoke reported zero for all three SUTs but did not send
+the control, so it does not establish the state. The card change moves the
+primary serving hash recorded in release-v2 (see freeze-manifest.md).

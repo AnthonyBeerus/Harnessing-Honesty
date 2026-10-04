@@ -70,7 +70,7 @@ def test_captured_live_envelope_is_classifiable() -> None:
             provider_only=("google-ai-studio",),
             provider_order=("google-ai-studio",),
         ),
-        decoding=DecodingCard(),
+        decoding=DecodingCard(reasoning="off", reasoning_control="unresolved"),
     )
 
     assert classify_envelope(envelope, manifest) is None

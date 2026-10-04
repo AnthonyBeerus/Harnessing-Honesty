@@ -12,7 +12,7 @@ def _manifest() -> ServingManifest:
             provider_only=("google-ai-studio",),
             provider_order=("google-ai-studio",),
         ),
-        decoding=DecodingCard(),
+        decoding=DecodingCard(reasoning="off", reasoning_control="unresolved"),
     )
 
 
@@ -82,7 +82,7 @@ def test_downstream_provider_matches_pin() -> None:
             provider_only=("deepinfra",),
             provider_order=("deepinfra",),
         ),
-        decoding=DecodingCard(),
+        decoding=DecodingCard(reasoning="off", reasoning_control="unresolved"),
     )
 
     failure = classify_envelope(

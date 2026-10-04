@@ -14,6 +14,9 @@ serving:
     temperature: 0.0
     seed: null
     max_tokens: 1024
+    # OpenRouter endpoint listing, 4 Oct 2026: supports `reasoning` [95].
+    reasoning: "off"
+    reasoning_control: disable
   # Plain yes/no avoids response-format tools across conditions [1], [4], [14].
   output_contract: plain_yes_no
 scheduler_seed: 0

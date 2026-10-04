@@ -22,7 +22,9 @@ def _serving(**overrides: object) -> ServingManifest:
             provider_only=("google-ai-studio",),
             provider_order=("google-ai-studio",),
         ),
-        "decoding": DecodingCard(temperature=0.0, seed=1),
+        "decoding": DecodingCard(
+            temperature=0.0, seed=1, reasoning="off", reasoning_control="unresolved"
+        ),
     }
     payload.update(overrides)
     return ServingManifest.model_validate(payload)
@@ -81,6 +83,29 @@ def test_identical_scheduler_and_sampling_seeds_are_refused() -> None:
             scheduler_seed=7,
             sampling_seed=7,
         )
+
+
+def test_reasoning_intent_is_required_and_only_off() -> None:
+    with pytest.raises(ValidationError, match="reasoning"):
+        DecodingCard()  # type: ignore[call-arg]
+    with pytest.raises(ValidationError, match="reasoning"):
+        DecodingCard(reasoning="on", reasoning_control="disable")  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize(
+    ("card", "control"),
+    [
+        ("sonnet.anthropic", "disable"),
+        ("gpt4o.openai", "not_supported"),
+        ("gemma4.deepinfra", "disable"),
+        ("gptoss.deepinfra", "unresolved"),
+    ],
+)
+def test_cards_map_reasoning_off_to_their_endpoint(card: str, control: str) -> None:
+    config = load_run_config(Path(f"config/qualification.{card}.yaml"))
+
+    assert config.serving.decoding.reasoning == "off"
+    assert config.serving.decoding.reasoning_control == control
 
 
 def test_open_routing_is_refused() -> None:

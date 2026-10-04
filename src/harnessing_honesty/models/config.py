@@ -1,7 +1,7 @@
 """Strict serving and run configuration. Unknown keys are refused."""
 
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
@@ -50,6 +50,11 @@ class DecodingCard(BaseModel):
     temperature: float = 0.0
     seed: int | None = 0
     max_tokens: int | None = None
+    # Enhanced reasoning is off by design. ``reasoning_control`` records how
+    # the endpoint achieves that: an explicit disable field, no reasoning
+    # facility, or no evidence yet ("unresolved", which cannot dispatch).
+    reasoning: Literal["off"]
+    reasoning_control: Literal["disable", "not_supported", "unresolved"]
 
 
 class ServingManifest(BaseModel):

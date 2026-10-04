@@ -344,3 +344,11 @@ The archived registration retains its original references.
 <a id="openaipython2530"></a>
 
 [93] OpenAI, “openai-python source code, version 2.53.0,” `src/openai/_constants.py`. Accessed: Oct. 4, 2026. [Source](https://github.com/openai/openai-python/blob/v2.53.0/src/openai/_constants.py).
+
+<a id="openrouter2026reasoning"></a>
+
+[94] OpenRouter, “Reasoning tokens,” disabling and excluding reasoning; usage reporting. Accessed: Oct. 4, 2026. [Source](https://openrouter.ai/docs/guides/best-practices/reasoning-tokens).
+
+<a id="openrouter2026endpoints"></a>
+
+[95] OpenRouter, “List endpoints for a model,” `supported_parameters` for `anthropic/claude-sonnet-4.6`, `openai/gpt-4o-2024-11-20` and `google/gemma-4-26b-a4b-it`. Retrieved: Oct. 4, 2026. [Source](https://openrouter.ai/api/v1/models/anthropic/claude-sonnet-4.6/endpoints).

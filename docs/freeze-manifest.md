@@ -61,6 +61,10 @@ are untested. Reconciliation covers selected responses, not every log line.
 The candidate's `analysis_code_hash` binds the analysis package at `8a5bd79`.
 Later scoring and analysis work changes only that field: reproduction from a
 later revision must match the CSVs byte for byte and every other candidate field.
+Its `serving_config_hash` binds the three primary cards at `8a5bd79`. On
+4 October 2026 the cards gained the required reasoning-off value, which moves
+that hash; reproduction binds it to the current cards instead. The final freeze
+is rebuilt with the changed serving configuration.
 
 ## Replacement-freeze procedure
 

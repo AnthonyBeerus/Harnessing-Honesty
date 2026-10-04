@@ -46,6 +46,13 @@ router attempt or with a pipeline stage is a protocol failure. The routing
 strategy is recorded in the raw body but not yet enforced. Missing fields stay
 empty and are never copied from the request.
 
+Enhanced reasoning is off by design and every card must say so. Where the
+endpoint lists a `reasoning` parameter [95], the request sends
+`reasoning.enabled = false`; `exclude` would only hide active reasoning [94].
+GPT-4o's endpoint lists none, so nothing is sent. A card without dated evidence
+is `unresolved` and cannot dispatch. Every response must report zero reasoning
+tokens [94]; an absent or positive count is a protocol failure.
+
 ## Scoring, inference and records
 
 The adapter normalizes only surrounding whitespace and letter case to exact
