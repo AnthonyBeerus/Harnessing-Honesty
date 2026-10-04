@@ -24,6 +24,7 @@ EXPECTED_KINDS = {
     "RequestSent": "request_sent",
     "ResponseReceived": "response_received",
     "RequestFailed": "request_failed",
+    "AttemptInterrupted": "attempt_interrupted",
     "RunClosed": "run_closed",
 }
 

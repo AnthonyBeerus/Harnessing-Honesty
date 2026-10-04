@@ -1,14 +1,45 @@
 """Rebuild a run from files alone. If this fails, the vocabulary is wrong."""
 
 from pathlib import Path
+from typing import Literal
 
-from pydantic import TypeAdapter
+from pydantic import BaseModel, ConfigDict, TypeAdapter
 
-from harnessing_honesty.domain.enums import RecordStatus
-from harnessing_honesty.domain.events import DomainEvent
+from harnessing_honesty.domain.enums import Failure, RecordStatus
+from harnessing_honesty.domain.events import (
+    AttemptInterrupted,
+    DomainEvent,
+    RequestFailed,
+    RequestSent,
+    ResponseReceived,
+)
 from harnessing_honesty.domain.records import RunRecord
 
 _EVENT_ADAPTER = TypeAdapter(DomainEvent)
+
+AttemptOutcome = Literal["answered", "failed", "interrupted", "no_outcome"]
+
+
+class AttemptRecord(BaseModel):
+    """One dispatch attempt and what followed it.
+
+    ``interrupted`` and ``no_outcome`` are indeterminate: the provider may
+    or may not have answered.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    request_sequence: int
+    call_id: str | None
+    attempt: int
+    request_hash: str | None
+    parent_call_id: str | None
+    outcome: AttemptOutcome
+    failure: Failure | None = None
+
+    @property
+    def indeterminate(self) -> bool:
+        return self.outcome in {"interrupted", "no_outcome"}
 
 
 class ReconstructedRun:
@@ -17,6 +48,45 @@ class ReconstructedRun:
     def __init__(self, record: RunRecord, events: tuple[DomainEvent, ...]) -> None:
         self.record = record
         self.events = events
+
+    @property
+    def attempts(self) -> tuple[AttemptRecord, ...]:
+        """Pair each RequestSent with the outcome event that follows it.
+
+        Dispatch is sequential, so an attempt's outcome is the next event.
+        An outcome for a different call or attempt is a lineage error.
+        """
+        records: list[AttemptRecord] = []
+        for index, event in enumerate(self.events):
+            if not isinstance(event, RequestSent):
+                continue
+            following = self.events[index + 1] if index + 1 < len(self.events) else None
+            outcome: AttemptOutcome = "no_outcome"
+            failure: Failure | None = None
+            if isinstance(following, ResponseReceived | RequestFailed | AttemptInterrupted):
+                if (following.call_id, following.attempt) != (event.call_id, event.attempt):
+                    raise ValueError(
+                        f"outcome at sequence {following.sequence} does not "
+                        f"match request at {event.sequence}"
+                    )
+                if isinstance(following, ResponseReceived):
+                    outcome = "answered"
+                elif isinstance(following, RequestFailed):
+                    outcome, failure = "failed", following.failure
+                else:
+                    outcome = "interrupted"
+            records.append(
+                AttemptRecord(
+                    request_sequence=event.sequence,
+                    call_id=event.call_id,
+                    attempt=event.attempt,
+                    request_hash=event.request_hash,
+                    parent_call_id=event.parent_call_id,
+                    outcome=outcome,
+                    failure=failure,
+                )
+            )
+        return tuple(records)
 
     @property
     def complete_calls(self) -> int:

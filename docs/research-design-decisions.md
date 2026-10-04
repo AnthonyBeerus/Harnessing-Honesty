@@ -421,3 +421,17 @@ disabled explicitly, but the documentation does not say the header is omitted
 when caching is off, so its absence is not positive evidence. A `HIT` still
 fails. Requiring the header would fail every call, so this remains a recorded
 limit.
+
+## 2026-10-04 — Call identity, lineage and indeterminate attempts
+
+Before dispatch the recorder saves the exact messages as
+`requests/{request_hash}.json` and then writes `RequestSent`. Each logical call
+gets a `call_id`; retries share it, and `(call_id, attempt)` identifies an
+attempt. A block is one wrapped client: one episode runner invocation, or one
+live client. The recorder derives `parent_call_id` and `prefix_hash` from
+content: the parent is the earlier call whose request plus parsed answer is the
+longest prefix of the new request. Runners are unchanged. `ResponseReceived`
+keeps the raw text so reconstruction can parse it again. An exception during
+dispatch writes `AttemptInterrupted`, and a `RequestSent` with no outcome is
+reported as `no_outcome`. Both are indeterminate, not model failures. Runs
+recorded earlier load with these fields empty.

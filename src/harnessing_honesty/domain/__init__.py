@@ -31,6 +31,7 @@ from harnessing_honesty.domain.checkers import REGISTERED_CATEGORIES
 from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.instrument import DependencyRecord, InstrumentItem
 from harnessing_honesty.domain.events import (
+    AttemptInterrupted,
     DomainEvent,
     RequestFailed,
     RequestSent,
@@ -72,6 +73,7 @@ __all__ = [
     "AnswerKey",
     "AnswerResponse",
     "AnswerSuccess",
+    "AttemptInterrupted",
     "BinaryAnswer",
     "Category",
     "CellBinding",

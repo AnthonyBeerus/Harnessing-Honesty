@@ -1,4 +1,7 @@
-"""Exclusive run directories, append-only JSONL, atomic summary replace."""
+"""Exclusive run directories, append-only JSONL, atomic writes.
+
+Summaries are replaced; envelopes and requests are written once.
+"""
 
 from pathlib import Path
 
@@ -28,6 +31,9 @@ class FilesystemRecordStore:
     def envelopes_dir(self, run_id: str) -> Path:
         return self.run_dir(run_id) / "envelopes"
 
+    def requests_dir(self, run_id: str) -> Path:
+        return self.run_dir(run_id) / "requests"
+
     def create(self, run_id: str) -> None:
         path = self.run_dir(run_id)
         try:
@@ -38,6 +44,7 @@ class FilesystemRecordStore:
             ) from exc
         self.events_path(run_id).touch()
         self.envelopes_dir(run_id).mkdir()
+        self.requests_dir(run_id).mkdir()
 
     def append(self, run_id: str, payload: str) -> None:
         path = self.events_path(run_id)
@@ -49,20 +56,33 @@ class FilesystemRecordStore:
             _fsync(handle)
 
     def replace_summary(self, run_id: str, payload: str) -> None:
-        path = self.summary_path(run_id)
-        tmp = path.with_name(path.name + ".tmp")
-        with tmp.open("w", encoding="utf-8") as handle:
-            handle.write(payload)
-            handle.flush()
-            _fsync(handle)
-        tmp.replace(path)
+        _write_atomic(self.summary_path(run_id), payload)
 
     def write_envelope(self, run_id: str, ref: str, payload: str) -> None:
+        """Write once. A second write to the same ref is an error."""
         path = self.envelopes_dir(run_id) / f"{ref}.json"
-        with path.open("w", encoding="utf-8") as handle:
-            handle.write(payload)
-            handle.flush()
-            _fsync(handle)
+        if path.exists():
+            raise FileExistsError(f"envelope already written: {path}")
+        _write_atomic(path, payload)
+
+    def write_request(self, run_id: str, digest: str, payload: str) -> None:
+        """Content-addressed: an identical rewrite is a no-op, a different one an error."""
+        path = self.requests_dir(run_id) / f"{digest}.json"
+        if path.exists():
+            if path.read_text(encoding="utf-8") != payload:
+                raise FileExistsError(f"request {digest} already saved with other content")
+            return
+        _write_atomic(path, payload)
+
+
+def _write_atomic(path: Path, payload: str) -> None:
+    """Readers see the old file or the whole new one, never a partial write."""
+    tmp = path.with_name(path.name + ".tmp")
+    with tmp.open("w", encoding="utf-8", newline="") as handle:
+        handle.write(payload)
+        handle.flush()
+        _fsync(handle)
+    tmp.replace(path)
 
 
 def _fsync(handle: object) -> None:

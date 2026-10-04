@@ -62,7 +62,15 @@ class RunStarted(_Event):
 
 
 class RequestSent(_Event):
-    """The harness handed a conversation to the client."""
+    """The harness handed a conversation to the client.
+
+    Written before dispatch, after the messages are saved under
+    ``requests/{request_hash}.json``. ``call_id`` names one logical call;
+    its retries share it, and ``(call_id, attempt)`` names one attempt.
+    ``parent_call_id`` is the earlier call whose request plus answer is the
+    longest prefix of this request; ``prefix_hash`` hashes that prefix.
+    Runs recorded before these fields existed load them as ``None``.
+    """
 
     kind: Literal["request_sent"] = "request_sent"
     requested_message_count: int
@@ -70,15 +78,25 @@ class RequestSent(_Event):
     requested_endpoint: str | None = None
     request_hash: str | None = None
     attempt: int = 1
+    call_id: str | None = None
+    block_id: str | None = None
+    parent_call_id: str | None = None
+    prefix_hash: str | None = None
     stage: str | None = None
     cell_identity: str | None = None
     verification_report_ids: tuple[str, ...] = ()
 
 
 class ResponseReceived(_Event):
-    """A parsed answer came back. The answer itself is not stored here."""
+    """A parsed answer came back.
+
+    ``raw_response`` is the text before parsing, so reconstruction can parse
+    it again. The parsed answer is not stored.
+    """
 
     kind: Literal["response_received"] = "response_received"
+    call_id: str | None = None
+    raw_response: str | None = None
     observed_message_count: int | None = None
     observed_model: str | None = None
     observed_endpoint: str | None = None
@@ -102,6 +120,7 @@ class RequestFailed(_Event):
     """
 
     kind: Literal["request_failed"] = "request_failed"
+    call_id: str | None = None
     failure: Failure
     detail: str
     raw_response: str | None = None
@@ -116,6 +135,19 @@ class RequestFailed(_Event):
     envelope_ref: str | None = None
 
 
+class AttemptInterrupted(_Event):
+    """Dispatch raised before returning a result; the provider outcome is unknown.
+
+    A ``RequestSent`` with no outcome event means the process stopped
+    mid-attempt. Both are indeterminate, not model failures.
+    """
+
+    kind: Literal["attempt_interrupted"] = "attempt_interrupted"
+    call_id: str | None = None
+    attempt: int = 1
+    detail: str
+
+
 class RunClosed(_Event):
     """The run reached a terminal status. Incomplete stays incomplete."""
 
@@ -124,6 +156,11 @@ class RunClosed(_Event):
 
 
 DomainEvent = Annotated[
-    RunStarted | RequestSent | ResponseReceived | RequestFailed | RunClosed,
+    RunStarted
+    | RequestSent
+    | ResponseReceived
+    | RequestFailed
+    | AttemptInterrupted
+    | RunClosed,
     Field(discriminator="kind"),
 ]
