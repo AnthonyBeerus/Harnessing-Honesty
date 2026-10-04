@@ -458,3 +458,15 @@ record `envelope_hash`. Reconstruction refuses a run with any failure. An
 interrupted history is not a failure: an attempt without an outcome, its
 envelope if written, and a leftover `.tmp` file are kept and reported as
 indeterminate. The first issue names the cause; later ones may follow from it.
+
+## 2026-10-04 — Persisted smoke and fresh-process reconstruction
+
+The approved excluded smoke at `66b641b` sent one request to Gemma 4 26B on
+DeepInfra through `run-serving-smoke`: one attempt, valid answer, $0.0000116
+recorded cost, pinned snapshot `google/gemma-4-26b-a4b-it-20260403`, zero
+reasoning tokens. A separate process read only the run directory: no integrity
+issues; the saved request matched its hash; the raw text parsed again to the
+recorded answer; the envelope matched its hash. The run-audit notebook showed
+the same. The call carries no matrix label, so no matrix was rebuilt; matrix
+reconstruction is covered offline. Evidence is git-ignored under
+`data/runs/dev/serving-smoke-qualification.gemma4.deepinfra-20261004T140930054117Z`.
