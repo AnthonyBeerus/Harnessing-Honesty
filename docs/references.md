@@ -127,7 +127,7 @@ The archived registration retains its original references.
 
 <a id="inspectlogs"></a>
 
-[31] UK AI Security Institute, “Inspect: log files,” Accessed: Sep. 4, 2026. [Online]. [Available](https://inspect.aisi.org.uk/eval-logs.html).
+[31] UK AI Security Institute, “Inspect: log files,” Accessed: Oct. 4, 2026. [Online]. [Available](https://inspect.aisi.org.uk/eval-logs.html).
 
 <a id="openrouterrouting"></a>
 

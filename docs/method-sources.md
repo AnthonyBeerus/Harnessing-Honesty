@@ -83,6 +83,15 @@ bind the corpus, configuration, and executable artefacts to hashes. The
 repository does not treat a passing software test as evidence of construct
 validity.
 
+Each run directory keeps the summary status, the exact request before
+dispatch, the raw response, usage and failures, and keeps interrupted attempts
+as indeterminate. The run-audit notebook presents these with lineage,
+integrity failures and reconstruction discrepancies. Inspect's evaluation logs
+keep comparable elements (status, sample input and output, model usage, error
+information, recoverable interrupted logs) [31]; this is a retrospective
+comparison of coverage, not the source of the design, and Inspect is not a
+dependency.
+
 ## Software structure and citation practice
 
 The implementation follows one route from configuration through cases,

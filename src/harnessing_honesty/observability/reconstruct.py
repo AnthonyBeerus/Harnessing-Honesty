@@ -12,20 +12,34 @@ from harnessing_honesty.domain.events import (
     RequestFailed,
     RequestSent,
     ResponseReceived,
+    UsageCounts,
 )
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.records import RunRecord
+from harnessing_honesty.domain.responses import normalize_binary_answer
 
 _EVENT_ADAPTER = TypeAdapter(DomainEvent)
 
 AttemptOutcome = Literal["answered", "failed", "interrupted", "no_outcome"]
+_EVIDENCE = (
+    "raw_response",
+    "observed_model",
+    "observed_endpoint",
+    "observed_snapshot",
+    "cache_status",
+    "finish_reason",
+    "usage",
+    "envelope_ref",
+    "envelope_hash",
+)
 
 
 class AttemptRecord(BaseModel):
-    """One dispatch attempt and what followed it.
+    """One dispatch attempt, what followed it, and its serving evidence.
 
     ``interrupted`` and ``no_outcome`` are indeterminate: the provider may
-    or may not have answered.
+    or may not have answered. Serving fields are copied from the outcome
+    event and stay ``None`` when it does not state them.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -37,10 +51,39 @@ class AttemptRecord(BaseModel):
     parent_call_id: str | None
     outcome: AttemptOutcome
     failure: Failure | None = None
+    block_id: str | None = None
+    stage: str | None = None
+    cell_identity: str | None = None
+    prefix_hash: str | None = None
+    raw_response: str | None = None
+    observed_model: str | None = None
+    observed_endpoint: str | None = None
+    observed_snapshot: str | None = None
+    cache_status: str | None = None
+    finish_reason: str | None = None
+    usage: UsageCounts | None = None
+    envelope_ref: str | None = None
+    envelope_hash: str | None = None
 
     @property
     def indeterminate(self) -> bool:
         return self.outcome in {"interrupted", "no_outcome"}
+
+    @property
+    def parse_agrees(self) -> bool | None:
+        """Whether parsing the raw text again agrees with the recorded outcome.
+
+        Only answers and parse failures with raw text are compared; anything
+        else, including runs recorded before raw text was kept, gives ``None``.
+        """
+        if self.raw_response is None:
+            return None
+        reparsed = normalize_binary_answer(self.raw_response) is not None
+        if self.outcome == "answered":
+            return reparsed
+        if self.failure is Failure.PARSE:
+            return not reparsed
+        return None
 
 
 class ReconstructedRun:
@@ -76,6 +119,7 @@ class ReconstructedRun:
                     outcome, failure = "failed", following.failure
                 else:
                     outcome = "interrupted"
+            evidence = {name: getattr(following, name, None) for name in _EVIDENCE}
             records.append(
                 AttemptRecord(
                     request_sequence=event.sequence,
@@ -85,6 +129,11 @@ class ReconstructedRun:
                     parent_call_id=event.parent_call_id,
                     outcome=outcome,
                     failure=failure,
+                    block_id=event.block_id,
+                    stage=event.stage,
+                    cell_identity=event.cell_identity,
+                    prefix_hash=event.prefix_hash,
+                    **evidence,
                 )
             )
         return tuple(records)

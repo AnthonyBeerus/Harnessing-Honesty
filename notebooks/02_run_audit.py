@@ -12,33 +12,109 @@
 
 # %% [markdown]
 # # Run audit
-# This entrypoint reads an explicitly selected local run directory.
-# Event reconstruction currently checks sequence continuity and the summary
-# identifier. It does not establish complete request reconstruction or serving
-# equivalence; see [Sources for the methods](../docs/method-sources.md#scoring-inference-and-records).
+# This notebook reads one explicitly selected run directory and never
+# dispatches a request. It shows run identity and completeness, integrity
+# failures, call lineage and retries, serving evidence, hashes, missingness and
+# reconstruction discrepancies. Every value comes from
+# `harnessing_honesty.observability` and `harnessing_honesty.analysis`.
+#
+# The record follows the elements Inspect keeps in its evaluation logs: run
+# status, each sample's input and output, model usage, and error information,
+# with interrupted logs kept for recovery [31]. That comparison supports the
+# record's coverage; it did not determine the design. See
+# [Sources for the methods](../docs/method-sources.md#scoring-inference-and-records).
 
 # %%
+from collections import Counter
 from pathlib import Path
 
+from harnessing_honesty.analysis.reconstruct import matrix_record_from_run
+from harnessing_honesty.domain.matrix import development_conditions
+from harnessing_honesty.observability.integrity import check_integrity
 from harnessing_honesty.observability.reconstruct import reconstruct_run
 
 root = next(path for path in (Path.cwd(), *Path.cwd().parents)
             if (path / "pyproject.toml").is_file()
             and (path / "config/freeze.json").is_file())
 run_directory = None  # Set an explicit Path relative to the repository root.
+run_path = None if run_directory is None else root / run_directory
+if run_path is None:
+    print("No run selected. No audit results are available.")
 
 # %% [markdown]
-# ## Recorded execution
-# With no selected run, no audit is performed. The request count is the number
-# of recorded `request_sent` events, not verified successful provider responses.
+# ## Identity and completeness
+# A run is complete only when it closed. Attempts without an outcome are
+# indeterminate: the provider may or may not have answered.
 
 # %%
-if run_directory is None:
-    print("No run selected. No audit results are available.")
-else:
-    run_path = root / run_directory
-    reconstructed = reconstruct_run(run_path)
+if run_path is not None:
+    run = reconstruct_run(run_path)
+    attempts = run.attempts
+    record = run.record
     print(f"Input: {run_path}")
-    print(f"Run: {reconstructed.record.run_id}")
-    print(f"Recorded requests: {reconstructed.complete_calls}")
-    print(f"Marked incomplete: {reconstructed.interrupted}")
+    print(f"Run: {record.run_id}; track {record.track}; status {record.status}")
+    print(f"Requested model: {record.requested_model}")
+    print(f"Config hash: {record.config_hash}")
+    print(f"Logical calls: {len({a.call_id for a in attempts})}; attempts: {len(attempts)}")
+    print(f"Outcomes: {dict(Counter(a.outcome for a in attempts))}")
+    print(f"Indeterminate attempts: {sum(a.indeterminate for a in attempts)}")
+
+# %% [markdown]
+# ## Integrity
+# The first issue names the cause; later issues may follow from it.
+# Reconstruction refuses a run with any issue.
+
+# %%
+if run_path is not None:
+    issues = check_integrity(run_path)
+    for issue in issues:
+        print(f"{issue.kind.value} at {issue.where}: {issue.detail}")
+    print(f"{len(issues)} integrity issues")
+
+# %% [markdown]
+# ## Lineage and retries
+# Each row is one attempt. Retries share a call; the parent is the call whose
+# request plus answer the new request extends.
+
+# %%
+if run_path is not None:
+    for a in attempts:
+        result = a.failure.value if a.failure else a.outcome
+        print(f"{a.call_id} #{a.attempt} {a.block_id} {a.stage} {a.cell_identity} "
+              f"{result} parent={a.parent_call_id}")
+
+# %% [markdown]
+# ## Serving evidence and hashes
+# Observed fields are `None` when the response did not state them. Request and
+# envelope hashes are those recorded at dispatch; integrity checks the files.
+
+# %%
+if run_path is not None:
+    for a in attempts:
+        tokens = a.usage.model_dump() if a.usage else None
+        print(f"{a.call_id} #{a.attempt}: {a.observed_model} via {a.observed_endpoint}; "
+              f"snapshot {a.observed_snapshot}; cache {a.cache_status}; "
+              f"finish {a.finish_reason}; usage {tokens}")
+        print(f"    request {a.request_hash}; prefix {a.prefix_hash}; "
+              f"envelope {a.envelope_ref} {a.envelope_hash}")
+
+# %% [markdown]
+# ## Missingness and reconstruction discrepancies
+# A matrix block is rebuilt from saved requests and raw outcomes. Slots that
+# were never filled or ended indeterminate are missing. A discrepancy is an
+# attempt whose raw text, parsed again, disagrees with its recorded outcome.
+
+# %%
+if run_path is not None:
+    disagreements = [a for a in attempts if a.parse_agrees is False]
+    for a in disagreements:
+        print(f"parse discrepancy: {a.call_id} #{a.attempt} {a.outcome} {a.raw_response!r}")
+    print(f"{len(disagreements)} parse discrepancies")
+    if issues or not any(a.stage for a in attempts):
+        print("No matrix rebuilt: integrity issues or no stage labels.")
+    else:
+        matrix = matrix_record_from_run(run_path)
+        conditions = development_conditions()
+        families = len({condition.pressure for condition in conditions})
+        print(f"Matrix drafts present: {len(matrix.drafts)} of {families}; "
+              f"finals present: {len(matrix.branches)} of {len(conditions)}")
