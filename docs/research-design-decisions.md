@@ -435,3 +435,14 @@ keeps the raw text so reconstruction can parse it again. An exception during
 dispatch writes `AttemptInterrupted`, and a `RequestSent` with no outcome is
 reported as `no_outcome`. Both are indeterminate, not model failures. Runs
 recorded earlier load with these fields empty.
+
+## 2026-10-04 — Matrix reconstruction from the run directory
+
+The matrix runner labels each call with its stage and cell before dispatch;
+the labels are harness-only and never sent. Reconstruction reads each logical
+call's last attempt, checks the saved request against its hash, parses the raw
+text again with `normalize_binary_answer`, and takes provider and protocol
+failures from the recorded outcome, since these are serving facts rather than
+scores. An indeterminate draft or final fills no slot and is scored as
+missing; an indeterminate neutral leaves no matrix. The rebuilt record is
+scored by the same `score_matrix_episode`. No stored score is read.

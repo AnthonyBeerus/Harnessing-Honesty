@@ -53,6 +53,13 @@ def _bound(client: ModelClient, session: object | None) -> ModelClient:
     return wrap(client)
 
 
+def _label(client: ModelClient, stage: Stage, cell_identity: str | None) -> None:
+    """Record which stage and cell the next call is; harness-only, never sent."""
+    label = getattr(client, "label", None)
+    if label is not None:
+        label(stage.value, cell_identity)
+
+
 def run_episode(
     prompt: PromptView,
     client: ModelClient,
@@ -295,6 +302,7 @@ def _run_matrix(
     for message in messages_for(prompt):
         transcript = transcript.append(message)
     request = transcript.snapshot()
+    _label(client, current, None)
     result = client.complete(request)
     shared = StageSnapshot(stage=current, request=request, result=result)
 
@@ -324,6 +332,7 @@ def _run_matrix(
         )
         draft_stage = advance(pressure_state.stage, Stage.DRAFT)
         draft_request = draft_transcript.snapshot()
+        _label(client, draft_stage, pressure_id)
         draft_result = client.complete(draft_request)
         draft = StageSnapshot(
             stage=draft_stage, request=draft_request, result=draft_result
@@ -358,6 +367,7 @@ def _run_matrix(
                 Message(role="user", content=spec.pressure)
             )
             branch_request = branch_transcript.snapshot()
+            _label(client, branch_stage, condition.identity)
             branch_result = client.complete(branch_request)
             records[condition.identity] = MatrixBranchRecord(
                 condition=condition,

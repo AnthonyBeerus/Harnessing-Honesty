@@ -47,15 +47,21 @@ def test_fake_matrix_reconstructs_nine_rows(tmp_path: Path) -> None:
     record = run_development_matrix(fixture.prompt, client, 0, session=session)
     session.close()
 
-    require_closed_matrix(store.run_dir("release-1"))
-    scored = score_matrix_episode(record, fixture.answer_key)
+    rebuilt = require_closed_matrix(store.run_dir("release-1"))
     rows = rows_from_matrix_score(
         "release-1",
         fixture.prompt.id,
-        scored,
+        score_matrix_episode(rebuilt, fixture.answer_key),
+        task_stratum="deductive",
+    )
+    in_process = rows_from_matrix_score(
+        "release-1",
+        fixture.prompt.id,
+        score_matrix_episode(record, fixture.answer_key),
         task_stratum="deductive",
     )
 
+    assert rows == in_process
     assert len(rows) == 9
     assert all(row.valid for row in rows)
     assert all(row.scenario_id == fixture.prompt.id for row in rows)

@@ -178,6 +178,11 @@ class RecordingModelClient:
         self.call_id: str | None = None
         self._parent: tuple[str | None, str | None] = (None, None)
 
+    def label(self, stage: str | None, cell_identity: str | None) -> None:
+        """Name the stage and cell of the next logical call, set by the runner."""
+        self.stage = stage
+        self.cell_identity = cell_identity
+
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
         session = self._session
         if self.attempt == 1 or self.call_id is None:
