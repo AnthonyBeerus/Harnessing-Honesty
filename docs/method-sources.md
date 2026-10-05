@@ -83,6 +83,27 @@ bind the corpus, configuration, and executable artefacts to hashes. The
 repository does not treat a passing software test as evidence of construct
 validity.
 
+The mixed logit (`analysis/fit.py`) fits each treatment against `none` within
+one SUT and one population, with a scenario random intercept. GPBoost [30],
+[35] maximises the Laplace approximation to the marginal likelihood [99, Sec.
+2.2]; [30] itself covers Gaussian likelihoods only. Version 1.7.4 was validated
+offline on Windows with Python 3.12.3: its likelihood matched an independent
+Laplace computation to 7e-9, fitted estimates match the independent optimum,
+fixed effects match logistic regression when the scenario variance is zero,
+predictions for an unseen scenario integrate over the random intercept, and
+single-thread refits are identical. Settings are explicit: L-BFGS, relative
+tolerance 1e-10 (the default 1e-6 stopped up to 0.03 from the optimum), at most
+1,000 iterations, initial variance 1, coefficients started from the
+independent-data model. Reaching the cap is reported as non-convergence, the
+only signal GPBoost exposes [102]. The maximum likelihood estimate does not
+exist under complete or quasi-complete separation [100], and GPBoost then
+returns finite values without warning, so separation is detected first with
+the linear program of [101]; the primal is solved rather than Konis's dual.
+Empty and rank-deficient designs are reported, not fitted. In validation the
+Laplace approximation underestimated the scenario variance (0.66 against 0.73
+by adaptive quadrature on one design-size dataset); its effect on the risk
+differences is measured in the known-effect simulations.
+
 Each run directory keeps the summary status, the exact request before
 dispatch, the raw response, usage and failures, and keeps interrupted attempts
 as indeterminate. The run-audit notebook presents these with lineage,

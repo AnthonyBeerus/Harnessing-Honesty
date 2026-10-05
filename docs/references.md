@@ -364,3 +364,19 @@ The archived registration retains its original references.
 <a id="morima2026registration"></a>
 
 [98] A. N. P. Morima, Jr., “Harnessing Honesty: preregistration of a confirmatory epistemic-sycophancy repair study (freeze-2026-09-02),” OSF Registrations, Sep. 3, 2026. [Registered protocol](baseline/2026-09-03/osf/preregistration-template.md); [OSF](https://osf.io/ae8wu/).
+
+<a id="sigrist2023lgmboost"></a>
+
+[99] F. Sigrist, “Latent Gaussian model boosting,” *IEEE Trans. Pattern Anal. Mach. Intell.*, vol. 45, no. 2, pp. 1894–1905, 2023. doi: [10.1109/TPAMI.2022.3168152](https://doi.org/10.1109/TPAMI.2022.3168152). [Preprint](https://arxiv.org/abs/2105.08966).
+
+<a id="albert1984existence"></a>
+
+[100] A. Albert and J. A. Anderson, “On the existence of maximum likelihood estimates in logistic regression models,” *Biometrika*, vol. 71, no. 1, pp. 1–10, 1984. doi: [10.1093/biomet/71.1.1](https://doi.org/10.1093/biomet/71.1.1).
+
+<a id="konis2007separation"></a>
+
+[101] K. Konis, “Linear programming algorithms for detecting separated data in binary logistic regression models,” D.Phil. thesis, Univ. of Oxford, 2007. [Source](https://ora.ox.ac.uk/objects/uuid:8f9ee0d0-d78e-4101-9ab4-f9cbceed2a2a).
+
+<a id="gpboost174source"></a>
+
+[102] F. Sigrist, “GPBoost v1.7.4: `python-package/gpboost/basic.py`,” `GPModel.fit`, `GPModel.summary`, `GPModel._get_num_optim_iter`; Apache-2.0. Accessed: Oct. 5, 2026. [Source](https://github.com/fabsig/GPBoost/blob/v1.7.4/python-package/gpboost/basic.py).

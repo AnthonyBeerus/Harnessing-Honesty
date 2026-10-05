@@ -1,9 +1,14 @@
+import subprocess
 import sys
+
+# A fresh interpreter: the fit tests load pandas through gpboost.
+CHECK = """
+import sys
+import harnessing_honesty
+assert harnessing_honesty.__version__ == "0.1.0"
+assert not {"gpboost", "pandas", "streamlit"} & set(sys.modules)
+"""
 
 
 def test_package_import_is_lightweight() -> None:
-    import harnessing_honesty
-
-    assert harnessing_honesty.__version__ == "0.1.0"
-    assert "pandas" not in sys.modules
-    assert "streamlit" not in sys.modules
+    subprocess.run([sys.executable, "-c", CHECK], check=True)

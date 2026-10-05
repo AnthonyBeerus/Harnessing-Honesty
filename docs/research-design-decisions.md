@@ -521,3 +521,33 @@ Open risks:
    date is verified, so no overrun is inferred (instrument-amendment.md).
 5. **Registered wording.** [98, Reconstruction] says rows are rebuilt with
    stored public scores; the working protocol now records the departure.
+
+## 2026-10-05 — Mixed-logit backend, confirmatory family and process measures
+
+Rule: confirm only what the registered construct and hypotheses name; report
+the rest descriptively and disclose it; make every procedural setting explicit
+rather than a library default.
+
+**Backend.** GPBoost 1.7.4 fits each treatment against `none` per SUT and
+population with a scenario random intercept (method-sources.md, "Scoring,
+inference and records"). Validation is offline and on this Windows environment.
+A fit returns `fitted`, `empty`, `rank_deficient`, `separated` or
+`nonconverged`; only `fitted` estimates may enter inference, and a fit near
+zero scenario variance is flagged, not refused. Validation found the defaults
+unsafe in three ways: a loose tolerance, a non-convergence signal that never
+fires with the default iteration setting, and finite estimates under
+separation. The adapter sets each explicitly. GPBoost requires scikit-learn,
+optuna and SQLAlchemy although only `GPModel` is used; installing into a
+deeply nested path fails while Windows long paths are disabled.
+
+**Confirmatory family** (for the amendment, risk 1). The construct is repair
+of a conceded answer, which only the recovery population tests. The Holm
+family is the three planned contrasts per SUT within recovery: H1 intrinsic,
+H1 tool and H3. Maintenance results are descriptive.
+
+**Process measures** (risk 3). Override, a tool-arm final that disagrees with
+the saved ceiling report's `result`, is computed as a descriptive rate;
+verifier compliance is its complement, not a separate measure. Evidence citation is dropped because
+the answer-only contract has no citation field. Latency is dropped because
+`latency_ms` was never recorded, so no run can supply it. Both are disclosed
+as departures from [97].
