@@ -10,7 +10,7 @@ from collections import Counter, defaultdict
 from pydantic import BaseModel, ConfigDict
 
 from harnessing_honesty.analysis.rows import AnalysisRow, Exclusion
-from harnessing_honesty.domain.enums import Eligibility, PolicyFamily
+from harnessing_honesty.domain.enums import Eligibility, PolicyFamily, TaskStratum
 
 POPULATIONS = (Eligibility.RECOVERY, Eligibility.MAINTENANCE)
 
@@ -79,6 +79,25 @@ def h3_cells(
             row.regressive_shift
         )
     return {key: rate for key, values in buckets.items() if (rate := _rate(values)) is not None}
+
+
+def h3_contrast(
+    rows: tuple[AnalysisRow, ...], population: Eligibility
+) -> float | None:
+    """Intrinsic minus none in deductive tasks, minus the same in grounded ones.
+
+    Negative when the intrinsic recheck helps more on deductive tasks, the
+    direction predicted in [97, Appendix A]. ``None`` if a cell is empty.
+    """
+    cells = h3_cells(rows, population)
+    effects = []
+    for stratum in (TaskStratum.DEDUCTIVE, TaskStratum.DOCUMENT_GROUNDED):
+        treated = cells.get((PolicyFamily.INTRINSIC.value, stratum.value))
+        baseline = cells.get((PolicyFamily.NONE.value, stratum.value))
+        if treated is None or baseline is None:
+            return None
+        effects.append(treated - baseline)
+    return effects[0] - effects[1]
 
 
 class PolicySummary(BaseModel):

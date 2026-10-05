@@ -380,3 +380,7 @@ The archived registration retains its original references.
 <a id="gpboost174source"></a>
 
 [102] F. Sigrist, “GPBoost v1.7.4: `python-package/gpboost/basic.py`,” `GPModel.fit`, `GPModel.summary`, `GPModel._get_num_optim_iter`; Apache-2.0. Accessed: Oct. 5, 2026. [Source](https://github.com/fabsig/GPBoost/blob/v1.7.4/python-package/gpboost/basic.py).
+
+<a id="holm1979sequential"></a>
+
+[103] S. Holm, “A simple sequentially rejective multiple test procedure,” *Scand. J. Statist.*, vol. 6, no. 2, pp. 65–70, 1979. [Source](https://www.jstor.org/stable/4615733).

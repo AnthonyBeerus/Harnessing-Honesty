@@ -77,14 +77,40 @@ Recovery (correct initial, conceded draft) and maintenance (correct initial,
 held draft) are separate populations; a prefix without valid evidence is
 reported as unknown. Within each population the primary rate uses every valid
 final. Sensitivity reports bound missing finals as all-shift or no-shift and
-restrict to scenario-pressure groups with all three policy finals valid. These
-are descriptive rates; interval estimation is not yet implemented. Freeze manifests
+restrict to scenario-pressure groups with all three policy finals valid. Freeze manifests
 bind the corpus, configuration, and executable artefacts to hashes. The
 repository does not treat a passing software test as evidence of construct
 validity.
 
-The mixed logit (`analysis/fit.py`) fits each treatment against `none` within
-one SUT and one population, with a scenario random intercept. GPBoost [30],
+The planned contrasts (`analysis/bootstrap.py`) are the registered rate
+differences: H1 is a treatment's regressive-shift rate minus that of `none`,
+and H3 is the intrinsic difference in deductive tasks minus that in
+document-grounded tasks, the contrasts of [97, Appendix A]. Every eligible
+branch receives every policy from the same draft, so the plain difference of
+rates is the paired comparison the design was built for. Uncertainty comes from
+resampling whole scenarios with replacement (the pairs cluster bootstrap [29,
+Sec. 5.2]) within each task family, 5,000 times, with a fixed recorded seed.
+The interval is the 2.5th to 97.5th percentile of the resampled estimates, as
+planned; [29, Sec. 5.1] notes that studentized and test-inversion intervals can
+perform better, and that is recorded as a limitation. The p-value is the
+smallest level at which such an interval excludes zero, so test and interval
+agree. Holm's procedure [103, Thm. 1] adjusts the three p-values of each SUT in
+the recovery population. A contrast is confirmed when its adjusted p-value is
+below 0.05, its estimate is negative and no resample failed.
+
+Calibration with scenario random effects (variance 1 on the logit scale, base
+rate about 0.3, 60 scenarios with every branch eligible; 400 datasets of 999
+resamples each): with no effect, some contrast was confirmed in 4.0% of
+datasets and each H1 interval covered zero in 94% of them. With true H1 effects
+of -0.086 (intrinsic) and -0.157 (tool), coverage was 93.5% and 91.2% and the
+contrasts were confirmed in 39% and 90% of datasets. The under-coverage for
+the larger effect is the percentile interval's known weakness at 60 clusters.
+Real recovery populations are smaller than this full-eligibility case; the
+power assessment uses the same procedure.
+
+The mixed logit (`analysis/fit.py`) is secondary and supplies odds ratios. It
+fits each treatment against `none` within one SUT and one population, with a
+scenario random intercept. GPBoost [30],
 [35] maximises the Laplace approximation to the marginal likelihood [99, Sec.
 2.2]; [30] itself covers Gaussian likelihoods only. Version 1.7.4 was validated
 offline on Windows with Python 3.12.3: its likelihood matched an independent
@@ -101,8 +127,8 @@ returns finite values without warning, so separation is detected first with
 the linear program of [101]; the primal is solved rather than Konis's dual.
 Empty and rank-deficient designs are reported, not fitted. In validation the
 Laplace approximation underestimated the scenario variance (0.66 against 0.73
-by adaptive quadrature on one design-size dataset); its effect on the risk
-differences is measured in the known-effect simulations.
+by adaptive quadrature on one design-size dataset). No decision depends on
+the fit.
 
 Each run directory keeps the summary status, the exact request before
 dispatch, the raw response, usage and failures, and keeps interrupted attempts

@@ -4,9 +4,9 @@ Within one SUT and one population, each treatment is fitted separately:
 
     regressive_shift ~ policy * task_stratum + pressure_family + (1 | scenario_id)
 
-The terms follow H1 and H3 [98, Hypotheses]; the registration names no
-estimator, so this one is fixed by the amendment before any outcome. Separate
-fits keep a separated tool arm from voiding the intrinsic analysis.
+This is the secondary analysis. The planned contrasts are the rate differences
+in ``bootstrap.py``; this fit supplies the odds ratios of [97, Analysis].
+Separate fits keep a separated tool arm from voiding the intrinsic fit.
 
 GPBoost [35] maximises the Laplace approximation to the marginal likelihood
 [99, Sec. 2.2]. Validation on 1.7.4 is recorded in docs/method-sources.md.

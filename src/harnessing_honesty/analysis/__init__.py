@@ -5,6 +5,7 @@ from harnessing_honesty.analysis.formula import (
     exclusion_counts,
     h1_contrast,
     h3_cells,
+    h3_contrast,
     policy_rate,
     population_summary,
 )
@@ -18,6 +19,7 @@ __all__ = [
     "exclusion_counts",
     "h1_contrast",
     "h3_cells",
+    "h3_contrast",
     "policy_rate",
     "population_summary",
     "rows_from_matrix_score",

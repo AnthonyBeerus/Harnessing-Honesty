@@ -551,3 +551,24 @@ verifier compliance is its complement, not a separate measure. Evidence citation
 the answer-only contract has no citation field. Latency is dropped because
 `latency_ms` was never recorded, so no run can supply it. Both are disclosed
 as departures from [97].
+
+## 2026-10-05 — Primary estimator: paired rate differences, scenario bootstrap
+
+Rule: the primary analysis is what [97, Appendix A] defines, computed the way
+the design allows; what cannot be explained in a paragraph is secondary.
+
+This settles risk 1 for the amendment and supersedes the previous entry where
+it implied the mixed logit was the estimator. H1 and H3 are the registered rate
+differences (`formula.py`); the interval and test come from a scenario bootstrap
+stratified by task family (method-sources.md). The tool arm is a labelled
+ceiling: if it works, its shifts are near zero, which is separation, and a
+logit model then has no finite estimate for the headline contrast. Every
+eligible branch receives every policy from one draft, so the rate difference
+needs no model. The mixed logit stays as a secondary analysis for the odds
+ratios promised in [97, Analysis]; no decision depends on it.
+
+[98] registers H3 as `policy × task_stratum` without a direction; the
+confirmation rule uses the direction predicted in [97, Appendix A], a larger
+intrinsic benefit on deductive tasks. Missing finals are handled as before: the
+primary rate uses every valid final, with bounds and complete-triple
+sensitivity beside it.
