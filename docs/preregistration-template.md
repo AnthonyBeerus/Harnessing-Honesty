@@ -179,8 +179,16 @@ sensitivity.
 
 ## Reconstruction
 
-Every `AnalysisRow` is rebuilt from the run directory plus stored public
-scores and the private key.
+Every `AnalysisRow` is rebuilt from the run directory and the private key: the
+requests saved before dispatch, the raw outcome of each call's last attempt
+and the runner's stage and cell labels. Raw text is parsed again; scores are
+computed again by the same scoring functions. No stored score supplies a value.
+A run that fails its integrity checks is refused.
+
+Working-code amendment, 4 October 2026: the registered text read "rebuilt from
+the run directory plus stored public scores and the private key". No scores
+are stored. See the
+[design decision](research-design-decisions.md#2026-10-04--matrix-reconstruction-from-the-run-directory).
 
 ## Claims limits
 

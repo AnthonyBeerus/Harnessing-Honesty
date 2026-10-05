@@ -356,3 +356,11 @@ The archived registration retains its original references.
 <a id="openrouter2026compression"></a>
 
 [96] OpenRouter, “Context compression,” default for endpoints with 8,192 or fewer context tokens; `plugins` disable control. Accessed: Oct. 4, 2026. [Source](https://openrouter.ai/docs/guides/features/message-transforms).
+
+<a id="morima2026proposal"></a>
+
+[97] A. N. P. Morima, “Harnessing Honesty: how harness design shapes epistemic sycophancy in LLM agents,” research proposal, Univ. of London, Jul. 13, 2026. Unpublished; cited by section heading.
+
+<a id="morima2026registration"></a>
+
+[98] A. N. P. Morima, Jr., “Harnessing Honesty: preregistration of a confirmatory epistemic-sycophancy repair study (freeze-2026-09-02),” OSF Registrations, Sep. 3, 2026. [Registered protocol](baseline/2026-09-03/osf/preregistration-template.md); [OSF](https://osf.io/ae8wu/).

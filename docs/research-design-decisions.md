@@ -470,3 +470,54 @@ recorded answer; the envelope matched its hash. The run-audit notebook showed
 the same. The call carries no matrix label, so no matrix was rebuilt; matrix
 reconstruction is covered offline. Evidence is git-ignored under
 `data/runs/dev/serving-smoke-qualification.gemma4.deepinfra-20261004T140930054117Z`.
+
+## 2026-10-05 — Proposal-to-current departures and open risks
+
+Compared on 5 October 2026: the proposal [97], the registered protocol [98]
+and the current implementation. Retained from [97]: the research question; the
+three call-matched policies; contradiction, authority and citation pressures
+[2]; one neutral answer forked into independent branches; 60 deterministic
+scenarios in two 30-item strata; exact scoring with no judge in H1 or H3;
+scenario-level dependence; a power gate that reclassifies rather than resamples;
+a descriptive multi-turn substudy [10]; the tool policy as a labelled ceiling;
+an informative null. The narrow construct, regressive answer change only,
+follows the taxonomy's warning that sycophancy names several behaviours [3].
+
+| Area | Proposal [97] | Current | Fixed by |
+|---|---|---|---|
+| Systems | GPT-OSS 20B and Nemotron (free); Gemma 4 replication | Sonnet 4.6, GPT-4o dated, Gemma 4; pinned; per model | [98, Sample] |
+| Repetition | Two seeds, temperature 0.2 | K=1, temperature 0.0 | [98, Sample; SUT controls] |
+| H1 | At least 0.10 reduction, CI excluding zero | Directional CI; 0.10 a magnitude note; intrinsic and tool each against none | [98, Hypotheses] |
+| H2 | Confirmatory policy × pressure | Not registered; descriptive | [98, Hypotheses] |
+| Estimand | Initial correct and final incorrect | Same eligibility, reported separately for recovery and maintenance drafts | [98, Estimands] |
+| Response | Answer, confidence, rationale, evidence IDs | One plain `yes` or `no` | Working amendment, 9 Sep (preregistration-template.md) |
+| Families | Quantitative, logic, factual, financial | Systems, pipeline, program, logic; financial removed | instrument-amendment.md |
+| Failures | One schema retry; parse failures incorrect, then missing | One parse and three provider retries; failures missing with bounds | 2026-10-04 retries entry; [98, Exclusions] |
+| Reconstruction | Raw trace retained | Rebuilt from saved requests and raw outcomes; no stored score read | 2026-10-04 reconstruction entries |
+
+The recovery and maintenance split and the labelled ceiling fit the
+self-correction evidence: intrinsic self-correction without external feedback
+is unreliable and can degrade answers [15, Abstract], and self-correction works
+well where reliable external feedback exists [16, Abstract]. The answer-only
+contract trades the proposal's confidence and rationale measures for reliable
+exact scoring; results are forced-choice commitments, not free-text behaviour.
+
+Open risks:
+
+1. **Estimator not registered.** [98] states a directional CI rule but no
+   estimator. The proposal's pooled mixed model [97, Analysis] differs from
+   the planned per-model fits with a scenario bootstrap. The estimator, Holm
+   family and power gate must be fixed in the amendment before any outcome.
+2. **Power.** Per-model reporting with K=1 and a recovery population set by
+   draft concessions may leave H1 contrasts estimation-only. Sonnet 4.6 is a
+   recorded floor-effect risk [98, Sample].
+3. **Process measures.** [97, Outcomes and Scoring] promised verifier
+   compliance, override and evidence-citation rates, and Appendix B lists
+   latency. None is computed; `latency_ms` is never set. Override is
+   recoverable from the saved report and final answer. Decide before the
+   amendment whether to compute or drop each, and disclose either way.
+4. **Schedule.** The twelve-week plan [97, Plan for Developing the Solution]
+   placed the freeze at Week 6; no confirmatory data exist. No calendar start
+   date is verified, so no overrun is inferred (instrument-amendment.md).
+5. **Registered wording.** [98, Reconstruction] says rows are rebuilt with
+   stored public scores; the working protocol now records the departure.
