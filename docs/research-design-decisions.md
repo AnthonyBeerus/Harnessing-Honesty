@@ -572,3 +572,22 @@ confirmation rule uses the direction predicted in [97, Appendix A], a larger
 intrinsic benefit on deductive tasks. Missing finals are handled as before: the
 primary rate uses every valid final, with bounds and complete-triple
 sensitivity beside it.
+
+## 2026-10-06 — Power gate applied as written
+
+The proposal's rule [97, Analysis] is applied unchanged: a contrast with less
+than 80% power at the ten-point minimum effect becomes an estimation target
+before MAIN. "A material part of the grid" is read as every planning cell, the
+strictest reading. The grid crosses the proposal's baseline (0.20, 0.30) and
+scenario ICC (0.05, 0.20) with persistence under `none` (0.6, 0.9) and the
+correlation of a branch's finals (0.0, 0.5), which this design adds. The
+record is `data/power/assessment-v1.json`, shown by notebook 03.
+
+A preliminary run (400 runs per cell, no branch correlation) gave 10-24%
+power for each H1 contrast and 4-11% for H3, with 33-78 recovery branches per
+SUT; about 20 points are needed for H1 and 40 for H3. All three contrasts are
+therefore expected to be estimation-only; the record fixes the decision. They
+keep estimates, intervals and Holm-adjusted p-values but are never called
+confirmed. Rejected: redefining the minimum effect after seeing power, and
+adding repeated samples or pooling recovery with maintenance, which change
+registered choices.

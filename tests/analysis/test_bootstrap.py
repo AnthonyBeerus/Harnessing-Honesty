@@ -131,6 +131,18 @@ def test_a_strong_effect_is_confirmed_even_with_a_zero_tool_arm() -> None:
     assert result.seed == 5 and result.n_resamples == 400
 
 
+def test_an_estimation_only_contrast_is_reported_but_never_confirmed() -> None:
+    rows = _simulate({NONE: 0.5, INTRINSIC: 0.2, TOOL: 0.0}, seed=4)
+    gated = frozenset({Contrast.H1_TOOL})
+    result = scenario_bootstrap(rows, RECOVERY, FAMILIES, 5, 400, confirmatory=gated)
+    intrinsic, tool, _ = result.contrasts
+
+    assert not intrinsic.confirmatory and not intrinsic.confirmed
+    assert intrinsic.ci_high is not None and intrinsic.ci_high < 0
+    assert intrinsic.p_holm < 0.05
+    assert tool.confirmatory and tool.confirmed
+
+
 def test_no_effect_is_not_confirmed() -> None:
     rows = _simulate(dict.fromkeys(PolicyFamily, 0.3), seed=6)
     result = scenario_bootstrap(rows, RECOVERY, FAMILIES, seed=7, n_resamples=400)

@@ -18,7 +18,9 @@ recovery, as the contrasts are stated. Every dataset is analysed by
 confirmed, with its Monte Carlo standard error.
 """
 
+import argparse
 from collections.abc import Sequence
+from pathlib import Path
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict
@@ -36,6 +38,7 @@ from harnessing_honesty.domain.enums import (
     TaskFamily,
     TaskStratum,
 )
+from harnessing_honesty.observability.hashing import config_hash
 
 POWER_THRESHOLD = 0.80
 # Registered 60-item design: four families of 15; two families per stratum.
@@ -261,3 +264,99 @@ def power_gate(
         contrast: min(estimate.power[contrast] for estimate in estimates) >= threshold
         for contrast in Contrast
     }
+
+
+# The proposal's grid [97, Analysis] crossed with the two shares this design
+# adds: persistence under none and the correlation of a branch's finals.
+PLANNING_GRID = tuple(
+    PowerScenario(
+        baseline=baseline, persistence=persistence, icc=icc, branch_correlation=rho
+    )
+    for baseline in (0.20, 0.30)
+    for persistence in (0.6, 0.9)
+    for icc in (0.05, 0.20)
+    for rho in (0.0, 0.5)
+)
+# Reported beside the gate: a floor-effect SUT, a null for calibration, and
+# the effect each contrast needs at central assumptions.
+LOW_ELIGIBILITY = PowerScenario(
+    baseline=0.10, persistence=0.9, icc=0.10, initial_accuracy=0.7
+)
+NULL = PowerScenario(
+    baseline=0.25, persistence=0.75, icc=0.10, h1_intrinsic=0.0, h1_tool=0.0, h3=0.0
+)
+EFFECT_CURVE = tuple(
+    PowerScenario(
+        baseline=0.25,
+        persistence=0.75,
+        icc=0.10,
+        branch_correlation=0.5,
+        h1_intrinsic=effect,
+        h1_tool=effect,
+        h3=effect,
+    )
+    for effect in (-0.10, -0.20, -0.30, -0.40)
+)
+DEFAULT_ASSESSMENT = Path("data/power/assessment-v1.json")
+
+
+def analysis_code_hash() -> str:
+    """The freeze manifest's ``analysis_code_hash`` of this package's sources."""
+    root = Path(__file__).resolve().parent
+    source = "".join(
+        path.read_text(encoding="utf-8") for path in sorted(root.glob("*.py"))
+    )
+    return config_hash({"analysis_source": source})
+
+
+class PowerAssessment(BaseModel):
+    """The recorded power assessment and the gate it implies."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    analysis_code_hash: str
+    n_datasets: int
+    n_resamples: int
+    seed: int
+    planning: tuple[PowerEstimate, ...]
+    low_eligibility: PowerEstimate
+    null: PowerEstimate
+    effect_curve: tuple[PowerEstimate, ...]
+    confirmatory: dict[Contrast, bool]
+
+
+def assess_power(n_datasets: int, n_resamples: int, seed: int) -> PowerAssessment:
+    """Every registered cell, each with its own seed derived from ``seed``."""
+    cells = (*PLANNING_GRID, LOW_ELIGIBILITY, NULL, *EFFECT_CURVE)
+    estimates = [
+        estimate_power(cell, n_datasets, n_resamples, seed + index)
+        for index, cell in enumerate(cells)
+    ]
+    planning = tuple(estimates[: len(PLANNING_GRID)])
+    rest = estimates[len(PLANNING_GRID) :]
+    return PowerAssessment(
+        analysis_code_hash=analysis_code_hash(),
+        n_datasets=n_datasets,
+        n_resamples=n_resamples,
+        seed=seed,
+        planning=planning,
+        low_eligibility=rest[0],
+        null=rest[1],
+        effect_curve=tuple(rest[2:]),
+        confirmatory=power_gate(planning),
+    )
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Record the power assessment.")
+    parser.add_argument("--output", type=Path, default=DEFAULT_ASSESSMENT)
+    parser.add_argument("--datasets", type=int, default=400)
+    parser.add_argument("--resamples", type=int, default=999)
+    parser.add_argument("--seed", type=int, default=20261006)
+    arguments = parser.parse_args()
+    if arguments.output.exists():
+        raise SystemExit(f"{arguments.output} exists; a recorded assessment is kept")
+    assessment = assess_power(arguments.datasets, arguments.resamples, arguments.seed)
+    arguments.output.parent.mkdir(parents=True, exist_ok=True)
+    arguments.output.write_text(assessment.model_dump_json(indent=1), encoding="utf-8")
+    print({contrast.value: kept for contrast, kept in assessment.confirmatory.items()})

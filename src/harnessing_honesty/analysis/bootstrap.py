@@ -10,8 +10,9 @@ percentile of the resampled estimates. The p-value is the smallest level at
 which such an interval excludes zero, so test and interval cannot disagree.
 Holm's procedure [103, Thm. 1] adjusts the three p-values together. Every
 contrast predicts less regressive shift ([97, Appendix A], [98, Hypotheses]):
-it is confirmed when its adjusted p-value is below 0.05, its estimate is
-negative and no resample failed.
+it is confirmed when it is still confirmatory after the power gate, its
+adjusted p-value is below 0.05, its estimate is negative and no resample
+failed. An estimation-only contrast keeps its estimate, interval and p-values.
 """
 
 from collections import defaultdict
@@ -111,7 +112,8 @@ class ContrastResult(BaseModel):
     """One planned contrast with its interval and decision.
 
     ``failed_resamples`` counts resamples in which the contrast had an empty
-    cell; any failure blocks confirmation.
+    cell; any failure blocks confirmation. ``confirmatory`` is false for a
+    contrast the power gate made estimation-only.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -123,6 +125,7 @@ class ContrastResult(BaseModel):
     p_value: float | None
     p_holm: float
     failed_resamples: int
+    confirmatory: bool
     confirmed: bool
 
 
@@ -143,10 +146,12 @@ def scenario_bootstrap(
     families: Mapping[str, TaskFamily],
     seed: int,
     n_resamples: int = N_RESAMPLES,
+    confirmatory: frozenset[Contrast] = frozenset(Contrast),
 ) -> BootstrapResult:
     """Estimates, percentile intervals, Holm-adjusted p-values and decisions.
 
-    A contrast with no estimate enters Holm's procedure with p = 1.
+    A contrast with no estimate enters Holm's procedure with p = 1. The Holm
+    family stays the three registered contrasts whatever the gate decides.
     """
     rng = np.random.default_rng(seed)
     resampler = ScenarioResampler(rows, families)
@@ -182,8 +187,10 @@ def scenario_bootstrap(
                 p_value=p_value,
                 p_holm=p_holm,
                 failed_resamples=failed,
+                confirmatory=contrast in confirmatory,
                 confirmed=(
-                    estimate is not None
+                    contrast in confirmatory
+                    and estimate is not None
                     and estimate < 0
                     and p_holm < ALPHA
                     and failed == 0

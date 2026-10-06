@@ -1,6 +1,9 @@
 """The power simulation reproduces its stated assumptions and gate rule."""
 
+import subprocess
+import sys
 from collections import Counter
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -120,3 +123,16 @@ def test_a_contrast_stays_confirmatory_only_if_every_cell_reaches_80_percent() -
     }
     with pytest.raises(ValueError, match="planning"):
         power_gate([])
+
+
+def test_the_command_keeps_an_existing_record(tmp_path: Path) -> None:
+    record = tmp_path / "assessment.json"
+    record.write_text("recorded", encoding="utf-8")
+    run = subprocess.run(
+        [sys.executable, "-m", "harnessing_honesty.analysis.power",
+         "--output", str(record)],
+        capture_output=True, text=True,
+    )
+
+    assert run.returncode != 0 and "kept" in run.stderr
+    assert record.read_text(encoding="utf-8") == "recorded"
