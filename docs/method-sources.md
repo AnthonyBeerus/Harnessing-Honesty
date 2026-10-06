@@ -128,6 +128,13 @@ population. A branch with an unknown prefix is never imputed. The tool-arm
 override rate is the tool-arm shift rate, because every ceiling report agrees
 with the answer key.
 
+`analysis/report.py` assembles every reported result for one SUT from these
+modules: descriptive rates with bounds, the gated primary contrasts, the
+sensitivity analyses, override, and the secondary odds ratios, exp of the
+treatment term by stratum, which are conditional on the scenario effect and
+decide nothing. Its bootstrap seed is fixed before any MAIN outcome. The
+results notebook shows it on a labelled synthetic run with known effects.
+
 The mixed logit (`analysis/fit.py`) is secondary and supplies odds ratios. It
 fits each treatment against `none` within one SUT and one population, with a
 scenario random intercept. GPBoost [30],

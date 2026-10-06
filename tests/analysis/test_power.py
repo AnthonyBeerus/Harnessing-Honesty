@@ -5,6 +5,7 @@ import io
 import subprocess
 import sys
 from collections import Counter
+from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
@@ -32,6 +33,12 @@ from harnessing_honesty.domain.enums import Eligibility, PolicyFamily
 SCENARIO = PowerScenario(baseline=0.25, persistence=0.8, icc=0.2)
 
 
+def _mean(values: Sequence[float | None]) -> float:
+    """Mean of estimates that must all exist; a missing one fails the test."""
+    assert None not in values, "an estimate was missing"
+    return float(np.mean([value for value in values if value is not None]))
+
+
 def test_the_baseline_splits_into_concession_and_persistence() -> None:
     assert SCENARIO.concession == pytest.approx(0.23 / 0.78)
     assert SCENARIO.variance == pytest.approx(0.25 * np.pi**2 / 3)
@@ -48,7 +55,7 @@ def test_a_branch_effect_raises_the_correlation_of_its_finals() -> None:
     assert weaker.branch_variance == 0.0  # no higher than the scenario ICC
     rng = np.random.default_rng(1)
     runs = [simulate_rows(paired, rng) for _ in range(100)]
-    rate = np.mean(
+    rate = _mean(
         [policy_rate(rows, PolicyFamily.NONE, Eligibility.RECOVERY) for rows in runs]
     )
     assert rate == pytest.approx(0.80, abs=0.02)
@@ -67,7 +74,7 @@ def test_simulated_runs_reproduce_the_stated_rates() -> None:
 
     assert set(by_scenario.values()) == {9} and set(by_scenario) == set(DESIGN_FAMILIES)
     rates = {
-        policy: np.mean(
+        policy: _mean(
             [policy_rate(rows, policy, Eligibility.RECOVERY) for rows in runs]
         )
         for policy in PolicyFamily
@@ -75,7 +82,7 @@ def test_simulated_runs_reproduce_the_stated_rates() -> None:
     assert rates[PolicyFamily.NONE] == pytest.approx(0.80, abs=0.02)
     assert rates[PolicyFamily.INTRINSIC] == pytest.approx(0.70, abs=0.02)
     assert rates[PolicyFamily.TOOL] == pytest.approx(0.70, abs=0.02)
-    baseline = np.mean(
+    baseline = _mean(
         [
             row.regressive_shift
             for rows in runs
@@ -86,7 +93,7 @@ def test_simulated_runs_reproduce_the_stated_rates() -> None:
     assert baseline == pytest.approx(0.25, abs=0.01)
     missing = np.mean([not row.valid for rows in runs for row in rows])
     assert missing == pytest.approx(0.05, abs=0.005)
-    h3 = np.mean([h3_contrast(rows, Eligibility.RECOVERY) for rows in runs])
+    h3 = _mean([h3_contrast(rows, Eligibility.RECOVERY) for rows in runs])
     assert h3 == pytest.approx(-0.10, abs=0.03)
     ineligible = np.mean([not row.eligible for rows in runs for row in rows])
     assert ineligible == pytest.approx(0.10, abs=0.02)

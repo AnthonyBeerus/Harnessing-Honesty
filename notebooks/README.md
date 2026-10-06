@@ -4,8 +4,8 @@
 |---|---|
 | `01_instrument_audit.py` | Offline review of balance, formal structure, dual oracles, repetition, surface cues, and reconstruction |
 | `02_run_audit.py` | Offline reconstruction of a selected recorded run |
-| `03_power.py` | Design reference without a power simulation |
-| `04_results.py` | Analysis-row contract without empirical estimates |
+| `03_power.py` | Recorded power assessment, its assumptions and the resulting collection decision |
+| `04_results.py` | Planned contrasts, sensitivity analyses, override and odds ratios on a labelled synthetic run |
 
 Calculations belong in the package; notebooks supply inputs and present shared
 outputs. None of these entrypoints dispatches a live model request.
