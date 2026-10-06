@@ -7,6 +7,7 @@ import pytest
 from harnessing_honesty.analysis.power import (
     analysis_code_hash,
     assess_power,
+    assessment_csv,
     power_gate,
 )
 from harnessing_honesty.compiler.freeze import (
@@ -52,12 +53,21 @@ def test_a_recorded_assessment_is_shown_with_its_decision(
     _run_notebook(path)
     out = capsys.readouterr().out
     assert "Analysis code: current" in out
+    assert "No CSV view" in out
     assert "base 0.2 pers 0.6 icc 0.05 rho 0.0" in out
     for contrast, kept in assessment.confirmatory.items():
         decision = 'confirmatory' if kept else 'estimation-only'
         assert f"{contrast.value}: {decision}" in out
 
+    table = path.with_suffix(".csv")
+    table.write_text(assessment_csv(assessment), encoding="utf-8")
+    _run_notebook(path)
+    assert "assessment.csv: matches the record" in capsys.readouterr().out
+
     stale = assessment.model_copy(update={"analysis_code_hash": "other"})
     path.write_text(stale.model_dump_json(), encoding="utf-8")
+    table.write_text("edited", encoding="utf-8")
     _run_notebook(path)
-    assert "Analysis code: STALE" in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "Analysis code: STALE" in out
+    assert "assessment.csv: DIFFERS from the record" in out

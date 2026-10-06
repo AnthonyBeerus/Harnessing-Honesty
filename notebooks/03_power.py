@@ -22,7 +22,9 @@
 # bootstrap used for real runs. All runs shown here are synthetic. The
 # assessment is recorded once with
 # `python -m harnessing_honesty.analysis.power`; this notebook reads that
-# record and checks it against the current analysis code. See
+# record and checks it against the current analysis code. The JSON record is
+# authoritative; the CSV beside it is a derived table, one row per cell and
+# contrast. See
 # [Sources for the methods](../docs/method-sources.md#scoring-inference-and-records).
 
 # %%
@@ -39,6 +41,7 @@ from harnessing_honesty.analysis.power import (
     PowerAssessment,
     PowerEstimate,
     analysis_code_hash,
+    assessment_csv,
 )
 
 root = next(path for path in (Path.cwd(), *Path.cwd().parents)
@@ -88,6 +91,13 @@ else:
     print(f"{assessment_path.name}: {assessment.n_datasets} runs per "
           f"cell, {assessment.n_resamples} resamples, seed {assessment.seed}")
     print("Analysis code: current" if current else "Analysis code: STALE")
+    table = assessment_path.with_suffix(".csv")
+    if not table.is_file():
+        print("No CSV view; the command derives it from the record.")
+    elif table.read_text(encoding="utf-8") == assessment_csv(assessment):
+        print(f"{table.name}: matches the record")
+    else:
+        print(f"{table.name}: DIFFERS from the record")
 
 
 def show(label: str, estimate: PowerEstimate) -> None:

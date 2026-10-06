@@ -1,5 +1,7 @@
 """The power simulation reproduces its stated assumptions and gate rule."""
 
+import csv
+import io
 import subprocess
 import sys
 from collections import Counter
@@ -12,10 +14,15 @@ from harnessing_honesty.analysis.bootstrap import Contrast
 from harnessing_honesty.analysis.formula import h3_contrast, policy_rate
 from harnessing_honesty.analysis.power import (
     DESIGN_FAMILIES,
+    EFFECT_CURVE,
+    PLANNING_GRID,
     PowerEstimate,
     PowerScenario,
     _logit_for,
     _marginal,
+    assess_power,
+    assessment_csv,
+    assessment_rows,
     estimate_power,
     power_gate,
     simulate_rows,
@@ -125,14 +132,57 @@ def test_a_contrast_stays_confirmatory_only_if_every_cell_reaches_80_percent() -
         power_gate([])
 
 
-def test_the_command_keeps_an_existing_record(tmp_path: Path) -> None:
-    record = tmp_path / "assessment.json"
-    record.write_text("recorded", encoding="utf-8")
-    run = subprocess.run(
+def test_the_csv_is_the_record_flattened_one_row_per_cell_and_contrast() -> None:
+    assessment = assess_power(n_datasets=2, n_resamples=19, seed=1)
+    table = list(csv.DictReader(io.StringIO(assessment_csv(assessment))))
+
+    assert len(table) == (len(PLANNING_GRID) + 2 + len(EFFECT_CURVE)) * 3
+    for written, row in zip(table, assessment_rows(assessment)):
+        assert written == {key: str(value) for key, value in row.items()}
+    estimates = [
+        *assessment.planning,
+        assessment.low_eligibility,
+        assessment.null,
+        *assessment.effect_curve,
+    ]
+    for index, row in enumerate(table):
+        estimate, contrast = estimates[index // 3], tuple(Contrast)[index % 3]
+        assert row["contrast"] == contrast.value
+        assert float(row["true_effect"]) == estimate.scenario.effect(contrast)
+        assert float(row["power"]) == estimate.power[contrast]
+        assert float(row["power_se"]) == estimate.power_se[contrast]
+        assert float(row["coverage"]) == estimate.coverage[contrast]
+        assert float(row["recovery_branches"]) == estimate.mean_recovery_branches
+        kept = assessment.confirmatory[contrast]
+        assert row["decision"] == ("confirmatory" if kept else "estimation-only")
+
+
+def _command(record: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
         [sys.executable, "-m", "harnessing_honesty.analysis.power",
          "--output", str(record)],
         capture_output=True, text=True,
     )
 
+
+def test_the_command_keeps_a_complete_record(tmp_path: Path) -> None:
+    record = tmp_path / "assessment.json"
+    record.write_text("recorded", encoding="utf-8")
+    record.with_suffix(".csv").write_text("table", encoding="utf-8")
+    run = _command(record)
+
     assert run.returncode != 0 and "kept" in run.stderr
     assert record.read_text(encoding="utf-8") == "recorded"
+
+
+def test_the_command_derives_a_missing_csv_from_the_record(tmp_path: Path) -> None:
+    assessment = assess_power(n_datasets=2, n_resamples=19, seed=1)
+    record = tmp_path / "assessment.json"
+    record.write_text(assessment.model_dump_json(indent=1), encoding="utf-8")
+    before = record.read_bytes()
+    run = _command(record)
+
+    assert run.returncode == 0, run.stderr
+    assert record.read_bytes() == before
+    written = record.with_suffix(".csv").read_text(encoding="utf-8")
+    assert written == assessment_csv(assessment)

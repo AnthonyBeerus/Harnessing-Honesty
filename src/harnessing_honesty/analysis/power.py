@@ -19,6 +19,8 @@ confirmed, with its Monte Carlo standard error.
 """
 
 import argparse
+import csv
+import io
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -347,6 +349,56 @@ def assess_power(n_datasets: int, n_resamples: int, seed: int) -> PowerAssessmen
     )
 
 
+def assessment_rows(assessment: PowerAssessment) -> list[dict[str, object]]:
+    """One row per cell and contrast: the record flattened for tables."""
+    groups = [("planning", estimate) for estimate in assessment.planning]
+    groups += [
+        ("low_eligibility", assessment.low_eligibility),
+        ("null", assessment.null),
+    ]
+    groups += [("effect_curve", estimate) for estimate in assessment.effect_curve]
+    rows: list[dict[str, object]] = []
+    for cell, (group, estimate) in enumerate(groups):
+        scenario = estimate.scenario
+        for contrast in Contrast:
+            rows.append(
+                {
+                    "group": group,
+                    "cell": cell,
+                    "contrast": contrast.value,
+                    "true_effect": scenario.effect(contrast),
+                    "baseline": scenario.baseline,
+                    "persistence": scenario.persistence,
+                    "icc": scenario.icc,
+                    "branch_correlation": scenario.branch_correlation,
+                    "initial_accuracy": scenario.initial_accuracy,
+                    "missing_final": scenario.missing_final,
+                    "maintenance_shift": scenario.maintenance_shift,
+                    "recovery_branches": estimate.mean_recovery_branches,
+                    "power": estimate.power[contrast],
+                    "power_se": estimate.power_se[contrast],
+                    "coverage": estimate.coverage[contrast],
+                    "any_confirmed": estimate.any_confirmed,
+                    "decision": (
+                        "confirmatory"
+                        if assessment.confirmatory[contrast]
+                        else "estimation-only"
+                    ),
+                }
+            )
+    return rows
+
+
+def assessment_csv(assessment: PowerAssessment) -> str:
+    """The CSV view of a record; the JSON record stays authoritative."""
+    rows = assessment_rows(assessment)
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=list(rows[0]), lineterminator="\n")
+    writer.writeheader()
+    writer.writerows(rows)
+    return buffer.getvalue()
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Record the power assessment.")
     parser.add_argument("--output", type=Path, default=DEFAULT_ASSESSMENT)
@@ -354,9 +406,20 @@ if __name__ == "__main__":
     parser.add_argument("--resamples", type=int, default=999)
     parser.add_argument("--seed", type=int, default=20261006)
     arguments = parser.parse_args()
-    if arguments.output.exists():
+    table = arguments.output.with_suffix(".csv")
+    if arguments.output.exists() and table.exists():
         raise SystemExit(f"{arguments.output} exists; a recorded assessment is kept")
-    assessment = assess_power(arguments.datasets, arguments.resamples, arguments.seed)
-    arguments.output.parent.mkdir(parents=True, exist_ok=True)
-    arguments.output.write_text(assessment.model_dump_json(indent=1), encoding="utf-8")
-    print({contrast.value: kept for contrast, kept in assessment.confirmatory.items()})
+    if not arguments.output.exists():
+        assessment = assess_power(
+            arguments.datasets, arguments.resamples, arguments.seed
+        )
+        arguments.output.parent.mkdir(parents=True, exist_ok=True)
+        arguments.output.write_text(
+            assessment.model_dump_json(indent=1), encoding="utf-8"
+        )
+    # The CSV is always derived from the record on disk, never written beside it.
+    record = PowerAssessment.model_validate_json(
+        arguments.output.read_text(encoding="utf-8")
+    )
+    table.write_text(assessment_csv(record), encoding="utf-8")
+    print({contrast.value: kept for contrast, kept in record.confirmatory.items()})
