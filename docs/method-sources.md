@@ -98,15 +98,12 @@ agree. Holm's procedure [103, Thm. 1] adjusts the three p-values of each SUT in
 the recovery population. A contrast is confirmed when its adjusted p-value is
 below 0.05, its estimate is negative and no resample failed.
 
-Calibration with scenario random effects (variance 1 on the logit scale, base
-rate about 0.3, 60 scenarios with every branch eligible; 400 datasets of 999
-resamples each): with no effect, some contrast was confirmed in 4.0% of
-datasets and each H1 interval covered zero in 94% of them. With true H1 effects
-of -0.086 (intrinsic) and -0.157 (tool), coverage was 93.5% and 91.2% and the
-contrasts were confirmed in 39% and 90% of datasets. The under-coverage for
-the larger effect is the percentile interval's known weakness at 60 clusters.
-Real recovery populations are smaller than this full-eligibility case; the
-power assessment uses the same procedure.
+Calibration comes from the recorded power assessment
+(`data/power/assessment-v1.json`), which applies this procedure to simulated
+runs with known effects. With no effect, some contrast was confirmed in 3.75%
+of 400 runs, and the intervals covered the true zero in 92-95% of them. In the
+16 planning cells, interval coverage was 89-95%; the shortfall below 95% is
+the percentile interval's known weakness at 60 clusters.
 
 The power assessment (`analysis/power.py`) simulates the shared-prefix design
 and analyses every simulated run with `scenario_bootstrap`. The proposal's
