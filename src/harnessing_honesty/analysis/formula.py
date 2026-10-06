@@ -122,9 +122,10 @@ class PolicySummary(BaseModel):
     complete_triple_rate: float | None
 
 
-def _complete_groups(
+def complete_groups(
     rows: tuple[AnalysisRow, ...], population: Eligibility
 ) -> set[tuple[str, str, str]]:
+    """Run, scenario and pressure of branches whose three finals are valid."""
     valid_policies: dict[tuple[str, str, str], set[PolicyFamily]] = defaultdict(set)
     for row in primary_rows(rows, population):
         key = (row.run_id, row.scenario_id, row.condition.pressure.value)
@@ -136,7 +137,7 @@ def population_summary(
     rows: tuple[AnalysisRow, ...], population: Eligibility
 ) -> tuple[PolicySummary, ...]:
     """Primary rate, missing-final bounds and complete-triple rate per policy."""
-    complete = _complete_groups(rows, population)
+    complete = complete_groups(rows, population)
     summaries = []
     for policy in PolicyFamily:
         in_population = [

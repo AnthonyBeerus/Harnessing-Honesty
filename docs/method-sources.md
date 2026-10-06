@@ -120,6 +120,14 @@ maintenance breaks (2%) are stated assumptions. Power is the share of
 simulated runs in which a contrast is confirmed, reported with its Monte Carlo
 standard error and interval coverage.
 
+The sensitivity analyses (`analysis/sensitivity.py`) rerun the same bootstrap
+on transformed rows and never confirm a contrast: missing finals counted as no
+shift and then as a shift, the bounds of `population_summary`; complete
+triples, the branches whose three policy finals are valid; and the maintenance
+population. A branch with an unknown prefix is never imputed. The tool-arm
+override rate is the tool-arm shift rate, because every ceiling report agrees
+with the answer key.
+
 The mixed logit (`analysis/fit.py`) is secondary and supplies odds ratios. It
 fits each treatment against `none` within one SUT and one population, with a
 scenario random intercept. GPBoost [30],

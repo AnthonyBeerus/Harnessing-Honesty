@@ -86,7 +86,7 @@ removal of one exact outer `json` fence with a recorded normalization flag.
 There were 63 completed responses with $0.291006 recorded cost, counting the
 normalized response once. One interrupted request has unknown completion and
 cost. Raw attempts, failures, saved dispositions and repair edits are retained;
-see the [decision ledger](research-design-decisions.md).
+see [Research design decisions](research-design-decisions.md).
 
 The [dispositions](../data/corpus/release-v2/all-dispositions.csv) include all
 180 originals and four repairs. Single-researcher review supports fidelity and

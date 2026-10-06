@@ -583,11 +583,18 @@ scenario ICC (0.05, 0.20) with persistence under `none` (0.6, 0.9) and the
 correlation of a branch's finals (0.0, 0.5), which this design adds. The
 record is `data/power/assessment-v1.json`, shown by notebook 03.
 
-A preliminary run (400 runs per cell, no branch correlation) gave 10-24%
-power for each H1 contrast and 4-11% for H3, with 33-78 recovery branches per
-SUT; about 20 points are needed for H1 and 40 for H3. All three contrasts are
-therefore expected to be estimation-only; the record fixes the decision. They
+The record (400 runs per cell, 999 resamples, seed 20261006, analysis code
+hash `91207ec6...`) gives 8-29% power for H1 intrinsic, 10-29% for H1 tool and 3-11% for
+H3 across the 16 planning cells, with 33-78 recovery branches per SUT; under
+no effect, some contrast was confirmed in 3.75% of runs. At central
+assumptions 80% power needs about 25 points for H1 and over 40 for H3. All
+three contrasts are estimation-only. They
 keep estimates, intervals and Holm-adjusted p-values but are never called
 confirmed. Rejected: redefining the minimum effect after seeing power, and
 adding repeated samples or pooling recovery with maintenance, which change
 registered choices.
+
+Override, as recorded above, needs no separate computation: every confirmatory
+ceiling report agrees with the answer key (a test checks all 60 items), so a
+tool-arm final that disagrees with its report is an incorrect final, and the
+override rate is the tool-arm shift rate of each population.
