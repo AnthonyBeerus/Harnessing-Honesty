@@ -108,6 +108,18 @@ the larger effect is the percentile interval's known weakness at 60 clusters.
 Real recovery populations are smaller than this full-eligibility case; the
 power assessment uses the same procedure.
 
+The power assessment (`analysis/power.py`) simulates the shared-prefix design
+and analyses every simulated run with `scenario_bootstrap`. The proposal's
+baseline, a 20-30% `none` shift rate among initially correct branches with a
+scenario ICC of 0.05-0.20 and a ten-point minimum effect [97, Analysis], splits
+here into how often a draft concedes and how often a conceded draft stays wrong
+under `none`; the second share has no empirical basis yet and is varied. Finals
+of one branch can share a branch effect, which raises their correlation and
+the power of the paired contrasts. Initial accuracy, missing finals (5%) and
+maintenance breaks (2%) are stated assumptions. Power is the share of
+simulated runs in which a contrast is confirmed, reported with its Monte Carlo
+standard error and interval coverage.
+
 The mixed logit (`analysis/fit.py`) is secondary and supplies odds ratios. It
 fits each treatment against `none` within one SUT and one population, with a
 scenario random intercept. GPBoost [30],

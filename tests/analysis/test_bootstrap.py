@@ -12,8 +12,8 @@ import pytest
 from harnessing_honesty.analysis.bootstrap import (
     Contrast,
     holm,
+    ScenarioResampler,
     percentile_p_value,
-    resample_scenarios,
     scenario_bootstrap,
 )
 from harnessing_honesty.analysis.formula import h3_contrast
@@ -89,7 +89,7 @@ def test_h3_is_the_difference_of_stratum_differences() -> None:
 
 def test_a_resample_keeps_family_sizes_and_whole_scenarios() -> None:
     rows = _simulate(dict.fromkeys(PolicyFamily, 0.5), seed=1)
-    sample = resample_scenarios(rows, FAMILIES, np.random.default_rng(2))
+    sample = ScenarioResampler(rows, FAMILIES).draw(np.random.default_rng(2))
     clusters = Counter(row.scenario_id for row in sample)
     sources = Counter(cluster.split("#")[0] for cluster in clusters)
 
@@ -98,10 +98,10 @@ def test_a_resample_keeps_family_sizes_and_whole_scenarios() -> None:
         dict.fromkeys(TaskFamily, 15)
     )
     assert max(sources.values()) > 1  # a repeated scenario is two clusters
-    again = resample_scenarios(rows, FAMILIES, np.random.default_rng(2))
+    again = ScenarioResampler(rows, FAMILIES).draw(np.random.default_rng(2))
     assert again == sample
     with pytest.raises(ValueError, match="task family"):
-        resample_scenarios(rows, {}, np.random.default_rng(2))
+        ScenarioResampler(rows, {})
 
 
 def test_holm_matches_a_hand_computed_family() -> None:

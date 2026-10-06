@@ -48,31 +48,45 @@ def planned_estimates(
     }
 
 
-def resample_scenarios(
-    rows: tuple[AnalysisRow, ...],
-    families: Mapping[str, TaskFamily],
-    rng: np.random.Generator,
-) -> tuple[AnalysisRow, ...]:
-    """One resample. A scenario drawn twice enters as two distinct clusters."""
-    by_scenario: dict[str, list[AnalysisRow]] = defaultdict(list)
-    for row in rows:
-        by_scenario[row.scenario_id].append(row)
-    unmapped = sorted(set(by_scenario) - set(families))
-    if unmapped:
-        raise ValueError(f"scenarios without a task family: {unmapped}")
-    by_family: dict[TaskFamily, list[str]] = defaultdict(list)
-    for scenario in sorted(by_scenario):
-        by_family[families[scenario]].append(scenario)
-    sample: list[AnalysisRow] = []
-    for family in sorted(by_family):
-        members = by_family[family]
-        for draw, index in enumerate(rng.integers(len(members), size=len(members))):
-            cluster = f"{members[index]}#{draw}"
-            sample.extend(
+class ScenarioResampler:
+    """Draws resamples of whole scenarios within each task family.
+
+    A scenario drawn at position ``k`` of its family becomes cluster ``s#k``,
+    so a scenario drawn twice enters as two clusters. Each relabelled block is
+    built once and reused across resamples.
+    """
+
+    def __init__(
+        self, rows: tuple[AnalysisRow, ...], families: Mapping[str, TaskFamily]
+    ) -> None:
+        self._rows: dict[str, list[AnalysisRow]] = defaultdict(list)
+        for row in rows:
+            self._rows[row.scenario_id].append(row)
+        unmapped = sorted(set(self._rows) - set(families))
+        if unmapped:
+            raise ValueError(f"scenarios without a task family: {unmapped}")
+        self._members: dict[TaskFamily, list[str]] = defaultdict(list)
+        for scenario in sorted(self._rows):
+            self._members[families[scenario]].append(scenario)
+        self._blocks: dict[str, tuple[AnalysisRow, ...]] = {}
+
+    def _block(self, scenario: str, draw: int) -> tuple[AnalysisRow, ...]:
+        cluster = f"{scenario}#{draw}"
+        if cluster not in self._blocks:
+            self._blocks[cluster] = tuple(
                 row.model_copy(update={"scenario_id": cluster})
-                for row in by_scenario[members[index]]
+                for row in self._rows[scenario]
             )
-    return tuple(sample)
+        return self._blocks[cluster]
+
+    def draw(self, rng: np.random.Generator) -> tuple[AnalysisRow, ...]:
+        """One resample, the same size per family as the data."""
+        sample: list[AnalysisRow] = []
+        for family in sorted(self._members):
+            members = self._members[family]
+            for draw, index in enumerate(rng.integers(len(members), size=len(members))):
+                sample.extend(self._block(members[index], draw))
+        return tuple(sample)
 
 
 def percentile_p_value(draws: Sequence[float]) -> float:
@@ -135,10 +149,11 @@ def scenario_bootstrap(
     A contrast with no estimate enters Holm's procedure with p = 1.
     """
     rng = np.random.default_rng(seed)
+    resampler = ScenarioResampler(rows, families)
     estimates = planned_estimates(rows, population)
     draws: dict[Contrast, list[float]] = {contrast: [] for contrast in Contrast}
     for _ in range(n_resamples):
-        sample = resample_scenarios(rows, families, rng)
+        sample = resampler.draw(rng)
         for contrast, value in planned_estimates(sample, population).items():
             if value is not None:
                 draws[contrast].append(value)
