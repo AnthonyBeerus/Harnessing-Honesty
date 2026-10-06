@@ -1,0 +1,763 @@
+{
+ "analysis_code_hash": "91207ec66b0de9fccb8476e8e851c4429485f420339c400fcceaf3aa3f46c5bb",
+ "n_datasets": 400,
+ "n_resamples": 999,
+ "seed": 20261006,
+ "planning": [
+  {
+   "scenario": {
+    "baseline": 0.2,
+    "persistence": 0.6,
+    "icc": 0.05,
+    "branch_correlation": 0.0,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261006,
+   "power": {
+    "h1_intrinsic": 0.08,
+    "h1_tool": 0.1025,
+    "h3": 0.03
+   },
+   "power_se": {
+    "h1_intrinsic": 0.013564659966250536,
+    "h1_tool": 0.015165235738358965,
+    "h3": 0.00852936105461599
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9525,
+    "h1_tool": 0.9275,
+    "h3": 0.935
+   },
+   "any_confirmed": 0.1725,
+   "mean_recovery_branches": 49.8625
+  },
+  {
+   "scenario": {
+    "baseline": 0.2,
+    "persistence": 0.6,
+    "icc": 0.05,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261007,
+   "power": {
+    "h1_intrinsic": 0.1975,
+    "h1_tool": 0.1975,
+    "h3": 0.06
+   },
+   "power_se": {
+    "h1_intrinsic": 0.019905636764494625,
+    "h1_tool": 0.019905636764494625,
+    "h3": 0.011874342087037916
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9275,
+    "h1_tool": 0.93,
+    "h3": 0.925
+   },
+   "any_confirmed": 0.32,
+   "mean_recovery_branches": 50.5525
+  },
+  {
+   "scenario": {
+    "baseline": 0.2,
+    "persistence": 0.6,
+    "icc": 0.2,
+    "branch_correlation": 0.0,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261008,
+   "power": {
+    "h1_intrinsic": 0.1225,
+    "h1_tool": 0.155,
+    "h3": 0.055
+   },
+   "power_se": {
+    "h1_intrinsic": 0.016393119745795794,
+    "h1_tool": 0.01809523417919757,
+    "h3": 0.011399013115177999
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9225,
+    "h1_tool": 0.9175,
+    "h3": 0.9325
+   },
+   "any_confirmed": 0.26,
+   "mean_recovery_branches": 50.1975
+  },
+  {
+   "scenario": {
+    "baseline": 0.2,
+    "persistence": 0.6,
+    "icc": 0.2,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261009,
+   "power": {
+    "h1_intrinsic": 0.15,
+    "h1_tool": 0.155,
+    "h3": 0.0475
+   },
+   "power_se": {
+    "h1_intrinsic": 0.017853571071357127,
+    "h1_tool": 0.01809523417919757,
+    "h3": 0.010635289135702893
+   },
+   "coverage": {
+    "h1_intrinsic": 0.935,
+    "h1_tool": 0.925,
+    "h3": 0.94
+   },
+   "any_confirmed": 0.2575,
+   "mean_recovery_branches": 49.965
+  },
+  {
+   "scenario": {
+    "baseline": 0.2,
+    "persistence": 0.9,
+    "icc": 0.05,
+    "branch_correlation": 0.0,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261010,
+   "power": {
+    "h1_intrinsic": 0.185,
+    "h1_tool": 0.185,
+    "h3": 0.0725
+   },
+   "power_se": {
+    "h1_intrinsic": 0.019414878315353924,
+    "h1_tool": 0.019414878315353924,
+    "h3": 0.012965699942540702
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9225,
+    "h1_tool": 0.8925,
+    "h3": 0.9075
+   },
+   "any_confirmed": 0.3,
+   "mean_recovery_branches": 32.7675
+  },
+  {
+   "scenario": {
+    "baseline": 0.2,
+    "persistence": 0.9,
+    "icc": 0.05,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261011,
+   "power": {
+    "h1_intrinsic": 0.1775,
+    "h1_tool": 0.1925,
+    "h3": 0.0625
+   },
+   "power_se": {
+    "h1_intrinsic": 0.019104564245226847,
+    "h1_tool": 0.019713177699194007,
+    "h3": 0.012103072956898178
+   },
+   "coverage": {
+    "h1_intrinsic": 0.935,
+    "h1_tool": 0.9175,
+    "h3": 0.92
+   },
+   "any_confirmed": 0.34,
+   "mean_recovery_branches": 33.1125
+  },
+  {
+   "scenario": {
+    "baseline": 0.2,
+    "persistence": 0.9,
+    "icc": 0.2,
+    "branch_correlation": 0.0,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261012,
+   "power": {
+    "h1_intrinsic": 0.1475,
+    "h1_tool": 0.1675,
+    "h3": 0.075
+   },
+   "power_se": {
+    "h1_intrinsic": 0.017730182599172518,
+    "h1_tool": 0.018671083926756905,
+    "h3": 0.013169567191065924
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9225,
+    "h1_tool": 0.92,
+    "h3": 0.91
+   },
+   "any_confirmed": 0.305,
+   "mean_recovery_branches": 33.05
+  },
+  {
+   "scenario": {
+    "baseline": 0.2,
+    "persistence": 0.9,
+    "icc": 0.2,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261013,
+   "power": {
+    "h1_intrinsic": 0.215,
+    "h1_tool": 0.1925,
+    "h3": 0.0575
+   },
+   "power_se": {
+    "h1_intrinsic": 0.020541117301646473,
+    "h1_tool": 0.019713177699194007,
+    "h3": 0.011639775556255371
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9275,
+    "h1_tool": 0.925,
+    "h3": 0.92
+   },
+   "any_confirmed": 0.335,
+   "mean_recovery_branches": 32.9125
+  },
+  {
+   "scenario": {
+    "baseline": 0.3,
+    "persistence": 0.6,
+    "icc": 0.05,
+    "branch_correlation": 0.0,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261014,
+   "power": {
+    "h1_intrinsic": 0.2125,
+    "h1_tool": 0.1625,
+    "h3": 0.0725
+   },
+   "power_se": {
+    "h1_intrinsic": 0.020453835214941964,
+    "h1_tool": 0.018445443204217135,
+    "h3": 0.012965699942540702
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9075,
+    "h1_tool": 0.94,
+    "h3": 0.94
+   },
+   "any_confirmed": 0.325,
+   "mean_recovery_branches": 78.4225
+  },
+  {
+   "scenario": {
+    "baseline": 0.3,
+    "persistence": 0.6,
+    "icc": 0.05,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261015,
+   "power": {
+    "h1_intrinsic": 0.2475,
+    "h1_tool": 0.24,
+    "h3": 0.095
+   },
+   "power_se": {
+    "h1_intrinsic": 0.021577983571223702,
+    "h1_tool": 0.021354156504062624,
+    "h3": 0.01466074691139575
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9525,
+    "h1_tool": 0.93,
+    "h3": 0.9225
+   },
+   "any_confirmed": 0.4075,
+   "mean_recovery_branches": 78.4275
+  },
+  {
+   "scenario": {
+    "baseline": 0.3,
+    "persistence": 0.6,
+    "icc": 0.2,
+    "branch_correlation": 0.0,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261016,
+   "power": {
+    "h1_intrinsic": 0.205,
+    "h1_tool": 0.1775,
+    "h3": 0.06
+   },
+   "power_se": {
+    "h1_intrinsic": 0.020185081124434453,
+    "h1_tool": 0.019104564245226847,
+    "h3": 0.011874342087037916
+   },
+   "coverage": {
+    "h1_intrinsic": 0.935,
+    "h1_tool": 0.9425,
+    "h3": 0.935
+   },
+   "any_confirmed": 0.3175,
+   "mean_recovery_branches": 77.8975
+  },
+  {
+   "scenario": {
+    "baseline": 0.3,
+    "persistence": 0.6,
+    "icc": 0.2,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261017,
+   "power": {
+    "h1_intrinsic": 0.235,
+    "h1_tool": 0.2225,
+    "h3": 0.085
+   },
+   "power_se": {
+    "h1_intrinsic": 0.021199941037653856,
+    "h1_tool": 0.020796258677944934,
+    "h3": 0.013944084767384343
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9425,
+    "h1_tool": 0.9425,
+    "h3": 0.935
+   },
+   "any_confirmed": 0.385,
+   "mean_recovery_branches": 78.065
+  },
+  {
+   "scenario": {
+    "baseline": 0.3,
+    "persistence": 0.9,
+    "icc": 0.05,
+    "branch_correlation": 0.0,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261018,
+   "power": {
+    "h1_intrinsic": 0.205,
+    "h1_tool": 0.1925,
+    "h3": 0.07
+   },
+   "power_se": {
+    "h1_intrinsic": 0.020185081124434453,
+    "h1_tool": 0.019713177699194007,
+    "h3": 0.012757350822173075
+   },
+   "coverage": {
+    "h1_intrinsic": 0.925,
+    "h1_tool": 0.9275,
+    "h3": 0.91
+   },
+   "any_confirmed": 0.325,
+   "mean_recovery_branches": 51.3
+  },
+  {
+   "scenario": {
+    "baseline": 0.3,
+    "persistence": 0.9,
+    "icc": 0.05,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261019,
+   "power": {
+    "h1_intrinsic": 0.235,
+    "h1_tool": 0.25,
+    "h3": 0.085
+   },
+   "power_se": {
+    "h1_intrinsic": 0.021199941037653856,
+    "h1_tool": 0.021650635094610966,
+    "h3": 0.013944084767384343
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9125,
+    "h1_tool": 0.9275,
+    "h3": 0.9425
+   },
+   "any_confirmed": 0.3975,
+   "mean_recovery_branches": 51.415
+  },
+  {
+   "scenario": {
+    "baseline": 0.3,
+    "persistence": 0.9,
+    "icc": 0.2,
+    "branch_correlation": 0.0,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261020,
+   "power": {
+    "h1_intrinsic": 0.2425,
+    "h1_tool": 0.2675,
+    "h3": 0.0925
+   },
+   "power_se": {
+    "h1_intrinsic": 0.021429754431630803,
+    "h1_tool": 0.02213276699827656,
+    "h3": 0.014486523910172517
+   },
+   "coverage": {
+    "h1_intrinsic": 0.93,
+    "h1_tool": 0.9325,
+    "h3": 0.925
+   },
+   "any_confirmed": 0.42,
+   "mean_recovery_branches": 51.7225
+  },
+  {
+   "scenario": {
+    "baseline": 0.3,
+    "persistence": 0.9,
+    "icc": 0.2,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261021,
+   "power": {
+    "h1_intrinsic": 0.2925,
+    "h1_tool": 0.29,
+    "h3": 0.1125
+   },
+   "power_se": {
+    "h1_intrinsic": 0.022745535276181124,
+    "h1_tool": 0.022688102609076853,
+    "h3": 0.015799030824705674
+   },
+   "coverage": {
+    "h1_intrinsic": 0.92,
+    "h1_tool": 0.9275,
+    "h3": 0.9125
+   },
+   "any_confirmed": 0.47,
+   "mean_recovery_branches": 51.0
+  }
+ ],
+ "low_eligibility": {
+  "scenario": {
+   "baseline": 0.1,
+   "persistence": 0.9,
+   "icc": 0.1,
+   "branch_correlation": 0.0,
+   "initial_accuracy": 0.7,
+   "maintenance_shift": 0.02,
+   "missing_final": 0.05,
+   "h1_intrinsic": -0.1,
+   "h1_tool": -0.1,
+   "h3": -0.1
+  },
+  "n_datasets": 400,
+  "n_resamples": 999,
+  "seed": 20261022,
+  "power": {
+   "h1_intrinsic": 0.0225,
+   "h1_tool": 0.0275,
+   "h3": 0.0
+  },
+  "power_se": {
+   "h1_intrinsic": 0.007415144974981945,
+   "h1_tool": 0.008176758220713145,
+   "h3": 0.0
+  },
+  "coverage": {
+   "h1_intrinsic": 0.8075,
+   "h1_tool": 0.775,
+   "h3": 0.77
+  },
+  "any_confirmed": 0.0475,
+  "mean_recovery_branches": 11.7525
+ },
+ "null": {
+  "scenario": {
+   "baseline": 0.25,
+   "persistence": 0.75,
+   "icc": 0.1,
+   "branch_correlation": 0.0,
+   "initial_accuracy": 0.9,
+   "maintenance_shift": 0.02,
+   "missing_final": 0.05,
+   "h1_intrinsic": 0.0,
+   "h1_tool": 0.0,
+   "h3": 0.0
+  },
+  "n_datasets": 400,
+  "n_resamples": 999,
+  "seed": 20261023,
+  "power": {
+   "h1_intrinsic": 0.005,
+   "h1_tool": 0.01,
+   "h3": 0.0225
+  },
+  "power_se": {
+   "h1_intrinsic": 0.0035266839949164713,
+   "h1_tool": 0.0049749371855331,
+   "h3": 0.007415144974981945
+  },
+  "coverage": {
+   "h1_intrinsic": 0.9525,
+   "h1_tool": 0.94,
+   "h3": 0.92
+  },
+  "any_confirmed": 0.0375,
+  "mean_recovery_branches": 51.35
+ },
+ "effect_curve": [
+  {
+   "scenario": {
+    "baseline": 0.25,
+    "persistence": 0.75,
+    "icc": 0.1,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.1,
+    "h1_tool": -0.1,
+    "h3": -0.1
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261024,
+   "power": {
+    "h1_intrinsic": 0.155,
+    "h1_tool": 0.1675,
+    "h3": 0.0875
+   },
+   "power_se": {
+    "h1_intrinsic": 0.01809523417919757,
+    "h1_tool": 0.018671083926756905,
+    "h3": 0.014128318194321643
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9575,
+    "h1_tool": 0.935,
+    "h3": 0.9175
+   },
+   "any_confirmed": 0.2975,
+   "mean_recovery_branches": 50.835
+  },
+  {
+   "scenario": {
+    "baseline": 0.25,
+    "persistence": 0.75,
+    "icc": 0.1,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.2,
+    "h1_tool": -0.2,
+    "h3": -0.2
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261025,
+   "power": {
+    "h1_intrinsic": 0.5875,
+    "h1_tool": 0.58,
+    "h3": 0.2125
+   },
+   "power_se": {
+    "h1_intrinsic": 0.02461421083439402,
+    "h1_tool": 0.024677925358506134,
+    "h3": 0.020453835214941964
+   },
+   "coverage": {
+    "h1_intrinsic": 0.95,
+    "h1_tool": 0.9425,
+    "h3": 0.9475
+   },
+   "any_confirmed": 0.7575,
+   "mean_recovery_branches": 50.5775
+  },
+  {
+   "scenario": {
+    "baseline": 0.25,
+    "persistence": 0.75,
+    "icc": 0.1,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.3,
+    "h1_tool": -0.3,
+    "h3": -0.3
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261026,
+   "power": {
+    "h1_intrinsic": 0.925,
+    "h1_tool": 0.94,
+    "h3": 0.4575
+   },
+   "power_se": {
+    "h1_intrinsic": 0.01316956719106592,
+    "h1_tool": 0.011874342087037922,
+    "h3": 0.024909523781076182
+   },
+   "coverage": {
+    "h1_intrinsic": 0.9425,
+    "h1_tool": 0.9175,
+    "h3": 0.905
+   },
+   "any_confirmed": 0.9825,
+   "mean_recovery_branches": 50.6875
+  },
+  {
+   "scenario": {
+    "baseline": 0.25,
+    "persistence": 0.75,
+    "icc": 0.1,
+    "branch_correlation": 0.5,
+    "initial_accuracy": 0.9,
+    "maintenance_shift": 0.02,
+    "missing_final": 0.05,
+    "h1_intrinsic": -0.4,
+    "h1_tool": -0.4,
+    "h3": -0.4
+   },
+   "n_datasets": 400,
+   "n_resamples": 999,
+   "seed": 20261027,
+   "power": {
+    "h1_intrinsic": 0.9925,
+    "h1_tool": 0.995,
+    "h3": 0.74
+   },
+   "power_se": {
+    "h1_intrinsic": 0.004313858481684336,
+    "h1_tool": 0.0035266839949164726,
+    "h3": 0.02193171219946131
+   },
+   "coverage": {
+    "h1_intrinsic": 0.92,
+    "h1_tool": 0.9425,
+    "h3": 0.93
+   },
+   "any_confirmed": 1.0,
+   "mean_recovery_branches": 50.715
+  }
+ ],
+ "confirmatory": {
+  "h1_intrinsic": false,
+  "h1_tool": false,
+  "h3": false
+ }
+}
