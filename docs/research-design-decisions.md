@@ -584,9 +584,9 @@ correlation of a branch's finals (0.0, 0.5), which this design adds. The
 record is `data/power/assessment-v1.json`, shown by notebook 03.
 
 The record (400 runs per cell, 999 resamples, seed 20261006, analysis code
-hash `3ac120cc...`, re-recorded on 7 October 2026 after the loop analysis
-was added, with every estimate unchanged from hashes `1d16c504...` and
-`df6d7329...`) gives
+hash `adc3d2ef...`, re-recorded on 7 October 2026 after the loop analysis
+and later changes to the analysis source, with every estimate unchanged from hashes
+`3ac120cc...`, `1d16c504...` and `df6d7329...`) gives
 8-29% power for H1 intrinsic, 10-29% for H1 tool and 3-11% for H3 across the 16 planning cells, with 33-78 recovery branches per SUT; under
 no effect, some contrast was confirmed in 3.75% of runs. At central
 assumptions 80% power needs about 25 points for H1 and over 40 for H3. All
