@@ -830,3 +830,20 @@ specification records Python 3.12.3, pydantic 2.13.4, pydantic-ai 1.107.1,
 openai 2.53.0 and httpx 0.28.1. The answers establish only that the path
 works, not anything about the hypotheses. Evidence is git-ignored under
 `data/runs/dev/dev-systems-20261007T095209Z`.
+
+## 2026-10-07 — Recorded cost and the collection cost estimate
+
+Every OpenRouter response reports the call's cost in credits in its usage
+object [107, "Cost Breakdown"]; `UsageCounts.cost` now copies it with the
+token counts, and earlier events load it as empty. `run_usage` re-reads a
+run's usage from its saved envelopes, so runs recorded before the field
+existed still report it. `estimate_cost` uses recorded evidence only: each
+SUT's price per token is its recorded cost over its recorded tokens; request
+text converts to tokens at the rate of a recorded calibration block (0.287
+tokens per character, two output tokens per call, from the development
+block of 7 October); and the characters are those of the 13 requests the
+collection runner renders for each item. It reports its assumptions and the
+retry ceiling (each call at most five attempts). On 7 October the 2,340
+MAIN calls were estimated at 0.80 credits (Sonnet 4.6 0.45, GPT-4o 0.35,
+Gemma 4 0.01), at most 4.00 if every call used every retry, priced from the
+4 October serving smokes and the development block.

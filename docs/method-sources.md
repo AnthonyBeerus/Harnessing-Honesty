@@ -168,7 +168,9 @@ A collection is refused where its deepest evidence path would exceed the
 Windows path limit [104]; this is a portability constraint on the evidence,
 not a method. Resume keeps an interrupted attempt and continues its call,
 unlike durable-execution engines that re-run an interrupted step [105], [106];
-those sources are a contrast, not a basis.
+those sources are a contrast, not a basis. Recorded cost is the router's
+reported charge per call [107]; the collection cost estimate is a
+repository calculation from recorded runs, not a published method.
 
 ## Software structure and citation practice
 

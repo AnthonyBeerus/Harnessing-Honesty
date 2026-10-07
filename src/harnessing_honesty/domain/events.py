@@ -18,6 +18,7 @@ class UsageCounts(BaseModel):
 
     Reasoning and cached tokens are first-class: a cache HIT or a hidden
     reasoning channel can change the served system without changing the slug.
+    ``cost`` is the charge the router reports for the call, in its credits.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -26,6 +27,7 @@ class UsageCounts(BaseModel):
     output_tokens: int | None = None
     reasoning_tokens: int | None = None
     cached_tokens: int | None = None
+    cost: float | None = None
 
 
 class _Event(BaseModel):

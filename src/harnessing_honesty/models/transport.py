@@ -149,4 +149,12 @@ def _usage(usage: object) -> UsageCounts | None:
         output_tokens=_count(usage, "completion_tokens"),
         reasoning_tokens=_count(usage, "completion_tokens_details", "reasoning_tokens"),
         cached_tokens=_count(usage, "prompt_tokens_details", "cached_tokens"),
+        # Every response carries the call's cost in credits [107, "Cost Breakdown"].
+        cost=_amount(usage.get("cost")),
     )
+
+
+def _amount(value: object) -> float | None:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        return None
+    return float(value)

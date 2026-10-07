@@ -396,3 +396,7 @@ The archived registration retains its original references.
 <a id="dbos2026steps"></a>
 
 [106] DBOS, “Steps,” *DBOS Python documentation*, tutorial “Steps.” Accessed: Oct. 6, 2026. [Source](https://docs.dbos.dev/python/tutorials/step-tutorial).
+
+<a id="openrouter2026usage"></a>
+
+[107] OpenRouter, “Usage accounting,” sec. “Cost Breakdown.” Accessed: Oct. 7, 2026. [Source](https://openrouter.ai/docs/use-cases/usage-accounting).
