@@ -36,9 +36,9 @@ from harnessing_honesty.domain import (
     Message,
     ModelResult,
 )
-from harnessing_honesty.domain.enums import Track
+from harnessing_honesty.domain.enums import Failure, Track
 from harnessing_honesty.domain.events import DomainEvent
-from harnessing_honesty.domain.results import ProtocolFailure
+from harnessing_honesty.domain.results import ProtocolFailure, ProviderFailure
 from harnessing_honesty.domain.episodes import MatrixEpisodeRecord
 from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.domain.protocols import Clock, ModelClient
@@ -63,6 +63,11 @@ from harnessing_honesty.runtime.live import open_session
 # One neutral, three pressure drafts and nine policy finals per item and SUT;
 # docs/preregistration-template.md, "Sample".
 CALLS_PER_BLOCK = 13
+
+# Consecutive calls on one SUT ending in a provider failure after all registered
+# retries that pause it as a dead pin; docs/research-design-decisions.md,
+# "2026-10-07 — Pausing a SUT whose pin fails at the provider".
+PROVIDER_FAILURE_STREAK = 3
 
 # Packages that build or carry the request; the resolved versions are part of
 # what was run, not only of what was declared.
@@ -333,6 +338,7 @@ def _run(
     sessions: dict[str, RunSession] = {}
     clients: dict[str, ModelClient] = {}
     recorded: dict[str, tuple[tuple[DomainEvent, ...], list[_Block]]] = {}
+    guards: dict[str, _PauseGuard] = {}
     for sut in spec.suts:
         card = load_run_config(_ROOT / sut.card).model_dump()
         config = RunConfig.model_validate(
@@ -346,7 +352,9 @@ def _run(
         session = open_session(config, runs_root, run_id, resume=resume)
         sessions[sut.card] = session
         clients[sut.card] = client_factory(config.serving)
-        recorded[sut.card] = _recorded_blocks(session.run_dir)
+        events, blocks, streak = _recorded_blocks(session.run_dir)
+        recorded[sut.card] = (events, blocks)
+        guards[sut.card] = _PauseGuard(_pause_path(directory, sut.card), streak)
     if not sessions:
         raise ValueError("collection is complete")
     started = dict.fromkeys(sessions, 0)
@@ -368,8 +376,7 @@ def _run(
                 raise ValueError(f"recorded {block_id} is not scheduled block {block}")
         recorder = sessions[block.card].wrap(clients[block.card], block_id)
         retrying = RetryingClient(recorder, clock=clock)
-        pause = _pause_path(directory, block.card)
-        replay = _Replay(recorder, retrying, calls, events, pause)
+        replay = _Replay(recorder, retrying, calls, events, guards[block.card])
         try:
             run_confirmatory_matrix(
                 item.prompt,
@@ -396,8 +403,10 @@ def _run(
 _Block = tuple[str, str | None, dict[str, list[AttemptRecord]]]
 
 
-def _recorded_blocks(run_dir: Path) -> tuple[tuple[DomainEvent, ...], list[_Block]]:
-    """A run's events and its recorded blocks in the order they began."""
+def _recorded_blocks(
+    run_dir: Path,
+) -> tuple[tuple[DomainEvent, ...], list[_Block], int]:
+    """A run's events, its recorded blocks in order, and its provider streak."""
     rebuilt = reconstruct_run(run_dir)
     blocks: dict[str, tuple[str | None, dict[str, list[AttemptRecord]]]] = {}
     for attempt in rebuilt.attempts:
@@ -405,7 +414,27 @@ def _recorded_blocks(run_dir: Path) -> tuple[tuple[DomainEvent, ...], list[_Bloc
         calls = entry[1]
         calls.setdefault(str(attempt.request_hash), []).append(attempt)
     listed = [(block_id, item, calls) for block_id, (item, calls) in blocks.items()]
-    return rebuilt.events, listed
+    return rebuilt.events, listed, _provider_streak(rebuilt.attempts)
+
+
+def _provider_streak(attempts: tuple[AttemptRecord, ...]) -> int:
+    """Finished calls at the end of a run that ended in a provider failure.
+
+    A final call still in progress (indeterminate, or stopped during a retry
+    wait) is not counted; its result is counted when it arrives.
+    """
+    by_call: dict[str, list[AttemptRecord]] = {}
+    for attempt in attempts:
+        by_call.setdefault(str(attempt.call_id), []).append(attempt)
+    streak = 0
+    for history in reversed(by_call.values()):
+        failures = [item.failure for item in history if not item.indeterminate]
+        if remaining_retries(failures) is not None:
+            continue
+        if failures[-1] is not Failure.PROVIDER:
+            break
+        streak += 1
+    return streak
 
 
 class _Replay:
@@ -425,13 +454,13 @@ class _Replay:
         retrying: RetryingClient,
         calls: dict[str, list[AttemptRecord]],
         events: tuple[DomainEvent, ...],
-        pause: Path,
+        guard: "_PauseGuard",
     ) -> None:
         self._recorder = recorder
         self._retrying = retrying
         self.calls = dict(calls)
         self._events = events
-        self._pause = pause
+        self._guard = guard
 
     def label(
         self, stage: str | None, cell_identity: str | None, scenario_id: str
@@ -455,22 +484,43 @@ class _Replay:
         return self._dispatch(messages)
 
     def _dispatch(self, messages: tuple[Message, ...]) -> ModelResult:
-        """Send a call; a serving-contract failure pauses this SUT at once.
+        """Send a call; its result may pause this SUT at once.
 
-        A replayed failure was handled when it happened and pauses nothing.
+        A replayed result was judged when it happened and pauses nothing.
         """
         result = self._retrying.complete(messages)
-        if isinstance(result, ProtocolFailure):
-            record = {
-                "reason": "serving contract failed",
-                "call_id": self._recorder.call_id,
-                "block_id": self._recorder.block_id,
-                "detail": result.detail,
-                "at": datetime.now(timezone.utc).isoformat(),
-            }
-            write_new(self._pause, json.dumps(record))
-            raise SutPaused(result.detail)
+        self._guard.check(result, self._recorder)
         return result
+
+
+class _PauseGuard:
+    """One SUT's pause file and its run of consecutive provider failures."""
+
+    def __init__(self, path: Path, provider_streak: int) -> None:
+        self._path = path
+        self._streak = provider_streak
+
+    def check(self, result: ModelResult, recorder: RecordingModelClient) -> None:
+        """Pause on a failed serving contract or a dead pin; otherwise return.
+
+        Only serving failures count, never a response's content or score.
+        """
+        self._streak = self._streak + 1 if isinstance(result, ProviderFailure) else 0
+        if isinstance(result, ProtocolFailure):
+            reason = "serving contract failed"
+        elif self._streak >= PROVIDER_FAILURE_STREAK:
+            reason = f"provider failed on {self._streak} consecutive calls"
+        else:
+            return
+        record = {
+            "reason": reason,
+            "call_id": recorder.call_id,
+            "block_id": recorder.block_id,
+            "detail": getattr(result, "detail", ""),
+            "at": datetime.now(timezone.utc).isoformat(),
+        }
+        write_new(self._path, json.dumps(record))
+        raise SutPaused(reason)
 
 
 class CollectionStopped(RuntimeError):
@@ -478,7 +528,7 @@ class CollectionStopped(RuntimeError):
 
 
 class SutPaused(RuntimeError):
-    """A SUT's serving contract failed; its remaining blocks wait."""
+    """A SUT's serving contract failed or its pin died; its remaining blocks wait."""
 
 
 def _pause_path(directory: Path, card: str) -> Path:
@@ -489,9 +539,10 @@ def stop_reason(directory: Path, card: str | None = None) -> str | None:
     """Why no further block may start (for ``card``), or ``None``.
 
     The one place collection stops are decided, checked before every block.
-    A stop request halts every SUT. A failed serving contract pauses only its
-    SUT, without fallback to another route; docs/preregistration-template.md,
-    "SUT controls". Neither reads a response, score or eligibility.
+    A stop request halts every SUT. A failed serving contract, or a pin that
+    fails at the provider on consecutive calls, pauses only its SUT, without
+    fallback to another route; docs/preregistration-template.md, "SUT
+    controls". None of these reads a response, score or eligibility.
     """
     if (directory / "stop.json").exists():
         return "stop requested"

@@ -729,5 +729,20 @@ a pause only its own, and neither reads a response, score or eligibility.
 After the route is restored, `clear_pause` lets `execute` continue the
 paused block in place: the failed call is replayed from the record, not
 resent, and a replayed failure pauses nothing. Runs already closed are
-skipped. An exhausted provider failure does not pause a SUT; the call is
-recorded as missing and collection continues.
+skipped. One exhausted provider failure does not pause a SUT; three in a
+row do (next entry).
+
+## 2026-10-07 — Pausing a SUT whose pin fails at the provider
+
+A dead pin usually shows as provider errors rather than as a protocol
+failure. A SUT is therefore also paused when three consecutive logical calls
+on it each end in a provider failure after all registered retries (one try
+and three retries 60 seconds apart). The count runs in dispatch order across
+blocks; any other final result (an answer, a parse failure) resets it. On
+resume it is rebuilt from the recorded run, counting finished calls only, so
+an interruption neither resets nor doubles it, and replayed calls are not
+counted again. After `clear_pause`, a further provider failure on the next
+call pauses the SUT again and a success resets the count. The rule reads
+serving failures only, never a response's content or score. Chosen with the
+researcher on 7 October 2026 to implement "If a pin dies after collection
+starts: pause that SUT" (docs/preregistration-template.md, "SUT controls").
