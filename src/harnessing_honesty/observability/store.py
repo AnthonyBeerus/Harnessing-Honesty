@@ -75,6 +75,33 @@ class FilesystemRecordStore:
         _write_atomic(path, payload)
 
 
+def set_aside_tail(events: Path, name: str) -> None:
+    """Move an unfinished final line out of ``events`` into ``name`` beside it.
+
+    The bytes are kept as they are (a cut can split a character). The copy is
+    written before the events file is shortened, so a crash in between loses
+    nothing; repeating the move after such a crash finds the same copy.
+    """
+    data = events.read_bytes()
+    cut = data.rfind(b"\n") + 1
+    if cut == len(data):
+        return
+    target = events.with_name(name)
+    if not target.exists():
+        tmp = target.with_name(target.name + ".tmp")
+        with tmp.open("wb") as handle:
+            handle.write(data[cut:])
+            handle.flush()
+            _fsync(handle)
+        tmp.replace(target)
+    elif target.read_bytes() != data[cut:]:
+        raise FileExistsError(f"{target} holds a different unfinished line")
+    with events.open("r+b") as handle:
+        handle.truncate(cut)
+        handle.flush()
+        _fsync(handle)
+
+
 def write_new(path: Path, payload: str) -> None:
     """Write a file that must not exist yet; an accepted record is never replaced."""
     if path.exists():

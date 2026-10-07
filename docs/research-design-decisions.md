@@ -710,9 +710,8 @@ files alone. `launch` starts one worker process detached from its caller, so
 a notebook kernel can end without ending collection; an owned or finished
 collection is reported rather than started again. The worker's client is
 `synthetic` (`HashedAnswerClient`, an offline answer fixed by the request
-hash) or `live`. A status read while the worker appends can meet an
-unfinished final line and raise; reading again succeeds. A final line left
-unfinished by a hard kill is still reported unreadable and blocks resume.
+hash) or `live`. Unfinished final event lines are handled as in the entry
+"Unfinished final event lines" below.
 
 ## 2026-10-07 — Pausing a SUT whose serving contract fails
 
@@ -746,3 +745,18 @@ call pauses the SUT again and a success resets the count. The rule reads
 serving failures only, never a response's content or score. Chosen with the
 researcher on 7 October 2026 to implement "If a pin dies after collection
 starts: pause that SUT" (docs/preregistration-template.md, "SUT controls").
+
+## 2026-10-07 — Unfinished final event lines
+
+Each event is appended to `events.jsonl` as one line ending in a newline and
+then fsynced. A final segment without that newline is a write an
+interruption cut short, or one still in progress for a reader during a live
+append; it is not an event even if it parses, since it was never flushed as
+one. Reconstruction and `check_integrity` share one reader, `event_lines`,
+which decodes only complete lines (a cut can fall inside a character) and
+reports the segment separately; it is not an integrity failure, like a
+leftover `.tmp` file. An attempt whose outcome was in that segment is
+indeterminate. On resume the segment's bytes are moved to
+`events-unfinished-{sequence}.txt` beside the events file before the file is
+shortened, so no byte is lost and earlier lines are untouched, and the
+`run_resumed` event names that file.

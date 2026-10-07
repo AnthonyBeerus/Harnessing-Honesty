@@ -66,9 +66,12 @@ class RunResumed(_Event):
 
     Earlier attempts keep their outcomes; one left without an outcome stays
     indeterminate, and any later attempt of that call carries a higher number.
+    ``unfinished_tail`` names the file holding a final event line the
+    interruption left unfinished, moved out of ``events.jsonl``.
     """
 
     kind: Literal["run_resumed"] = "run_resumed"
+    unfinished_tail: str | None = None
 
 
 class RequestSent(_Event):

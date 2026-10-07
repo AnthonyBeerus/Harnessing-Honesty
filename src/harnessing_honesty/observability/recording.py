@@ -40,7 +40,10 @@ from harnessing_honesty.observability.integrity import (
 from harnessing_honesty.observability.reconstruct import reconstruct_run, saved_request
 from harnessing_honesty.observability.redact import redact_text
 from harnessing_honesty.observability.sink import JsonlEventSink, NullSink
-from harnessing_honesty.observability.store import FilesystemRecordStore
+from harnessing_honesty.observability.store import (
+    FilesystemRecordStore,
+    set_aside_tail,
+)
 
 
 class _Observed(TypedDict, total=False):
@@ -82,6 +85,7 @@ class RunSession:
         self._blocks = 0
         self._calls = 0
         self._continuations: dict[str, str] = {}
+        self._unfinished_tail: str | None = None
         if resume:
             self._restore(config_hash)
             return
@@ -124,6 +128,10 @@ class RunSession:
         if rebuilt.record.config_hash != config_hash:
             raise ValueError(f"run {self.run_id} was recorded under another config")
         self.record = rebuilt.record
+        if rebuilt.unfinished_tail is not None:
+            name = f"events-unfinished-{len(rebuilt.events):06d}.txt"
+            set_aside_tail(self._store.events_path(self.run_id), name)
+            self._unfinished_tail = name
         self.sink = JsonlEventSink(self._store, self.run_id, start=len(rebuilt.events))
         attempts = rebuilt.attempts
         self._blocks = len({attempt.block_id for attempt in attempts})
@@ -161,6 +169,7 @@ class RunSession:
                 sequence=self.sink.next_sequence,
                 run_id=self.run_id,
                 occurred_at=self._now(),
+                unfinished_tail=self._unfinished_tail,
             )
         )
 

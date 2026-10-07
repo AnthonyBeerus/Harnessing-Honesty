@@ -28,7 +28,7 @@ from harnessing_honesty.observability.hashing import (
     digest_text,
     request_hash,
 )
-from harnessing_honesty.observability.reconstruct import saved_request
+from harnessing_honesty.observability.reconstruct import event_lines, saved_request
 
 _EVENT_ADAPTER = TypeAdapter(DomainEvent)
 _OUTCOMES = (ResponseReceived, RequestFailed, AttemptInterrupted)
@@ -113,10 +113,11 @@ def _read_events(
         return None, (_issue(Integrity.MISSING_FILE, "events.jsonl", "absent"),)
     events: list[DomainEvent] = []
     issues: list[IntegrityIssue] = []
-    lines = path.read_text(encoding="utf-8").splitlines()
+    try:
+        lines, _unfinished = event_lines(path.read_bytes())
+    except UnicodeDecodeError as exc:
+        return None, (_issue(Integrity.UNREADABLE, "events.jsonl", str(exc)),)
     for number, line in enumerate(lines, start=1):
-        if not line.strip():
-            continue
         try:
             events.append(_EVENT_ADAPTER.validate_json(line))
         except ValidationError as exc:

@@ -103,7 +103,8 @@ def test_the_worker_runs_detached_and_a_repeated_launch_reports(tmp_path: Path) 
     directory = start_collection(tmp_path, spec)
 
     launch(directory, approved_calls=spec.planned_calls, client="synthetic")
-    deadline = time.monotonic() + 120
+    # Generous: process start can stall while the machine is busy.
+    deadline = time.monotonic() + 300
     while not collection_status(directory).complete:
         assert time.monotonic() < deadline, (directory / "worker.log").read_text()
         time.sleep(0.2)

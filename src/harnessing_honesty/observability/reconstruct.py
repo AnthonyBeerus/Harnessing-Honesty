@@ -98,9 +98,15 @@ class AttemptRecord(BaseModel):
 class ReconstructedRun:
     """Events plus the derived summary, loaded from a run directory."""
 
-    def __init__(self, record: RunRecord, events: tuple[DomainEvent, ...]) -> None:
+    def __init__(
+        self,
+        record: RunRecord,
+        events: tuple[DomainEvent, ...],
+        unfinished_tail: bytes | None = None,
+    ) -> None:
         self.record = record
         self.events = events
+        self.unfinished_tail = unfinished_tail
 
     @property
     def attempts(self) -> tuple[AttemptRecord, ...]:
@@ -175,18 +181,32 @@ def reconstruct_run(run_dir: Path) -> ReconstructedRun:
     summary_path = run_dir / "summary.json"
     events_path = run_dir / "events.jsonl"
     record = RunRecord.model_validate_json(summary_path.read_text(encoding="utf-8"))
-    events: list[DomainEvent] = []
-    text = events_path.read_text(encoding="utf-8")
-    for line in text.splitlines():
-        if not line.strip():
-            continue
-        events.append(_EVENT_ADAPTER.validate_json(line))
+    lines, tail = event_lines(events_path.read_bytes())
+    events = [_EVENT_ADAPTER.validate_json(line) for line in lines]
     sequences = [event.sequence for event in events]
     if sequences != list(range(len(sequences))):
         raise ValueError(f"event sequence is not dense from 0: {sequences}")
     if events and events[0].run_id != record.run_id:
         raise ValueError("event run_id does not match summary")
-    return ReconstructedRun(record, tuple(events))
+    return ReconstructedRun(record, tuple(events), tail)
+
+
+def event_lines(data: bytes) -> tuple[list[str], bytes | None]:
+    """Complete event lines, and the unfinished final segment if there is one.
+
+    The recorder appends each event as one line ending in a newline, then
+    fsyncs. A final segment without that newline is a write an interruption
+    cut short; it is not an event even if it parses, since it was never
+    flushed as one. Readers during a live append see the same. Only complete
+    lines are decoded, since a cut can fall inside a character.
+    """
+    complete, _, tail = data.rpartition(b"\n")
+    lines = [
+        line.decode("utf-8").rstrip("\r")
+        for line in complete.split(b"\n")
+        if line.strip()
+    ]
+    return lines, tail or None
 
 
 def recorded_result(
