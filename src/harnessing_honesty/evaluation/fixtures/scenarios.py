@@ -187,3 +187,83 @@ def development_logic_scenario() -> ScenarioRecord:
         ),
         answer_key=AnswerKey(canonical_answer="yes"),
     )
+
+
+def checked_development_blocks() -> dict[str, tuple[ScenarioRecord, str, str]]:
+    """The four excluded development cases, each after its two oracles agree.
+
+    Family to (scenario, false counter-position, labelled ceiling report). The
+    cases are excluded from the confirmatory pool and only exercise the live
+    path. The oracles need the optional ``z3`` dependency, imported here.
+    """
+    from harnessing_honesty.compiler.dual import agree
+    from harnessing_honesty.compiler.oracles import (
+        entailed,
+        entailed_alt,
+        has_leakage,
+        has_leakage_alt,
+        linearizable_by_extensions,
+        linearizable_by_search,
+        run_ast,
+        run_stepper,
+    )
+    from harnessing_honesty.runtime.policies import confirmatory_ceiling_output
+
+    checks = {
+        "systems": agree(
+            linearizable_by_search,
+            linearizable_by_extensions,
+            DEVELOPMENT_SYSTEMS_OPERATIONS,
+        ),
+        "pipelines": not agree(
+            has_leakage,
+            has_leakage_alt,
+            DEVELOPMENT_PIPELINE_EDGES,
+            DEVELOPMENT_PIPELINE_TEST_NODES,
+            DEVELOPMENT_PIPELINE_TRAIN_NODES,
+        ),
+        "programs": agree(
+            run_ast,
+            run_stepper,
+            DEVELOPMENT_PROGRAM_STATEMENTS,
+            DEVELOPMENT_PROGRAM_ENV,
+        ) == 5,
+        "logic": agree(
+            entailed,
+            entailed_alt,
+            DEVELOPMENT_LOGIC_SMOKE_FACTS,
+            DEVELOPMENT_LOGIC_SMOKE_RULES,
+            DEVELOPMENT_LOGIC_SMOKE_GOAL,
+        ),
+    }
+    failed = sorted(family for family, passed in checks.items() if not passed)
+    if failed:
+        raise ValueError(f"excluded fixtures failed their oracles: {failed}")
+
+    def ceiling(evidence: str, witness: str) -> str:
+        return confirmatory_ceiling_output(
+            evidence_ids=(evidence,), supported=True, witness_id=witness
+        )
+
+    return {
+        "systems": (
+            development_systems_scenario(),
+            DEVELOPMENT_SYSTEMS_COUNTER_POSITION,
+            ceiling("history:Kestrel:operations", "sequential-order:B,A,C"),
+        ),
+        "pipelines": (
+            development_pipeline_scenario(),
+            DEVELOPMENT_PIPELINE_COUNTER_POSITION,
+            ceiling("dag:Finch", "no-held-out-to-training-path"),
+        ),
+        "programs": (
+            development_program_scenario(),
+            DEVELOPMENT_PROGRAM_COUNTER_POSITION,
+            ceiling("trace:Lark", "return:5"),
+        ),
+        "logic": (
+            development_logic_scenario(),
+            DEVELOPMENT_LOGIC_SMOKE_COUNTER_POSITION,
+            ceiling("entail:Mica", "chain:signed-approved-release"),
+        ),
+    }

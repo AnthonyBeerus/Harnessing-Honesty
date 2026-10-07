@@ -40,8 +40,9 @@ from harnessing_honesty.domain.enums import Failure, Track
 from harnessing_honesty.domain.events import DomainEvent
 from harnessing_honesty.domain.results import ProtocolFailure, ProviderFailure
 from harnessing_honesty.domain.episodes import MatrixEpisodeRecord
-from harnessing_honesty.domain.instrument import InstrumentItem
+from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.protocols import Clock, ModelClient
+from harnessing_honesty.evaluation.fixtures.scenarios import checked_development_blocks
 from harnessing_honesty.models.config import RunConfig, ServingManifest, load_run_config
 from harnessing_honesty.models.fake import HashedAnswerClient, ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
@@ -111,11 +112,50 @@ def resolved_environment() -> tuple[tuple[str, str], ...]:
     return (("python", platform.python_version()), *packages)
 
 
+class BlockItem(BaseModel):
+    """What one block needs of an item: its prompt, false proposition and report.
+
+    Neither the answer key nor any score reaches collection.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    item_id: str
+    prompt: PromptView
+    false_counter_position: str
+    verifier_output: str
+
+
+def block_items(track: Track) -> dict[str, BlockItem]:
+    """The frozen pool's items; on the development track, also the excluded cases.
+
+    MAIN can therefore never reach a development case.
+    """
+    items = {
+        item.item_id: BlockItem(
+            item_id=item.item_id,
+            prompt=item.prompt,
+            false_counter_position=item.false_counter_position,
+            verifier_output=item_ceiling(item),
+        )
+        for item in confirmatory_pool()
+    }
+    if track is Track.DEV:
+        for scenario, counter, report in checked_development_blocks().values():
+            items[scenario.prompt.id] = BlockItem(
+                item_id=scenario.prompt.id,
+                prompt=scenario.prompt,
+                false_counter_position=counter,
+                verifier_output=report,
+            )
+    return items
+
+
 def build_spec(
     collection_id: str,
     track: Track,
     cards: tuple[str, ...],
-    items: tuple[InstrumentItem, ...],
+    item_ids: tuple[str, ...],
     *,
     scheduler_seed: int,
     freeze_id: str | None = None,
@@ -126,7 +166,7 @@ def build_spec(
         track=track,
         freeze_id=freeze_id,
         scheduler_seed=scheduler_seed,
-        item_ids=tuple(item.item_id for item in items),
+        item_ids=item_ids,
         suts=tuple(
             SutEntry(card=card, config_digest=load_run_config(_ROOT / card).digest())
             for card in cards
@@ -137,7 +177,6 @@ def build_spec(
 
 def readiness(
     spec: CollectionSpec,
-    items: tuple[InstrumentItem, ...],
     *,
     freeze: Callable[[], FreezeManifest] = accepted_freeze,
 ) -> tuple[str, ...]:
@@ -147,7 +186,7 @@ def readiness(
     pass a stand-in so the result does not depend on the repository state.
     """
     findings: list[str] = []
-    known = {item.item_id for item in items}
+    known = set(block_items(spec.track))
     if not spec.item_ids:
         findings.append("items: none selected")
     if len(set(spec.item_ids)) != len(spec.item_ids):
@@ -194,17 +233,16 @@ def _main_findings(
     return findings
 
 
-def preview(item: InstrumentItem, order_seed: int = 0) -> MatrixEpisodeRecord:
+def preview(item: BlockItem, order_seed: int = 0) -> MatrixEpisodeRecord:
     """The 13 requests one block would send, rendered offline.
 
     The runner is the one used for collection; a scripted client answers every
-    call with the key so all branches render. No provider is contacted.
+    call so all branches render. No provider is contacted.
     """
-    answer = item.answer_key.canonical_answer
     scripted: list[ModelResult] = [
         AnswerSuccess(
-            response=AnswerResponse.model_validate({"answer": answer}),
-            raw_response=answer,
+            response=AnswerResponse(answer="yes"),
+            raw_response="yes",
             requested_message_count=1,
         )
     ] * CALLS_PER_BLOCK
@@ -213,7 +251,7 @@ def preview(item: InstrumentItem, order_seed: int = 0) -> MatrixEpisodeRecord:
         item.false_counter_position,
         ScriptedModelClient(scripted),
         order_seed,
-        verifier_output=item_ceiling(item),
+        verifier_output=item.verifier_output,
     )
 
 
@@ -315,8 +353,8 @@ def execute(
     calling ``execute`` again resumes them (``_Replay``).
     """
     spec, schedule = load_collection(directory)
-    items = {item.item_id: item for item in confirmatory_pool()}
-    findings = readiness(spec, tuple(items.values()))
+    items = block_items(spec.track)
+    findings = readiness(spec)
     if findings:
         raise ValueError("collection is not ready: " + "; ".join(findings))
     if approved_calls != spec.planned_calls:
@@ -329,7 +367,7 @@ def _run(
     directory: Path,
     spec: CollectionSpec,
     schedule: tuple[Block, ...],
-    items: dict[str, InstrumentItem],
+    items: dict[str, BlockItem],
     client_factory: Callable[[ServingManifest], ModelClient],
     clock: Clock | None,
 ) -> None:
@@ -383,7 +421,7 @@ def _run(
                 item.false_counter_position,
                 replay,
                 block.order_seed,
-                verifier_output=item_ceiling(item),
+                verifier_output=item.verifier_output,
             )
         except SutPaused:
             continue

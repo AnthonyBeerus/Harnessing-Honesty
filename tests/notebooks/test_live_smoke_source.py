@@ -13,8 +13,8 @@ def test_live_smoke_is_excluded_from_release_batch_and_defaults_off() -> None:
     assert "config/qualification.gpt4o.openai.yaml" in text
     assert "config/qualification.gemma4.deepinfra.yaml" in text
     assert 'FAMILY: str = "logic"' in text
-    assert "15 paid model requests" in text
-    assert "run-live-policy-path" in text
+    assert "paid" in text and "CALLS_PER_BLOCK" in text
+    assert "run-development-block" in text
     assert '"--family"' in text
     assert '"--config"' in text
     assert source not in (root / "notebooks").glob("[0-9][0-9]_*.py")

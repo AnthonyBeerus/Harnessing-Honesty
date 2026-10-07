@@ -44,7 +44,7 @@ def _spec(items: int = 60, seed: int = 0) -> CollectionSpec:
         "synthetic-test",
         Track.DEV,
         PRIMARY_SERVING_CARDS,
-        ITEMS[:items],
+        tuple(item.item_id for item in ITEMS[:items]),
         scheduler_seed=seed,
     )
 

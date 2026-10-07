@@ -796,3 +796,18 @@ drafts); blocks follow the schedule; every raw answer parses again to its
 recorded outcome; and 1,620 analysis rows rebuild, 18 of them missing.
 Removing replay, the resumed retry budget, the provider-failure count, the
 runner's skip after a failed draft or the retry stop rule each fails it.
+
+## 2026-10-07 — Excluded development cases through the collector
+
+Collection now takes a `BlockItem` (item id, prompt, false counter-position
+and labelled report), which carries nothing a scorer uses. The frozen pool
+supplies these for every track; on the development track the four excluded
+cases, each checked by its two repository oracles first, are added. MAIN
+cannot reach them, and readiness refuses them there. The oracle checks and
+each case's counter-position and report moved from the CLI into
+`checked_development_blocks`. `run-development-block` runs one excluded case
+on one serving card as a one-item collection through readiness, the worker
+process, recording and resume; it refuses unless its 13 planned calls are
+confirmed. It replaces `run-live-policy-path`, the five-call shared-draft
+smoke that could not be rebuilt from its run directory, and the development
+smoke notebook now calls it for each SUT.

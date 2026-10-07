@@ -11,6 +11,7 @@ from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Stage, Track
 from harnessing_honesty.evaluation.collection import (
     CollectionSpec,
+    block_items,
     build_spec,
     preview,
     readiness,
@@ -25,7 +26,7 @@ def _spec(track: Track = Track.DEV, **changes: object) -> CollectionSpec:
         "collection-test",
         track,
         PRIMARY_SERVING_CARDS,
-        ITEMS,
+        tuple(item.item_id for item in ITEMS),
         scheduler_seed=0,
         freeze_id="freeze-test" if track is Track.MAIN else None,
     )
@@ -56,7 +57,7 @@ def test_the_specification_fixes_cards_items_and_environment() -> None:
 
 
 def test_a_consistent_development_specification_is_ready() -> None:
-    assert readiness(_spec(), ITEMS) == ()
+    assert readiness(_spec()) == ()
 
 
 @pytest.mark.parametrize(
@@ -69,7 +70,7 @@ def test_a_consistent_development_specification_is_ready() -> None:
     ],
 )
 def test_each_inconsistency_is_named(changes: dict[str, object], expected: str) -> None:
-    findings = readiness(_spec(**changes), ITEMS)
+    findings = readiness(_spec(**changes))
 
     assert any(expected in finding for finding in findings), findings
 
@@ -78,7 +79,7 @@ def test_a_card_changed_after_acceptance_is_refused() -> None:
     spec = _spec()
     stale = spec.suts[0].model_copy(update={"config_digest": "0" * 64})
     changed = spec.model_copy(update={"suts": (stale, *spec.suts[1:])})
-    findings = readiness(changed, ITEMS)
+    findings = readiness(changed)
 
     assert findings == (f"{stale.card}: changed since the specification was accepted",)
 
@@ -89,34 +90,34 @@ def test_main_needs_a_matching_signed_freeze() -> None:
     def mismatch() -> FreezeManifest:
         raise ValueError("Current instrument differs from the registered freeze")
 
-    assert readiness(spec, ITEMS, freeze=lambda: _freeze(spec)) == ()
-    assert readiness(spec, ITEMS, freeze=mismatch) == (
+    assert readiness(spec, freeze=lambda: _freeze(spec)) == ()
+    assert readiness(spec, freeze=mismatch) == (
         "freeze: Current instrument differs from the registered freeze",
     )
-    unsigned = readiness(spec, ITEMS, freeze=lambda: _freeze(spec, signer=None))
+    unsigned = readiness(spec, freeze=lambda: _freeze(spec, signer=None))
     assert unsigned == ("freeze: not signed",)
     other_items = _freeze(spec, item_ids=spec.item_ids[1:])
-    assert readiness(spec, ITEMS, freeze=lambda: other_items) == (
+    assert readiness(spec, freeze=lambda: other_items) == (
         "freeze: items differ from the frozen pool",
     )
     other_id = _freeze(spec, freeze_id="freeze-other")
-    assert readiness(spec, ITEMS, freeze=lambda: other_id) == (
+    assert readiness(spec, freeze=lambda: other_id) == (
         "freeze: specification names 'freeze-test'",
     )
     other_seed = _freeze(spec, scheduler_seed=9)
-    assert readiness(spec, ITEMS, freeze=lambda: other_seed) == (
+    assert readiness(spec, freeze=lambda: other_seed) == (
         "freeze: scheduler seed differs from the freeze",
     )
     one_card = spec.model_copy(update={"suts": spec.suts[:1]})
     assert "freeze: cards differ from the primary serving cards" in readiness(
-        one_card, ITEMS, freeze=lambda: _freeze(one_card)
+        one_card, freeze=lambda: _freeze(one_card)
     )
 
 
 def test_preview_renders_one_block_without_a_provider() -> None:
     item = ITEMS[0]
 
-    record = preview(item)
+    record = preview(block_items(Track.MAIN)[item.item_id])
 
     assert (len(record.drafts), len(record.branches)) == (3, 9)
     stages = {branch.snapshot.stage for branch in record.branches}

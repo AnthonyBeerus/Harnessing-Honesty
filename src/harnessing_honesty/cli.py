@@ -12,7 +12,6 @@ from harnessing_honesty.runtime.episode import (
     run_episode,
     run_multi_turn_episode,
     run_pressured_episode,
-    run_shared_draft_episode,
 )
 from harnessing_honesty.domain import (
     AnswerResponse,
@@ -22,38 +21,17 @@ from harnessing_honesty.domain import (
     ParseFailure,
     ProtocolFailure,
     ProviderFailure,
-    ScenarioRecord,
 )
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 from harnessing_honesty.runtime.policies import (
     DEVELOPMENT_VERIFIER_OUTPUT,
-    confirmatory_ceiling_output,
     development_policy_templates,
 )
 from harnessing_honesty.runtime.pressures import (
     PROPOSITION_MARKERS,
     development_pressure_templates,
     wrap_false_counter_position,
-)
-from harnessing_honesty.evaluation.fixtures.scenarios import (
-    DEVELOPMENT_LOGIC_SMOKE_COUNTER_POSITION,
-    DEVELOPMENT_LOGIC_SMOKE_FACTS,
-    DEVELOPMENT_LOGIC_SMOKE_GOAL,
-    DEVELOPMENT_LOGIC_SMOKE_RULES,
-    DEVELOPMENT_PIPELINE_EDGES,
-    DEVELOPMENT_PIPELINE_COUNTER_POSITION,
-    DEVELOPMENT_PIPELINE_TEST_NODES,
-    DEVELOPMENT_PIPELINE_TRAIN_NODES,
-    DEVELOPMENT_PROGRAM_COUNTER_POSITION,
-    DEVELOPMENT_PROGRAM_ENV,
-    DEVELOPMENT_PROGRAM_STATEMENTS,
-    DEVELOPMENT_SYSTEMS_COUNTER_POSITION,
-    DEVELOPMENT_SYSTEMS_OPERATIONS,
-    development_logic_scenario,
-    development_pipeline_scenario,
-    development_program_scenario,
-    development_systems_scenario,
 )
 from harnessing_honesty.scoring import Score, score_episode
 
@@ -398,144 +376,68 @@ def show_freeze() -> None:
     print(f"signer: {freeze.signer}")
 
 
-def _checked_live_family_scenario(family: str) -> ScenarioRecord:
-    """Return an excluded fixture after its two repository oracles agree."""
-    from harnessing_honesty.compiler.dual import agree
-    from harnessing_honesty.compiler.oracles import (
-        entailed,
-        entailed_alt,
-        has_leakage,
-        has_leakage_alt,
-        linearizable_by_extensions,
-        linearizable_by_search,
-        run_ast,
-        run_stepper,
-    )
-
-    if family == "systems":
-        valid = agree(
-            linearizable_by_search,
-            linearizable_by_extensions,
-            DEVELOPMENT_SYSTEMS_OPERATIONS,
-        )
-        scenario = development_systems_scenario()
-    elif family == "pipelines":
-        valid = not agree(
-            has_leakage,
-            has_leakage_alt,
-            DEVELOPMENT_PIPELINE_EDGES,
-            DEVELOPMENT_PIPELINE_TEST_NODES,
-            DEVELOPMENT_PIPELINE_TRAIN_NODES,
-        )
-        scenario = development_pipeline_scenario()
-    elif family == "programs":
-        valid = agree(
-            run_ast,
-            run_stepper,
-            DEVELOPMENT_PROGRAM_STATEMENTS,
-            DEVELOPMENT_PROGRAM_ENV,
-        ) == 5
-        scenario = development_program_scenario()
-    elif family == "logic":
-        valid = agree(
-            entailed,
-            entailed_alt,
-            DEVELOPMENT_LOGIC_SMOKE_FACTS,
-            DEVELOPMENT_LOGIC_SMOKE_RULES,
-            DEVELOPMENT_LOGIC_SMOKE_GOAL,
-        )
-        scenario = development_logic_scenario()
-    else:
-        raise SystemExit(f"family smoke is not available for {family!r}")
-    if not valid:
-        raise SystemExit(f"excluded {family} fixture failed its independent oracles")
-    return scenario
-
-
-def run_live_policy_path(
-    config_paths: list[str],
+def run_development_block(
+    card: str,
+    family: str,
     confirmed_requests: int,
-    family: str = "systems",
     runs_root: Path | None = None,
 ) -> None:
-    """Run one excluded family pressure through all policies and SUTs."""
+    """Run one excluded development case on one card through the collector.
+
+    The block goes through the same specification, readiness check, worker
+    process, recording and resume as a collection; only the item is excluded
+    material. Paid: refuses unless the 13 planned calls are confirmed.
+    """
+    import time
+    from datetime import datetime, timezone
+
+    from harnessing_honesty.domain.enums import Track
+    from harnessing_honesty.evaluation.collection import (
+        build_spec,
+        collection_status,
+        launch,
+        readiness,
+        start_collection,
+    )
+    from harnessing_honesty.evaluation.fixtures.scenarios import (
+        checked_development_blocks,
+    )
     from harnessing_honesty.models.config import load_run_config
-    from harnessing_honesty.runtime.live import RUNS_ROOT, open_recorded_client, run_id
-    from harnessing_honesty.runtime.policies import policy_follow_ups
+    from harnessing_honesty.runtime.live import RUNS_ROOT
 
-    expected_requests = 5 * len(config_paths)
-    if confirmed_requests != expected_requests:
+    scenario = checked_development_blocks()[family][0]
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    spec = build_spec(
+        f"dev-{family}-{stamp}",
+        Track.DEV,
+        (card,),
+        (scenario.prompt.id,),
+        scheduler_seed=load_run_config(Path(card)).scheduler_seed,
+    )
+    if confirmed_requests != spec.planned_calls:
         raise SystemExit(
-            f"refusing live run: pass --confirm-paid-requests {expected_requests}"
+            f"refusing live run: pass --confirm-paid-requests {spec.planned_calls}"
         )
-    scenario = _checked_live_family_scenario(family)
-    if family == "systems":
-        counter_position = DEVELOPMENT_SYSTEMS_COUNTER_POSITION
-        report = confirmatory_ceiling_output(
-            evidence_ids=("history:Kestrel:operations",),
-            supported=True,
-            witness_id="sequential-order:B,A,C",
-        )
-    elif family == "pipelines":
-        counter_position = DEVELOPMENT_PIPELINE_COUNTER_POSITION
-        report = confirmatory_ceiling_output(
-            evidence_ids=("dag:Finch",),
-            supported=True,
-            witness_id="no-held-out-to-training-path",
-        )
-    elif family == "programs":
-        counter_position = DEVELOPMENT_PROGRAM_COUNTER_POSITION
-        report = confirmatory_ceiling_output(
-            evidence_ids=("trace:Lark",),
-            supported=True,
-            witness_id="return:5",
-        )
-    elif family == "logic":
-        counter_position = DEVELOPMENT_LOGIC_SMOKE_COUNTER_POSITION
-        report = confirmatory_ceiling_output(
-            evidence_ids=("entail:Mica",),
-            supported=True,
-            witness_id="chain:signed-approved-release",
-        )
-    else:
-        raise SystemExit(f"policy-path smoke is not available for {family!r}")
-    pressure = wrap_false_counter_position(counter_position)[0].text
-
-    for config_path in config_paths:
-        path = Path(config_path)
-        config = load_run_config(path)
-        client, session = open_recorded_client(
-            config,
-            runs_root or RUNS_ROOT,
-            run_id("policy-path", path),
-            PydanticAIModelClient.from_manifest,
-        )
-        record = run_shared_draft_episode(
-            scenario.prompt,
-            pressure,
-            policy_follow_ups(report),
-            client,
-            MULTI_TURN_SEED,
-        )
-        results = [record.shared.result]
-        if record.draft is not None:
-            results.append(record.draft.result)
-        results.extend(branch.snapshot.result for branch in record.branches)
-
-        print(f"=== {config.serving.requested_model} ===")
-        for label, result in zip(
-            ("neutral", "draft", "none", "intrinsic", "tool"),
-            results,
-            strict=False,
-        ):
-            print(f"{label}: ", end="")
-            _print_result(result)
-        session.close()
-        print(f"recorded: {session.run_dir}")
-        if len(results) != 5:
-            raise SystemExit(1)
-        if not all(isinstance(result, AnswerSuccess) for result in results):
-            raise SystemExit(1)
+    findings = readiness(spec)
+    if findings:
+        raise SystemExit("not ready: " + "; ".join(findings))
+    directory = start_collection(runs_root or RUNS_ROOT, spec)
+    launch(directory, approved_calls=spec.planned_calls, client="live")
+    print(f"collection: {directory}")
+    started = time.monotonic()
+    while True:
+        time.sleep(2)
+        status = collection_status(directory)
+        if status.complete:
+            break
+        if status.owner is None and time.monotonic() - started > 30:
+            log = (directory / "worker.log").read_text(encoding="utf-8")
+            raise SystemExit(f"worker ended before completion:\n{log}")
+    sut = status.suts[0]
+    print(
+        f"complete: {sut.attempts} attempts, "
+        f"{sut.indeterminate_attempts} indeterminate"
+    )
 
 
 def run_serving_smoke(
@@ -554,7 +456,11 @@ def run_serving_smoke(
         )
     ceiling = len(config_paths) * (1 + PARSE_RETRIES + PROVIDER_RETRIES)
     print(f"{len(config_paths)} logical calls; at most {ceiling} HTTP attempts")
-    prompt = _checked_live_family_scenario("systems").prompt
+    from harnessing_honesty.evaluation.fixtures.scenarios import (
+        checked_development_blocks,
+    )
+
+    prompt = checked_development_blocks()["systems"][0].prompt
     failed = False
     for config_path in config_paths:
         path = Path(config_path)
@@ -602,18 +508,15 @@ def main() -> None:
     freeze_parser = subcommands.add_parser("show-freeze")
     freeze_parser.set_defaults(command=show_freeze)
 
-    policy_path_parser = subcommands.add_parser("run-live-policy-path")
-    policy_path_parser.add_argument(
-        "--config", action="append", default=None,
-        help="serving card; repeat once per SUT",
-    )
-    policy_path_parser.add_argument(
+    block_parser = subcommands.add_parser("run-development-block")
+    block_parser.add_argument("--config", required=True, help="one serving card")
+    block_parser.add_argument(
         "--family",
         choices=("systems", "pipelines", "programs", "logic"),
         default="systems",
     )
-    policy_path_parser.add_argument("--confirm-paid-requests", type=int, required=True)
-    policy_path_parser.set_defaults(command=run_live_policy_path)
+    block_parser.add_argument("--confirm-paid-requests", type=int, required=True)
+    block_parser.set_defaults(command=run_development_block)
 
     smoke_parser = subcommands.add_parser("run-serving-smoke")
     smoke_parser.add_argument(
@@ -625,12 +528,8 @@ def main() -> None:
 
     arguments = parser.parse_args()
     command = arguments.command
-    if command is run_live_policy_path:
-        command(
-            arguments.config or list(PRIMARY_LIVE_CONFIGS),
-            arguments.confirm_paid_requests,
-            arguments.family,
-        )
+    if command is run_development_block:
+        command(arguments.config, arguments.family, arguments.confirm_paid_requests)
     elif command is run_serving_smoke:
         command(
             arguments.config or list(PRIMARY_LIVE_CONFIGS),
