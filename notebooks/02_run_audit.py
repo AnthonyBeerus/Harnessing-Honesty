@@ -28,6 +28,7 @@
 from collections import Counter
 from pathlib import Path
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.analysis.reconstruct import (
     loop_record_from_run,
     matrix_record_from_run,
@@ -37,9 +38,7 @@ from harnessing_honesty.domain.matrix import development_conditions
 from harnessing_honesty.observability.integrity import check_integrity
 from harnessing_honesty.observability.reconstruct import reconstruct_run
 
-root = next(path for path in (Path.cwd(), *Path.cwd().parents)
-            if (path / "pyproject.toml").is_file()
-            and (path / "config/freeze.json").is_file())
+root = REPO_ROOT
 run_directory = None  # Set an explicit Path relative to the repository root.
 run_path = None if run_directory is None else root / run_directory
 attempts = issues = ()  # filled below once a run is selected

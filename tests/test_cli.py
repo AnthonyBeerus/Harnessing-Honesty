@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from harnessing_honesty import cli
+from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess
 from harnessing_honesty.models.fake import ScriptedModelClient
 
@@ -16,7 +17,7 @@ def test_serving_smoke_refuses_dispatch_without_exact_confirmation(
     monkeypatch.setattr(cli.PydanticAIModelClient, "from_manifest", pytest.fail)
 
     with pytest.raises(SystemExit, match="confirm-paid-requests 3"):
-        cli.run_serving_smoke(list(cli.PRIMARY_LIVE_CONFIGS), 4, runs_root=tmp_path)
+        cli.run_serving_smoke(list(PRIMARY_SERVING_CARDS), 4, runs_root=tmp_path)
 
     assert not tmp_path.joinpath("dev").exists()
 
@@ -31,7 +32,7 @@ def test_serving_smoke_records_one_request_per_sut(
         cli.PydanticAIModelClient, "from_manifest", lambda _m: ScriptedModelClient([yes])
     )
 
-    cli.run_serving_smoke(list(cli.PRIMARY_LIVE_CONFIGS), 3, runs_root=tmp_path)
+    cli.run_serving_smoke(list(PRIMARY_SERVING_CARDS), 3, runs_root=tmp_path)
 
     runs = sorted((tmp_path / "dev").iterdir())
     assert len(runs) == 3

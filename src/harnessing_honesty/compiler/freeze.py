@@ -7,6 +7,7 @@ from typing import ClassVar
 
 from pydantic import BaseModel, ConfigDict
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.compiler.construction import (
     ConstructionConfig,
     load_construction_config,
@@ -121,9 +122,8 @@ def primary_serving_digest() -> str:
     the confirmatory serving identity.
     """
     materials: list[dict[str, object]] = []
-    root = Path(__file__).resolve().parents[3]
     for path in PRIMARY_SERVING_CARDS:
-        serving = load_run_config(root / path).serving
+        serving = load_run_config(REPO_ROOT / path).serving
         materials.append(serving.material())
     materials.sort(key=lambda row: str(row["requested_model"]))
     return config_hash({"primary_serving": materials})
@@ -196,7 +196,7 @@ def accepted_freeze() -> FreezeManifest:
     """Return stored approval only when current construction matches it [28]."""
     # A post-registration change remains distinguishable from the prospective
     # specification only when the deviation is made explicit [28].
-    path = Path(__file__).resolve().parents[3] / "config" / "freeze.json"
+    path = REPO_ROOT / "config" / "freeze.json"
     registered = FreezeManifest.model_validate_json(path.read_text(encoding="utf-8"))
     unsigned = build_freeze(
         sign_off_pool(confirmatory_pool()),

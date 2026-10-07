@@ -7,10 +7,11 @@ from typing import ClassVar, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.domain.enums import TaskFamily
 
 DEFAULT_CONSTRUCTION_PATH = (
-    Path(__file__).resolve().parents[3] / "config" / "construction.json"
+    REPO_ROOT / "config" / "construction.json"
 )
 
 

@@ -30,6 +30,7 @@
 # %%
 from pathlib import Path
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.analysis.bootstrap import Contrast
 from harnessing_honesty.analysis.power import (
     DEFAULT_ASSESSMENT,
@@ -44,9 +45,7 @@ from harnessing_honesty.analysis.power import (
     assessment_csv,
 )
 
-root = next(path for path in (Path.cwd(), *Path.cwd().parents)
-            if (path / "pyproject.toml").is_file()
-            and (path / "config/freeze.json").is_file())
+root = REPO_ROOT
 assessment_path = root / DEFAULT_ASSESSMENT
 
 # %% [markdown]

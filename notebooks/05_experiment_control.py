@@ -24,15 +24,14 @@
 # %%
 from pathlib import Path
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.evaluation import collection, workload
 from harnessing_honesty.runtime.live import RUNS_ROOT
 
-root = next(path for path in (Path.cwd(), *Path.cwd().parents)
-            if (path / "pyproject.toml").is_file()
-            and (path / "config/freeze.json").is_file())
+root = REPO_ROOT
 runs_root = root / RUNS_ROOT
 
 # %% [markdown]
@@ -164,4 +163,4 @@ if not (REQUEST_STOP or RESUME or CLEAR_PAUSE_CARD):
 # %%
 for sut in spec.suts:
     run_id = collection.sut_run_id(spec, sut.card)
-    print(f"run_directory = {Path(RUNS_ROOT) / TRACK.value / run_id}")
+    print(f"run_directory = {runs_root / TRACK.value / run_id}")

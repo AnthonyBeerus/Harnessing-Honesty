@@ -24,6 +24,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.compiler.freeze import (
     PRIMARY_SERVING_CARDS,
     FreezeManifest,
@@ -88,7 +89,6 @@ _RECORDED_PACKAGES = (
     "harnessing_honesty", "pydantic", "pydantic-ai", "openai", "httpx"
 )
 
-_ROOT = Path(__file__).resolve().parents[3]
 
 
 class SutEntry(BaseModel):
@@ -185,7 +185,7 @@ def build_spec(
         item_ids=item_ids,
         kinds=kinds,
         suts=tuple(
-            SutEntry(card=card, config_digest=load_run_config(_ROOT / card).digest())
+            SutEntry(card=card, config_digest=load_run_config(REPO_ROOT / card).digest())
             for card in cards
         ),
         environment=resolved_environment(),
@@ -194,7 +194,7 @@ def build_spec(
 
 def card_config(card: str) -> RunConfig:
     """The run configuration of a serving card, by its repository path."""
-    return load_run_config(_ROOT / card)
+    return load_run_config(REPO_ROOT / card)
 
 
 def selection(
@@ -245,7 +245,7 @@ def readiness(
         findings.append(f"items: not in the pool: {', '.join(unknown)}")
     for sut in spec.suts:
         try:
-            config = load_run_config(_ROOT / sut.card)
+            config = load_run_config(REPO_ROOT / sut.card)
         except (OSError, ValueError) as exc:
             findings.append(f"{sut.card}: unreadable: {exc}")
             continue
@@ -472,7 +472,7 @@ def _run(
     recorded: dict[str, tuple[tuple[DomainEvent, ...], list[_Block]]] = {}
     guards: dict[str, _PauseGuard] = {}
     for sut in spec.suts:
-        card = load_run_config(_ROOT / sut.card).model_dump()
+        card = load_run_config(REPO_ROOT / sut.card).model_dump()
         config = RunConfig.model_validate(
             {**card, "track": spec.track, "freeze_id": spec.freeze_id}
         )

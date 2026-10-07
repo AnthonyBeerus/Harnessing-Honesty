@@ -7,13 +7,14 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.domain.protocols import Clock, ModelClient
 from harnessing_honesty.models.config import RunConfig, ServingManifest
 from harnessing_honesty.models.retries import RetryingClient
 from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore
 
-RUNS_ROOT = Path("data/runs")
+RUNS_ROOT = REPO_ROOT / "data" / "runs"
 
 
 def run_id(kind: str, card: Path) -> str:

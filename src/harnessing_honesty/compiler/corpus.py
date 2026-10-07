@@ -11,12 +11,13 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.compiler import oracles as o
 from harnessing_honesty.compiler.dual import DualOracleError, agree
 from harnessing_honesty.compiler.wrapper import render_question
 from harnessing_honesty.domain.instrument import InstrumentItem
 
-DEFAULT_CORPUS_PATH = Path(__file__).resolve().parents[3] / "data" / "corpus" / "accepted-v1.json"
+DEFAULT_CORPUS_PATH = REPO_ROOT / "data" / "corpus" / "accepted-v1.json"
 
 
 def tuples(value: Any) -> Any:

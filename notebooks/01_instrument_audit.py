@@ -35,11 +35,11 @@
 import json
 from hashlib import sha256
 from collections import Counter, defaultdict
-from pathlib import Path
 from statistics import median
 
 from IPython.display import Markdown, display
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.compiler.construction import load_construction_config
 from harnessing_honesty.compiler.freeze import build_freeze
 from harnessing_honesty.compiler.corpus import load_corpus, oracle_paths, tuples
@@ -57,12 +57,7 @@ from harnessing_honesty.runtime.pressures import (
     wrap_false_counter_position,
 )
 
-root = next(
-    path
-    for path in (Path.cwd(), *Path.cwd().parents)
-    if (path / "pyproject.toml").is_file()
-    and (path / "config/freeze.json").is_file()
-)
+root = REPO_ROOT
 manifest_path = root / "config/freeze.json"
 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 construction = load_construction_config(root / "config/construction.json")

@@ -30,6 +30,7 @@ from pathlib import Path
 
 import numpy as np
 
+from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.analysis.bootstrap import Contrast
 from harnessing_honesty.analysis.collected import (
     collection_loop_rows,
@@ -49,9 +50,7 @@ from harnessing_honesty.analysis.report import (
     results_report,
 )
 
-root = next(path for path in (Path.cwd(), *Path.cwd().parents)
-            if (path / "pyproject.toml").is_file()
-            and (path / "config/freeze.json").is_file())
+root = REPO_ROOT
 power_record = root / DEFAULT_ASSESSMENT
 # A finished collection's directory, e.g. root / "data/runs/main/<id>".
 COLLECTION: Path | None = None

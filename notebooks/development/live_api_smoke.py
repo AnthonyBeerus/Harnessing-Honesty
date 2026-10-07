@@ -30,10 +30,11 @@
 # [the project bibliography](../../docs/references.md).
 
 # %%
-from pathlib import Path
 import subprocess
 import sys
 
+from harnessing_honesty import REPO_ROOT
+from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.evaluation.collection import (
     CALLS_PER_BLOCK,
@@ -43,14 +44,8 @@ from harnessing_honesty.evaluation.collection import (
 from harnessing_honesty.evaluation.fixtures.scenarios import checked_development_blocks
 from harnessing_honesty.models.config import load_run_config
 
-root = next(path for path in (Path.cwd(), *Path.cwd().parents)
-            if (path / "pyproject.toml").is_file()
-            and (path / "config/qualification.example.yaml").is_file())
-config_paths = [
-    root / "config/qualification.sonnet.anthropic.yaml",
-    root / "config/qualification.gpt4o.openai.yaml",
-    root / "config/qualification.gemma4.deepinfra.yaml",
-]
+root = REPO_ROOT
+config_paths = [root / card for card in PRIMARY_SERVING_CARDS]
 configs = [load_run_config(path) for path in config_paths]
 FAMILY: str = "logic"
 scenario = checked_development_blocks()[FAMILY][0]

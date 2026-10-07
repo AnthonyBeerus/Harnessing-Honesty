@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 
 from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
+from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.runtime.episode import (
     run_confirmatory_matrix,
@@ -31,11 +32,6 @@ from harnessing_honesty.runtime.pressures import (
 )
 
 LOOP_SEED = 0
-PRIMARY_LIVE_CONFIGS = (
-    "config/qualification.sonnet.anthropic.yaml",
-    "config/qualification.gpt4o.openai.yaml",
-    "config/qualification.gemma4.deepinfra.yaml",
-)
 
 
 def _print_messages(messages: tuple[Message, ...]) -> None:
@@ -439,7 +435,6 @@ def run_collection(
     worker and needs the planned call count confirmed; a live client sends
     paid requests.
     """
-    from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
     from harnessing_honesty.compiler.pool import confirmatory_pool
     from harnessing_honesty.domain.enums import Track
     from harnessing_honesty.evaluation import collection, workload
@@ -565,7 +560,7 @@ def main(argv: list[str] | None = None) -> None:
         command(arguments.config, arguments.family, arguments.confirm_paid_requests)
     elif command is run_serving_smoke:
         command(
-            arguments.config or list(PRIMARY_LIVE_CONFIGS),
+            arguments.config or list(PRIMARY_SERVING_CARDS),
             arguments.confirm_paid_requests,
         )
     elif command is qualify_live:
