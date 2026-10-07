@@ -14,6 +14,7 @@ from harnessing_honesty.evaluation import collection
 from harnessing_honesty.evaluation.collection import (
     CollectionSpec,
     block_schedule,
+    collection_status,
     execute,
     start_collection,
     sut_run_id,
@@ -103,6 +104,9 @@ def test_an_interrupted_collection_resumes_without_repeating_calls(
     tmp_path: Path,
 ) -> None:
     spec, directory = _interrupted(tmp_path)
+    status = collection_status(directory)
+    assert sum(sut.indeterminate_attempts for sut in status.suts) == 1
+    assert status.owner is None and not status.complete
     second: list[str] = []
 
     _execute(directory, spec, second)

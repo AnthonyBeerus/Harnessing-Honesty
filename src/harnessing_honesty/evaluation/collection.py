@@ -7,8 +7,16 @@ experiment-control notebook call these functions; neither holds its own
 procedure. See docs/architecture-boundaries.md, "Notebook operation".
 """
 
+import argparse
+import json
+import os
 import platform
-from collections.abc import Callable
+import socket
+import subprocess
+import sys
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
+from datetime import datetime, timezone
 from importlib.metadata import version
 from pathlib import Path
 from random import Random
@@ -34,7 +42,8 @@ from harnessing_honesty.domain.episodes import MatrixEpisodeRecord
 from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.domain.protocols import Clock, ModelClient
 from harnessing_honesty.models.config import RunConfig, ServingManifest, load_run_config
-from harnessing_honesty.models.fake import ScriptedModelClient
+from harnessing_honesty.models.fake import HashedAnswerClient, ScriptedModelClient
+from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 from harnessing_honesty.models.retries import RetryingClient, remaining_retries
 from harnessing_honesty.observability.hashing import request_hash
 from harnessing_honesty.observability.reconstruct import (
@@ -306,6 +315,19 @@ def execute(
         raise ValueError("collection is not ready: " + "; ".join(findings))
     if approved_calls != spec.planned_calls:
         raise ValueError(f"approve exactly {spec.planned_calls} calls")
+    with _owned(directory):
+        _run(directory, spec, schedule, items, client_factory, clock)
+
+
+def _run(
+    directory: Path,
+    spec: CollectionSpec,
+    schedule: tuple[Block, ...],
+    items: dict[str, InstrumentItem],
+    client_factory: Callable[[ServingManifest], ModelClient],
+    clock: Clock | None,
+) -> None:
+    """The body of ``execute``, run while this process owns the collection."""
     runs_root = directory.parents[1]
     sessions: dict[str, RunSession] = {}
     clients: dict[str, ModelClient] = {}
@@ -323,6 +345,9 @@ def execute(
         recorded[sut.card] = _recorded_blocks(session.run_dir)
     started = dict.fromkeys(sessions, 0)
     for block in schedule:
+        reason = stop_reason(directory)
+        if reason is not None:
+            raise CollectionStopped(reason)
         item = items[block.item_id]
         events, prior = recorded[block.card]
         index = started[block.card]
@@ -409,3 +434,189 @@ class _Replay:
         self._recorder.resume_call(str(last.call_id), len(attempts))
         self._retrying.resume(remaining)
         return self._retrying.complete(messages)
+
+
+class CollectionStopped(RuntimeError):
+    """Collection ended between blocks; its runs stay incomplete and resumable."""
+
+
+def stop_reason(directory: Path) -> str | None:
+    """Why no further block may start, or ``None``. Checked before every block."""
+    if (directory / "stop.json").exists():
+        return "stop requested"
+    return None
+
+
+def request_stop(directory: Path) -> None:
+    """Ask the owner to stop after its current block; in-flight calls finish."""
+    path = directory / "stop.json"
+    if not path.exists():
+        stamp = datetime.now(timezone.utc).isoformat()
+        write_new(path, json.dumps({"requested_at": stamp}))
+
+
+def clear_stop(directory: Path) -> None:
+    """Withdraw a stop request so the collection can be resumed."""
+    (directory / "stop.json").unlink(missing_ok=True)
+
+
+@contextmanager
+def _owned(directory: Path) -> Iterator[None]:
+    """Hold ``owner.json`` for the duration; a second owner is refused.
+
+    The file is created exclusively, so two processes cannot both own a
+    collection. It is removed when the owner ends normally or by exception.
+    A process killed outright leaves it; ``release_owner`` clears it.
+    """
+    path = directory / "owner.json"
+    record = {
+        "pid": os.getpid(),
+        "host": socket.gethostname(),
+        "started_at": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        handle = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError as exc:
+        owner = path.read_text(encoding="utf-8")
+        raise RuntimeError(f"collection is owned: {owner}") from exc
+    with os.fdopen(handle, "w", encoding="utf-8") as stream:
+        stream.write(json.dumps(record))
+        stream.flush()
+        os.fsync(stream.fileno())
+    try:
+        yield
+    finally:
+        path.unlink()
+
+
+def release_owner(directory: Path, pid: int) -> None:
+    """Clear the owner left by a process that no longer runs.
+
+    Liveness is not probed (on Windows, signalling a process to test it can
+    interrupt it); the caller names the pid it has confirmed is gone.
+    """
+    path = directory / "owner.json"
+    owner = json.loads(path.read_text(encoding="utf-8"))
+    if owner["pid"] != pid:
+        raise ValueError(f"owner is pid {owner['pid']}, not {pid}")
+    path.unlink()
+
+
+class SutProgress(BaseModel):
+    """One SUT's run as its files show it."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    card: str
+    scheduled_blocks: int
+    recorded_blocks: int
+    attempts: int
+    indeterminate_attempts: int
+    closed: bool
+
+
+class CollectionStatus(BaseModel):
+    """Collection state derived from durable files only, never from a kernel."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    collection_id: str
+    planned_calls: int
+    owner: dict[str, object] | None
+    stop_requested: bool
+    suts: tuple[SutProgress, ...]
+
+    @property
+    def complete(self) -> bool:
+        return all(sut.closed for sut in self.suts)
+
+
+def collection_status(directory: Path) -> CollectionStatus:
+    """Read progress, ownership and stop state from the collection directory."""
+    spec, schedule = load_collection(directory)
+    owner_path = directory / "owner.json"
+    owner = None
+    if owner_path.exists():
+        owner = json.loads(owner_path.read_text(encoding="utf-8"))
+    progress: list[SutProgress] = []
+    for sut in spec.suts:
+        run_dir = directory.parents[1] / spec.track.value / sut_run_id(spec, sut.card)
+        scheduled = sum(block.card == sut.card for block in schedule)
+        if not run_dir.exists():
+            progress.append(SutProgress(
+                card=sut.card, scheduled_blocks=scheduled, recorded_blocks=0,
+                attempts=0, indeterminate_attempts=0, closed=False,
+            ))
+            continue
+        rebuilt = reconstruct_run(run_dir)
+        attempts = rebuilt.attempts
+        progress.append(SutProgress(
+            card=sut.card,
+            scheduled_blocks=scheduled,
+            recorded_blocks=len({attempt.block_id for attempt in attempts}),
+            attempts=len(attempts),
+            indeterminate_attempts=sum(attempt.indeterminate for attempt in attempts),
+            closed=not rebuilt.interrupted,
+        ))
+    return CollectionStatus(
+        collection_id=spec.collection_id,
+        planned_calls=spec.planned_calls,
+        owner=owner,
+        stop_requested=stop_reason(directory) is not None,
+        suts=tuple(progress),
+    )
+
+
+_CLIENTS: dict[str, Callable[[ServingManifest], ModelClient]] = {
+    "synthetic": lambda serving: HashedAnswerClient(),
+    "live": PydanticAIModelClient.from_manifest,
+}
+
+
+def launch(directory: Path, *, approved_calls: int, client: str) -> CollectionStatus:
+    """Start one worker process for the collection, or report why not.
+
+    An owned or finished collection is reported, not started again, so a
+    repeated launch cannot duplicate an experiment. The worker is detached
+    from the caller (a notebook kernel may end without ending it) and writes
+    its output to ``worker.log``. ``client`` is ``synthetic`` or ``live``.
+    """
+    if client not in _CLIENTS:
+        raise ValueError(f"client must be one of {sorted(_CLIENTS)}")
+    status = collection_status(directory)
+    if status.owner is not None or status.complete:
+        return status
+    command = [
+        sys.executable, "-m", "harnessing_honesty.evaluation.collection",
+        str(directory), "--approved-calls", str(approved_calls), "--client", client,
+    ]
+    flags = 0
+    if os.name == "nt":
+        flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
+    with (directory / "worker.log").open("a", encoding="utf-8") as log:
+        subprocess.Popen(
+            command, stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+            creationflags=flags, start_new_session=os.name != "nt",
+        )
+    return status
+
+
+def main() -> None:
+    """Worker entry: ``python -m harnessing_honesty.evaluation.collection DIR``."""
+    parser = argparse.ArgumentParser(description=main.__doc__)
+    parser.add_argument("directory", type=Path)
+    parser.add_argument("--approved-calls", type=int, required=True)
+    parser.add_argument("--client", choices=sorted(_CLIENTS), required=True)
+    args = parser.parse_args()
+    try:
+        execute(
+            args.directory, _CLIENTS[args.client], approved_calls=args.approved_calls
+        )
+    except CollectionStopped as stopped:
+        print(f"stopped: {stopped}")
+        return
+    print("complete")
+
+
+if __name__ == "__main__":
+    main()

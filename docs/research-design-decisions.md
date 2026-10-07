@@ -693,3 +693,23 @@ DBOS resumes from the last completed step [106], so an interrupted model call
 would run again without record of the first attempt; neither was adopted.
 Moving `recorded_result` out of the analysis package changes the analysis
 code hash; the power record is re-recorded after the collected-row loader.
+
+## 2026-10-07 — Collection worker, ownership and stop
+
+`execute` holds `owner.json` (process id, host, start time) while it runs. The
+file is created exclusively, so two processes cannot own one collection, and
+is removed when the owner ends normally or by exception. A process killed
+outright leaves it; `release_owner` clears it only when given that process
+id. Liveness is not probed, since on Windows signalling a process to test it
+can interrupt it. `request_stop` writes `stop.json`; `stop_reason` is checked
+before every block, so a stop ends collection between blocks with no call
+left in flight, and the runs stay incomplete and resumable after
+`clear_stop`. `collection_status` reads ownership, the stop request and each
+SUT's recorded blocks, attempts, indeterminate attempts and closure from the
+files alone. `launch` starts one worker process detached from its caller, so
+a notebook kernel can end without ending collection; an owned or finished
+collection is reported rather than started again. The worker's client is
+`synthetic` (`HashedAnswerClient`, an offline answer fixed by the request
+hash) or `live`. A status read while the worker appends can meet an
+unfinished final line and raise; reading again succeeds. A final line left
+unfinished by a hard kill is still reported unreadable and blocks resume.
