@@ -811,3 +811,22 @@ process, recording and resume; it refuses unless its 13 planned calls are
 confirmed. It replaces `run-live-policy-path`, the five-call shared-draft
 smoke that could not be rebuilt from its run directory, and the development
 smoke notebook now calls it for each SUT.
+
+## 2026-10-07 — Excluded development block through the complete collector
+
+Approved by the researcher, `run-development-block` at `70b628b` sent the
+excluded systems case `dev-exclude-001` to Gemma 4 26B on OpenRouter pinned
+to DeepInfra as a one-item development collection: specification, readiness,
+detached worker, recording. All 13 calls answered on their first attempt
+(13 attempts, none indeterminate), the worker logged completion and the run
+closed. Read back from the run directory alone: no integrity issue; every
+call labelled with the item, in one block; observed model
+`google/gemma-4-26b-a4b-it`, snapshot `google/gemma-4-26b-a4b-it-20260403`,
+endpoint DeepInfra, no cache status, zero reasoning tokens; every raw answer
+parsed again to its recorded outcome; the matrix rebuilt with three drafts
+and nine finals, dispatched in the order the scheduled order seed implies;
+3,029 input and 26 output tokens; recorded cost $0.00022087. The
+specification records Python 3.12.3, pydantic 2.13.4, pydantic-ai 1.107.1,
+openai 2.53.0 and httpx 0.28.1. The answers establish only that the path
+works, not anything about the hypotheses. Evidence is git-ignored under
+`data/runs/dev/dev-systems-20261007T095209Z`.
