@@ -8,33 +8,23 @@ supplies a value.
 from pathlib import Path
 
 from harnessing_honesty.analysis.rows import AnalysisRow, exclusion_reason
-from harnessing_honesty.domain import (
-    AnswerResponse,
-    AnswerSuccess,
-    Message,
-    ModelResult,
-    ParseFailure,
-    ProtocolFailure,
-    ProviderFailure,
-    normalize_binary_answer,
-)
+from harnessing_honesty.domain import Message
 from harnessing_honesty.domain.condition import Condition
-from harnessing_honesty.domain.enums import Failure, PolicyFamily, PressureFamily, Stage
+from harnessing_honesty.domain.enums import PolicyFamily, PressureFamily, Stage
 from harnessing_honesty.domain.episodes import (
     MatrixBranchRecord,
     MatrixDraftRecord,
     MatrixEpisodeRecord,
     StageSnapshot,
 )
-from harnessing_honesty.domain.events import (
-    DomainEvent,
-    RequestFailed,
-    RequestSent,
-    ResponseReceived,
-)
+from harnessing_honesty.domain.events import RequestSent
 from harnessing_honesty.domain.matrix import development_conditions
 from harnessing_honesty.observability.integrity import require_integrity
-from harnessing_honesty.observability.reconstruct import reconstruct_run, saved_request
+from harnessing_honesty.observability.reconstruct import (
+    reconstruct_run,
+    recorded_result,
+    saved_request,
+)
 from harnessing_honesty.scoring import MatrixEpisodeScore
 
 
@@ -124,7 +114,7 @@ def _matrix_record(run_dir: Path, block_id: str | None) -> MatrixEpisodeRecord:
         stage = Stage(request.stage)
         messages = _saved_request(run_dir, request)
         outcome = events[sequence + 1] if sequence + 1 < len(events) else None
-        result = _result(outcome, messages)
+        result = recorded_result(outcome, messages)
         if stage is Stage.NEUTRAL:
             if shared is not None:
                 raise ValueError("block has more than one neutral call")
@@ -169,29 +159,3 @@ def _saved_request(run_dir: Path, request: RequestSent) -> tuple[Message, ...]:
     if len(messages) != request.requested_message_count:
         raise ValueError(f"request {request.request_hash} has the wrong message count")
     return messages
-
-
-def _result(
-    outcome: DomainEvent | None, messages: tuple[Message, ...]
-) -> ModelResult | None:
-    """Re-derive a result: parse raw text again; keep transport failures.
-
-    Provider and protocol failures are recorded serving facts, not scores.
-    Interrupted or absent outcomes are indeterminate and return ``None``.
-    """
-    if isinstance(outcome, RequestFailed) and outcome.failure is Failure.PROVIDER:
-        return ProviderFailure(detail=outcome.detail)
-    if isinstance(outcome, RequestFailed) and outcome.failure is Failure.PROTOCOL:
-        return ProtocolFailure(detail=outcome.detail)
-    if not isinstance(outcome, ResponseReceived | RequestFailed):
-        return None
-    raw = outcome.raw_response
-    answer = None if raw is None else normalize_binary_answer(raw)
-    if raw is None or answer is None:
-        return ParseFailure(detail="reconstructed: not yes or no", raw_response=raw)
-    return AnswerSuccess(
-        response=AnswerResponse(answer=answer),
-        raw_response=raw,
-        requested_message_count=len(messages),
-        observed_message_count=getattr(outcome, "observed_message_count", None),
-    )

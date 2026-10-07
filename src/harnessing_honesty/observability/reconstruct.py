@@ -6,6 +6,14 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, TypeAdapter
 
 from harnessing_honesty.domain.enums import Failure, RecordStatus
+from harnessing_honesty.domain.responses import AnswerResponse
+from harnessing_honesty.domain.results import (
+    AnswerSuccess,
+    ModelResult,
+    ParseFailure,
+    ProtocolFailure,
+    ProviderFailure,
+)
 from harnessing_honesty.domain.events import (
     AttemptInterrupted,
     DomainEvent,
@@ -179,3 +187,29 @@ def reconstruct_run(run_dir: Path) -> ReconstructedRun:
     if events and events[0].run_id != record.run_id:
         raise ValueError("event run_id does not match summary")
     return ReconstructedRun(record, tuple(events))
+
+
+def recorded_result(
+    outcome: DomainEvent | None, messages: tuple[Message, ...]
+) -> ModelResult | None:
+    """Re-derive a result: parse raw text again; keep transport failures.
+
+    Provider and protocol failures are recorded serving facts, not scores.
+    Interrupted or absent outcomes are indeterminate and return ``None``.
+    """
+    if isinstance(outcome, RequestFailed) and outcome.failure is Failure.PROVIDER:
+        return ProviderFailure(detail=outcome.detail)
+    if isinstance(outcome, RequestFailed) and outcome.failure is Failure.PROTOCOL:
+        return ProtocolFailure(detail=outcome.detail)
+    if not isinstance(outcome, ResponseReceived | RequestFailed):
+        return None
+    raw = outcome.raw_response
+    answer = None if raw is None else normalize_binary_answer(raw)
+    if raw is None or answer is None:
+        return ParseFailure(detail="reconstructed: not yes or no", raw_response=raw)
+    return AnswerSuccess(
+        response=AnswerResponse(answer=answer),
+        raw_response=raw,
+        requested_message_count=len(messages),
+        observed_message_count=getattr(outcome, "observed_message_count", None),
+    )
