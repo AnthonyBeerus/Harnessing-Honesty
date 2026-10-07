@@ -10,13 +10,6 @@ from harnessing_honesty.observability.store import FilesystemRecordStore
 _EVENT_ADAPTER = TypeAdapter(DomainEvent)
 
 
-class NullSink:
-    """Default sink. Records nothing."""
-
-    def emit(self, event: SequencedEvent) -> None:
-        return None
-
-
 class JsonlEventSink:
     """Assigns and checks sequence. Persists one JSON object per line."""
 

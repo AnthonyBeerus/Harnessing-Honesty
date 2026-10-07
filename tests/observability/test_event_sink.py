@@ -126,7 +126,6 @@ def test_reconstruct_a_fake_matrix_from_files(tmp_path: Path) -> None:
     rebuilt = reconstruct_run(store.run_dir("matrix-1"))
 
     assert rebuilt.record.status is RecordStatus.COMPLETE
-    assert rebuilt.complete_calls == 13
     assert len(record.branches) == 9
     kinds = [event.kind for event in rebuilt.events]
     assert kinds[0] == "run_started"

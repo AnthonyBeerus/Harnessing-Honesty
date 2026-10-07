@@ -39,7 +39,7 @@ from harnessing_honesty.observability.integrity import (
 )
 from harnessing_honesty.observability.reconstruct import reconstruct_run, saved_request
 from harnessing_honesty.observability.redact import redact_text
-from harnessing_honesty.observability.sink import JsonlEventSink, NullSink
+from harnessing_honesty.observability.sink import JsonlEventSink
 from harnessing_honesty.observability.store import (
     FilesystemRecordStore,
     set_aside_tail,
@@ -373,13 +373,3 @@ class RecordingModelClient:
             "usage": evidence.usage,
             "envelope_ref": ref,
         }
-
-
-def maybe_wrap(
-    client: object,
-    sink: object | None,
-) -> object:
-    """Keep existing runners working when no durable sink is supplied."""
-    if sink is None or isinstance(sink, NullSink):
-        return client
-    return sink

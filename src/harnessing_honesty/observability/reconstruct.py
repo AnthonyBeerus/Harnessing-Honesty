@@ -155,14 +155,6 @@ class ReconstructedRun:
         return tuple(records)
 
     @property
-    def complete_calls(self) -> int:
-        return sum(
-            1
-            for event in self.events
-            if event.kind in {"request_sent"}
-        )
-
-    @property
     def interrupted(self) -> bool:
         return self.record.status is RecordStatus.INCOMPLETE
 
