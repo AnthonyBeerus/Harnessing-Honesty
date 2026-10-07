@@ -399,6 +399,7 @@ def run_development_block(
         readiness,
         start_collection,
     )
+    from harnessing_honesty.evaluation import collection
     from harnessing_honesty.evaluation.fixtures.scenarios import (
         checked_development_blocks,
     )
@@ -431,7 +432,7 @@ def run_development_block(
         if status.complete:
             break
         if status.owner is None and time.monotonic() - started > 30:
-            log = (directory / "worker.log").read_text(encoding="utf-8")
+            log = collection.worker_logs(directory)[-1].read_text(encoding="utf-8")
             raise SystemExit(f"worker ended before completion:\n{log}")
     sut = status.suts[0]
     print(

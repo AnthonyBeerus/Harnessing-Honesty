@@ -135,7 +135,7 @@ Validate and Preview are implemented in `evaluation/collection.py`
 `collection_status`, `request_stop`/`clear_stop` and `clear_pause` over the
 persisted block schedule (`start_collection`, `execute`). `launch` starts one
 detached worker process (`python -m harnessing_honesty.evaluation.collection`)
-writing to `worker.log`. The experiment-control notebook,
+writing to its own `worker-{time}.log`. The experiment-control notebook,
 `notebooks/05_experiment_control.py`, calls these functions and
 `start_or_reuse`; the CLI's `collection-plan`, `collection-launch`,
 `collection-status`, `collection-stop`, `collection-resume` and

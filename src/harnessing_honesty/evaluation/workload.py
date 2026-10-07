@@ -20,6 +20,7 @@ from harnessing_honesty.evaluation.collection import (
     block_items,
     card_config,
     collection_status,
+    worker_logs,
     preview,
     readiness,
 )
@@ -231,7 +232,8 @@ def status_text(directory: Path) -> str:
                 f"{'':48} {usage.input_tokens} in, {usage.output_tokens} out, "
                 f"{usage.cost:.6f} credits"
             )
-    log = directory / "worker.log"
-    if log.is_file():
-        lines.append("Worker log: " + log.read_text(encoding="utf-8")[-500:])
+    logs = worker_logs(directory)
+    if logs:
+        tail = logs[-1].read_text(encoding="utf-8")[-500:]
+        lines.append(f"Worker log {logs[-1].name} ({len(logs)} in all): {tail}")
     return "\n".join(lines)

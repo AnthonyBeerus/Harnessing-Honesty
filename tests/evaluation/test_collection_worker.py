@@ -20,6 +20,7 @@ from harnessing_honesty.evaluation.collection import (
     request_stop,
     start_collection,
     sut_run_id,
+    worker_logs,
 )
 from harnessing_honesty.models.config import ServingManifest
 from harnessing_honesty.models.fake import HashedAnswerClient
@@ -82,7 +83,7 @@ def test_a_collection_has_one_owner(tmp_path: Path) -> None:
             _execute(directory)
         status = launch(directory, approved_calls=78, client="synthetic")
         assert status.owner is not None
-        assert not (directory / "worker.log").exists()
+        assert worker_logs(directory) == []
 
     assert collection_status(directory).owner is None
 
@@ -106,14 +107,15 @@ def test_the_worker_runs_detached_and_a_repeated_launch_reports(tmp_path: Path) 
     # Generous: process start can stall while the machine is busy.
     deadline = time.monotonic() + 300
     while not collection_status(directory).complete:
-        assert time.monotonic() < deadline, (directory / "worker.log").read_text()
+        assert time.monotonic() < deadline, worker_logs(directory)
         time.sleep(0.2)
 
-    log = (directory / "worker.log").read_text(encoding="utf-8")
+    logs = worker_logs(directory)
+    log = logs[-1].read_text(encoding="utf-8")
     assert log.strip().endswith("complete")
     again = launch(directory, approved_calls=spec.planned_calls, client="synthetic")
     assert again.complete
-    assert (directory / "worker.log").read_text(encoding="utf-8") == log
+    assert worker_logs(directory) == logs
     answers = set()
     for sut in spec.suts:
         run_dir = tmp_path / "dev" / sut_run_id(spec, sut.card)

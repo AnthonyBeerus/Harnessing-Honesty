@@ -876,3 +876,26 @@ dispatch nothing. `collection-launch` and `collection-resume` refuse unless
 collection through `start_or_reuse`, and start one worker; `--client live`
 sends paid requests. `collection-stop` and `collection-clear-pause` act only
 on the collection's stop and pause files.
+
+## 2026-10-07 — Notebook and CLI equivalence
+
+`tests/test_notebook_cli_equivalence.py` launches the same synthetic
+selection once through the experiment-control notebook and once through the
+CLI, each by its own worker process, and compares the records from their
+files: the specifications differ only in collection id, the schedules are
+equal, and for every SUT the attempts (call, attempt, block, stage, cell,
+item, request hash, parent, prefix, outcome, raw text), the saved request
+bytes and the rebuilt analysis rows are identical apart from the run id.
+Re-running the notebook reconnects by collection id and reads the same
+status. A worker killed mid-collection leaves its owner file; once that
+process id is released, `collection-resume` completes the collection, and
+every call ends answered, with any earlier attempt of it indeterminate. Two
+launches at once leave one owner: the second worker refuses because the
+collection is owned or already complete, and each SUT records each call
+once. A launch under a stop request dispatches nothing, and the default
+notebook constructs no live client. The worker path uses the clean synthetic
+client, so retries through it are covered by the in-process synthetic
+experiment rather than here. Two defects these tests found are fixed: a
+status read could meet a run directory whose summary was not yet written,
+and two workers appending to one log could overwrite each other's lines on
+Windows, so each launch now writes its own `worker-{time}.log`.

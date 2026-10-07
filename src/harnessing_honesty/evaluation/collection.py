@@ -747,7 +747,8 @@ def collection_status(directory: Path) -> CollectionStatus:
         run_dir = directory.parents[1] / spec.track.value / sut_run_id(spec, sut.card)
         scheduled = sum(block.card == sut.card for block in schedule)
         paused = _paused(directory, sut.card)
-        if not run_dir.exists():
+        # A run whose summary is not yet written is still being created.
+        if not (run_dir / "summary.json").is_file():
             progress.append(SutProgress(
                 card=sut.card, scheduled_blocks=scheduled, recorded_blocks=0,
                 attempts=0, indeterminate_attempts=0, closed=False, paused=paused,
@@ -785,7 +786,9 @@ def launch(directory: Path, *, approved_calls: int, client: str) -> CollectionSt
     An owned or finished collection is reported, not started again, so a
     repeated launch cannot duplicate an experiment. The worker is detached
     from the caller (a notebook kernel may end without ending it) and writes
-    its output to ``worker.log``. ``client`` is ``synthetic`` or ``live``.
+    its output to a log of its own, ``worker-{time}.log``: workers launched
+    together cannot overwrite each other's lines. ``client`` is ``synthetic``
+    or ``live``.
     """
     if client not in _CLIENTS:
         raise ValueError(f"client must be one of {sorted(_CLIENTS)}")
@@ -799,12 +802,18 @@ def launch(directory: Path, *, approved_calls: int, client: str) -> CollectionSt
     flags = 0
     if os.name == "nt":
         flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS
-    with (directory / "worker.log").open("a", encoding="utf-8") as log:
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    with (directory / f"worker-{stamp}.log").open("w", encoding="utf-8") as log:
         subprocess.Popen(
             command, stdin=subprocess.DEVNULL, stdout=log, stderr=log,
             creationflags=flags, start_new_session=os.name != "nt",
         )
     return status
+
+
+def worker_logs(directory: Path) -> list[Path]:
+    """Every worker's log in the collection, oldest first; one per launch."""
+    return sorted(directory.glob("worker-*.log"))
 
 
 def main() -> None:

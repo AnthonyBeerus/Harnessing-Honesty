@@ -24,7 +24,7 @@ def runs_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 def _wait(directory: Path) -> None:
     deadline = time.monotonic() + 300
     while not collection.collection_status(directory).complete:
-        assert time.monotonic() < deadline, (directory / "worker.log").read_text()
+        assert time.monotonic() < deadline, collection.worker_logs(directory)
         time.sleep(0.2)
 
 
@@ -57,12 +57,12 @@ def test_a_launch_runs_once_and_the_controls_act_on_files(
     cli.main(launch)
     directory = runs_root / "dev" / "c3"
     _wait(directory)
-    log = (directory / "worker.log").read_text(encoding="utf-8")
+    logs = collection.worker_logs(directory)
 
     cli.main(launch)
     cli.main(["collection-status", "--id", "c3"])
 
-    assert (directory / "worker.log").read_text(encoding="utf-8") == log
+    assert collection.worker_logs(directory) == logs
     assert "complete: True" in capsys.readouterr().out
     with pytest.raises(SystemExit, match="--confirm-calls 26"):
         cli.main([

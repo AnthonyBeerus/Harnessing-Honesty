@@ -64,13 +64,13 @@ def test_a_synthetic_launch_runs_once_and_keeps_its_specification(
     directory = Path(_run(selection))
     deadline = time.monotonic() + 300
     while not collection.collection_status(directory).complete:
-        assert time.monotonic() < deadline, (directory / "worker.log").read_text()
+        assert time.monotonic() < deadline, collection.worker_logs(directory)
         time.sleep(0.2)
-    log = (directory / "worker.log").read_text(encoding="utf-8")
+    logs = collection.worker_logs(directory)
 
     _run(selection)  # a repeated launch cell reports; it starts no second worker
 
-    assert (directory / "worker.log").read_text(encoding="utf-8") == log
+    assert collection.worker_logs(directory) == logs
     assert "complete: True" in capsys.readouterr().out
     changed = {
         **selection,
