@@ -78,10 +78,7 @@ def require_closed_matrix(
     run_dir: Path, block_id: str | None = None
 ) -> MatrixEpisodeRecord:
     """Rebuild the matrix of a run that closed; an open run is refused."""
-    require_integrity(run_dir)
-    if reconstruct_run(run_dir).interrupted:
-        raise ValueError("run is incomplete")
-    return _matrix_record(run_dir, block_id)
+    return _matrix_record(run_dir, block_id, closed_run(run_dir))
 
 
 def matrix_record_from_run(

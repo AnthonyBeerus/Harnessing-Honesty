@@ -9,11 +9,8 @@ right arguments, so ``isinstance`` against one would be a false comfort.
 from datetime import datetime
 from typing import Protocol
 
-from harnessing_honesty.domain.enums import Verdict
 from harnessing_honesty.domain.messages import Message
-from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.results import ModelResult
-from harnessing_honesty.domain.scenario import AnswerKey
 
 
 class ModelClient(Protocol):
@@ -25,27 +22,6 @@ class ModelClient(Protocol):
     """
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult: ...
-
-
-class Checker(Protocol):
-    """Controller-owned verdict on one answer.
-
-    This is the oracle that *should* see the key. The model-visible tool is
-    a different protocol and must not.
-    """
-
-    def check(self, answer: str, key: AnswerKey) -> Verdict: ...
-
-
-class VerificationTool(Protocol):
-    """Model-visible premise check. Takes ``PromptView``, never the record.
-
-    The parameter type is the isolation: a tool that accepted
-    ``ScenarioRecord`` could read ``canonical_answer`` and become the oracle
-    this protocol exists to refuse.
-    """
-
-    def run(self, prompt: PromptView) -> str: ...
 
 
 class Clock(Protocol):
@@ -70,23 +46,3 @@ class SequencedEvent(Protocol):
     sequence: int
     run_id: str
 
-
-class EventSink(Protocol):
-    """Append-only destination for episode events."""
-
-    def emit(self, event: SequencedEvent) -> None: ...
-
-
-class RecordStore(Protocol):
-    """Write-once raw records and atomically replaceable summaries.
-
-    ``create`` must fail if the run already exists. ``append`` must not
-    rewrite a previous line. ``replace_summary`` must leave either the old
-    file or the new one, never a partial.
-    """
-
-    def create(self, run_id: str) -> None: ...
-
-    def append(self, run_id: str, payload: str) -> None: ...
-
-    def replace_summary(self, run_id: str, payload: str) -> None: ...

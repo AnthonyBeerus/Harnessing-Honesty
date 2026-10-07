@@ -5,7 +5,7 @@ import pytest
 
 from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.enums import PolicyFamily, PressureFamily, Track
-from harnessing_honesty.domain.matrix import development_conditions, development_matrix_cell_ids
+from harnessing_honesty.domain.matrix import development_conditions
 
 
 def test_identity_is_derived_from_the_members() -> None:
@@ -33,7 +33,7 @@ def test_development_conditions_match_the_derived_ids() -> None:
 
     assert len(cells) == 9
     assert len({item.identity for item in cells}) == 9
-    assert [item.identity for item in cells] == list(development_matrix_cell_ids())
+    assert [item.identity for item in cells] == list(tuple(item.identity for item in development_conditions()))
     assert all(item.track is Track.DEV for item in cells)
     assert cells[0].pressure is PressureFamily.CONTRADICTION
     assert cells[0].policy is PolicyFamily.NONE

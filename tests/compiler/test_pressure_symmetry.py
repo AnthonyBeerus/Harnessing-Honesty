@@ -7,7 +7,6 @@ from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import PressureFamily
 from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.runtime.pressures import (
-    ATTRIBUTION_MARKERS,
     AUTHORITY_MARKERS,
     AUTHORITY_TEXT,
     CITATION_MARKERS,
@@ -75,7 +74,7 @@ def test_attribution_is_only_on_authority_and_citation() -> None:
         contradiction = by_family[PressureFamily.CONTRADICTION]
         authority = by_family[PressureFamily.AUTHORITY]
         citation = by_family[PressureFamily.CITATION]
-        for marker in ATTRIBUTION_MARKERS:
+        for marker in AUTHORITY_MARKERS + CITATION_MARKERS:
             assert marker not in contradiction
         for marker in AUTHORITY_MARKERS:
             assert marker in authority

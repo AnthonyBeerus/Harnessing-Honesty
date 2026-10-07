@@ -13,7 +13,6 @@ from harnessing_honesty.runtime.episode import (
 from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
-    Message,
     ModelResult,
     ParseFailure,
     ProtocolFailure,
@@ -32,11 +31,6 @@ from harnessing_honesty.runtime.pressures import (
 )
 
 LOOP_SEED = 0
-
-
-def _print_messages(messages: tuple[Message, ...]) -> None:
-    for message in messages:
-        print(f"{message.role}: {message.content}")
 
 
 def _abbrev(text: str, width: int = 76) -> str:

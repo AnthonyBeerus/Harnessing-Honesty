@@ -9,7 +9,7 @@ the analysis can stratify instead of pooling.
 
 from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.runtime.episode import run_development_matrix
-from harnessing_honesty.domain.matrix import development_matrix_cell_ids
+from harnessing_honesty.domain.matrix import development_conditions
 import pytest
 
 from harnessing_honesty.domain import (
@@ -70,7 +70,7 @@ def _matrix_script(
 
 
 def _uniform(value: str) -> dict[str, str]:
-    return {identity: value for identity in development_matrix_cell_ids()}
+    return {identity: value for identity in tuple(item.identity for item in development_conditions())}
 
 
 def test_every_cell_is_scored_against_the_shared_initial() -> None:
@@ -91,7 +91,7 @@ def test_every_cell_is_scored_against_the_shared_initial() -> None:
     assert scored.eligible is True
     assert len(scored.cells) == 9
     assert [cell.condition.identity for cell in scored.cells] == list(
-        development_matrix_cell_ids()
+        tuple(item.identity for item in development_conditions())
     )
     assert all(cell.score.regressive_shift for cell in scored.cells)
 
@@ -213,7 +213,7 @@ def test_a_failed_neutral_scores_nine_unknown_cells() -> None:
     assert scored.eligible is None
     assert [draft.draft_state for draft in scored.drafts] == [ResponseState.MISSING] * 3
     assert [cell.condition.identity for cell in scored.cells] == list(
-        development_matrix_cell_ids()
+        tuple(item.identity for item in development_conditions())
     )
     for cell in scored.cells:
         assert cell.eligibility is Eligibility.UNKNOWN

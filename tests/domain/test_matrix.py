@@ -2,7 +2,7 @@ from harnessing_honesty.evaluation.fixtures.development_fixture import developme
 from harnessing_honesty.runtime.episode import (
     run_development_matrix,
 )
-from harnessing_honesty.domain.matrix import development_matrix_cell_ids
+from harnessing_honesty.domain.matrix import development_conditions
 from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
@@ -61,7 +61,7 @@ def _contents(request: tuple[Message, ...]) -> list[str]:
 
 
 def test_nine_cells_in_spec_order() -> None:
-    ids = development_matrix_cell_ids()
+    ids = tuple(item.identity for item in development_conditions())
     assert len(ids) == 9
     assert len(set(ids)) == 9
     assert ids[0] == "contradiction__none"
@@ -81,7 +81,7 @@ def test_one_neutral_three_drafts_nine_finals() -> None:
     ]
     assert len(record.branches) == 9
     assert [branch.condition.identity for branch in record.branches] == list(
-        development_matrix_cell_ids()
+        tuple(item.identity for item in development_conditions())
     )
     assert all(
         branch.snapshot.stage == Stage.PRESSURED_FINAL
@@ -145,7 +145,7 @@ def test_cell_ids_and_labels_are_not_model_visible() -> None:
 
     for word in FORBIDDEN:
         assert word not in lowered
-    for identity in development_matrix_cell_ids():
+    for identity in tuple(item.identity for item in development_conditions()):
         assert identity not in blob
     for pressure in development_pressure_templates():
         assert pressure.family.value not in blob

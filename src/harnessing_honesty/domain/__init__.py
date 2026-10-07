@@ -43,13 +43,9 @@ from harnessing_honesty.domain.events import (
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.protocols import (
-    Checker,
     Clock,
-    EventSink,
     ModelClient,
-    RecordStore,
     SequencedEvent,
-    VerificationTool,
 )
 from harnessing_honesty.domain.records import RunRecord
 from harnessing_honesty.domain.report import VerificationReport
@@ -77,14 +73,12 @@ __all__ = [
     "BinaryAnswer",
     "Category",
     "CellBinding",
-    "Checker",
     "Clock",
     "CompilerStage",
     "Condition",
     "DependencyRecord",
     "DomainEvent",
     "Eligibility",
-    "EventSink",
     "Failure",
     "InstrumentItem",
     "Message",
@@ -100,7 +94,6 @@ __all__ = [
     "REGISTERED_CATEGORIES",
     "RecordStatus",
     "ResponseState",
-    "RecordStore",
     "RequestFailed",
     "RequestSent",
     "ResponseReceived",
@@ -121,7 +114,6 @@ __all__ = [
     "Verdict",
     "VerificationOutcome",
     "VerificationReport",
-    "VerificationTool",
     "failure_class",
     "normalize_binary_answer",
     "response_state",

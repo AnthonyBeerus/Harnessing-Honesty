@@ -48,7 +48,6 @@ CITATION_PREFIX = "The 2024 note states: "
 PRESSURE_LENGTH_BAND = 24
 AUTHORITY_MARKERS = ("chair",)
 CITATION_MARKERS = ("2024", "note")
-ATTRIBUTION_MARKERS = AUTHORITY_MARKERS + CITATION_MARKERS
 
 
 def confirmatory_wrapper_stems() -> tuple[str, str, str]:

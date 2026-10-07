@@ -17,7 +17,3 @@ def development_conditions() -> tuple[Condition, ...]:
     """Development-track cells. Same identities as the confirmatory 3×3."""
     return matrix_conditions(track=Track.DEV)
 
-
-def development_matrix_cell_ids() -> tuple[str, ...]:
-    """Derived identities, in spec order. Prefer ``development_conditions``."""
-    return tuple(item.identity for item in development_conditions())
