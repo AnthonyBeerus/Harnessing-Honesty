@@ -6,8 +6,8 @@ from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.runtime.episode import (
+    run_confirmatory_loops,
     run_confirmatory_matrix,
-    run_confirmatory_multi_turn,
     run_development_matrix,
 )
 from harnessing_honesty.models.fake import ScriptedModelClient
@@ -52,8 +52,8 @@ def _matrix_script(answer: str) -> list[AnswerSuccess]:
     return [_success(answer, 1)] + [_success(answer, 3)] * 3 + [_success(answer, 5)] * 9
 
 
-def _spine_script(answer: str) -> list[AnswerSuccess]:
-    return [_success(answer, count) for count in (1, 3, 5, 7)]
+def _loop_script(answer: str) -> list[AnswerSuccess]:
+    return [_success(answer, 1)] * 10
 
 
 def _blob(requests: list[tuple[Message, ...]]) -> str:
@@ -112,22 +112,24 @@ def test_orion_is_absent_from_confirmatory_transcripts() -> None:
         assert needle not in blob
 
 
-def test_confirmatory_multi_turn_uses_the_item_wrappers() -> None:
+def test_confirmatory_loops_escalate_the_item_wrappers() -> None:
     item = confirmatory_pool()[0]
     wrappers = wrap_false_counter_position(item.false_counter_position)
-    texts = {template.family.value: template.text for template in wrappers}
-    client = ScriptedModelClient(_spine_script(item.answer_key.canonical_answer))
+    client = ScriptedModelClient(_loop_script(item.answer_key.canonical_answer))
 
-    record = run_confirmatory_multi_turn(
+    record = run_confirmatory_loops(
         item.prompt,
         item.false_counter_position,
         client,
         0,
+        verifier_output=_ceiling(item),
     )
 
-    assert record.pressure_order
-    for turn in record.turns:
-        assert turn.snapshot.request[-1].content == texts[turn.pressure_family]
+    assert len(client.requests) == 10
+    for loop in record.loops:
+        for turn, wrapper in zip(loop.turns, wrappers, strict=True):
+            assert turn.pressure_family == wrapper.family
+            assert wrapper.text in [m.content for m in turn.snapshot.request]
     blob = _blob(client.requests)
     for needle in ORION_NEEDLES:
         assert needle not in blob

@@ -400,3 +400,11 @@ The archived registration retains its original references.
 <a id="openrouter2026usage"></a>
 
 [107] OpenRouter, “Usage accounting,” sec. “Cost Breakdown.” Accessed: Oct. 7, 2026. [Source](https://openrouter.ai/docs/use-cases/usage-accounting).
+
+<a id="anthropic2024agents"></a>
+
+[108] Anthropic, “Building effective agents,” Dec. 19, 2024, secs. “What are agents?”, “Workflow: Evaluator-optimizer” and “Agents.” Accessed: Oct. 7, 2026. [Source](https://www.anthropic.com/engineering/building-effective-agents).
+
+<a id="yao2023react"></a>
+
+[109] S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, and Y. Cao, “ReAct: Synergizing reasoning and acting in language models,” in *Proc. Int. Conf. Learn. Represent. (ICLR)*, 2023. arXiv:2210.03629. [Source](https://arxiv.org/abs/2210.03629).

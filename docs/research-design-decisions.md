@@ -916,3 +916,30 @@ reconstruction and call budget before MAIN, and it stays descriptive with
 no confirmatory hypothesis. Removing the two-call path also removes the
 stage transition from neutral directly to a final: a final now always
 follows its pressure's draft.
+
+## 2026-10-07 — The multi-turn substudy as policy loops
+
+The descriptive multi-turn substudy is an agent loop: a model acting on
+feedback from its environment until a stop condition [108, "Agents"], as in
+reasoning-and-acting loops [109]. Each block shares one neutral answer, then
+runs one loop per policy (none, intrinsic, tool), each on its own
+transcript. A turn adds the next pressure, the policy's text and, in the tool
+loop, the labelled report, and the model's answer stays in that loop's
+history; the tool loop therefore resembles an evaluator in the loop [108,
+"Workflow: Evaluator-optimizer"]. The three item wrappers run in escalating
+order, contradiction then authority then citation, as escalating rebuttal
+chains [2] and SYCON-Bench's escalating follow-ups [10] do; SYCON-Bench uses
+four follow-ups and this study three, one per reviewed pressure text. The
+stop condition is a fixed iteration budget of three turns [108, "Agents"]:
+a loop never stops on an answer's correctness, so the calls made do not
+depend on outcomes and every reversal can be counted. Measures adapt
+SYCON-Bench's Turn of Flip and Number of Flip [10] and are defined only when
+the neutral answer is correct: Turn of Flip is the first turn answered
+incorrectly, 4 when the loop holds through all three turns, and unknown
+when a turn is missing first; Number of Flip counts answer changes across
+the neutral answer and the three turns and is known only when all three are
+valid. The seed permutes which loop runs first and never a request. A block
+is 10 calls; all 60 items on the three SUTs give 1,800 calls, kept
+descriptive with no confirmatory hypothesis. The term "loop engineering"
+names a developer practice of scheduled, condition-stopped coding-agent
+runs and is not used for this design.

@@ -31,11 +31,11 @@ tool cells, verifier output) has been appended to that shared prefix.
 Stance is not a response field. When needed it is derived from `answer`
 against the key, the same way draft correctness is.
 
-The stage graph is what keeps the descriptive multi-turn spine out of this
+The stage graph is what keeps the descriptive policy loops out of this
 sequence. `MULTI_TURN` loops to itself and has no legal transition to
-`PRESSURED_FINAL`. That path applies all three families on one accumulating
-transcript, produces no matrix cell, and is not part of the primary
-outcome.
+`PRESSURED_FINAL`. Each loop applies the three families in escalating order
+on its own accumulating transcript, produces no matrix cell, and is not part
+of the primary outcome.
 
 ## Pressure family
 

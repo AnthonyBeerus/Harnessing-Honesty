@@ -1,8 +1,7 @@
 """Episode runners.
 
-The one-call serving smoke, the 3x3 matrix, and the descriptive multi-turn
-spine. The matrix is the primary condition; the spine is kept separate and
-never produces a matrix cell.
+The one-call serving smoke, the 3x3 matrix, and the descriptive policy loops.
+The matrix is the primary condition; loop turns never produce a matrix cell.
 """
 
 
@@ -11,8 +10,9 @@ from harnessing_honesty.domain.episodes import (
     MatrixBranchRecord,
     MatrixDraftRecord,
     MatrixEpisodeRecord,
-    MultiTurnTurnRecord,
-    MultiTurnRecord,
+    LoopEpisodeRecord,
+    LoopTurnRecord,
+    PolicyLoopRecord,
 )
 from harnessing_honesty.runtime.branching import (
     clone_branch,
@@ -216,110 +216,128 @@ def run_confirmatory_matrix(
     )
 
 
-def _run_multi_turn(
+def _run_loops(
     prompt: PromptView,
     pressures: tuple[PressureTemplate, ...],
     client: ModelClient,
     order_seed: int,
     session: object | None = None,
-) -> MultiTurnRecord:
-    """Apply every supplied pressure family in a seeded order on one transcript."""
-    client = _bound(client, session)
-    pressures_by_id = {item.family.value: item for item in pressures}
-    pressure_ids = tuple(item.family.value for item in pressures)
+    *,
+    verifier_output: str,
+) -> LoopEpisodeRecord:
+    """One neutral answer, then one loop per policy over the supplied pressures.
 
-    current: Stage | None = advance(None, Stage.NEUTRAL)
+    Each loop is an agent loop with a fixed iteration budget [108]: every turn adds
+    the next pressure, the policy's text (and, for the tool policy, the
+    labelled report), and the model's answer to that loop's own transcript.
+    Pressures run in the supplied order in every loop; ``order_seed`` only
+    permutes which loop runs first. Loops never stop on an answer's
+    correctness, so the calls made do not depend on outcomes.
+    """
+    client = _bound(client, session)
+    policies = {
+        PolicyFamily(spec.branch_id): spec
+        for spec in policy_follow_ups(verifier_output)
+    }
+
+    current = advance(None, Stage.NEUTRAL)
     transcript = Transcript()
     for message in messages_for(prompt):
         transcript = transcript.append(message)
     request = transcript.snapshot()
+    _label(client, current, None, prompt.id)
     result = client.complete(request)
     shared = StageSnapshot(stage=current, request=request, result=result)
-
     if not isinstance(result, AnswerSuccess):
-        return MultiTurnRecord(shared=shared, turns=(), pressure_order=())
+        return LoopEpisodeRecord(shared=shared, loops=(), execution_order=())
 
-    transcript = transcript.append(
-        Message(role="assistant", content=result.response.answer)
+    answer = Message(role="assistant", content=result.response.answer)
+    prefix = transcript.append(answer)
+    order = tuple(
+        PolicyFamily(policy)
+        for policy in permute_branch_ids(tuple(p.value for p in policies), order_seed)
     )
-    pressure_order = permute_branch_ids(pressure_ids, order_seed)
-    turns: list[MultiTurnTurnRecord] = []
-
-    for position, pressure_id in enumerate(pressure_order):
-        pressure = pressures_by_id[pressure_id]
-        current = advance(current, Stage.MULTI_TURN)
-        transcript = transcript.append(
-            Message(role="user", content=pressure.text)
-        )
-        turn_request = transcript.snapshot()
-        turn_result = client.complete(turn_request)
-        turns.append(
-            MultiTurnTurnRecord(
-                position=position,
-                pressure_family=pressure_id,
-                snapshot=StageSnapshot(
-                    stage=current,
-                    request=turn_request,
-                    result=turn_result,
-                ),
+    loops: dict[PolicyFamily, PolicyLoopRecord] = {}
+    for policy in order:
+        spec = policies[policy]
+        state = clone_branch(prefix, Stage.NEUTRAL, f"loop__{policy.value}")
+        stage, loop_transcript = state.stage, state.transcript
+        turns: list[LoopTurnRecord] = []
+        for position, pressure in enumerate(pressures, start=1):
+            stage = advance(stage, Stage.MULTI_TURN)
+            loop_transcript = loop_transcript.append(
+                Message(role="user", content=pressure.text)
             )
-        )
-
-        if not isinstance(turn_result, AnswerSuccess):
-            break
-
-        transcript = transcript.append(
-            Message(
-                role="assistant",
-                content=turn_result.response.answer,
+            if spec.external_report is not None:
+                loop_transcript = loop_transcript.append(
+                    Message(role="user", content=spec.external_report)
+                )
+            loop_transcript = loop_transcript.append(
+                Message(role="user", content=spec.pressure)
             )
-        )
-
-    return MultiTurnRecord(
+            turn_request = loop_transcript.snapshot()
+            cell = f"loop__{policy.value}__{pressure.family.value}"
+            _label(client, stage, cell, prompt.id)
+            turn_result = client.complete(turn_request)
+            turns.append(
+                LoopTurnRecord(
+                    position=position,
+                    pressure_family=pressure.family,
+                    snapshot=StageSnapshot(
+                        stage=stage, request=turn_request, result=turn_result
+                    ),
+                )
+            )
+            if not isinstance(turn_result, AnswerSuccess):
+                break
+            loop_transcript = loop_transcript.append(
+                Message(role="assistant", content=turn_result.response.answer)
+            )
+        loops[policy] = PolicyLoopRecord(policy=policy, turns=tuple(turns))
+    return LoopEpisodeRecord(
         shared=shared,
-        turns=tuple(turns),
-        pressure_order=pressure_order,
+        loops=tuple(loops[policy] for policy in policies),
+        execution_order=order,
     )
 
 
-def run_multi_turn_episode(
+def run_development_loops(
     prompt: PromptView,
     client: ModelClient,
     order_seed: int,
     session: object | None = None,
-) -> MultiTurnRecord:
-    """Development spine. Orion pressure texts stay on this path only.
-
-    Descriptive only. Turns accumulate, so turn ``n`` sees turns ``1..n-1``.
-    That is the opposite of the matrix, where each cell is isolated. Every
-    snapshot is ``Stage.MULTI_TURN``, which cannot reach
-    ``Stage.PRESSURED_FINAL``, so these turns cannot be read as matrix
-    cells. No policy text and no verifier output are attached here.
-
-    A turn that is not ``AnswerSuccess`` ends the spine; no assistant turn
-    is invented from a failure.
-    """
-    return _run_multi_turn(
+) -> LoopEpisodeRecord:
+    """Development loops. Orion pressure texts stay on this path only."""
+    return _run_loops(
         prompt,
         development_pressure_templates(),
         client,
         order_seed,
         session,
+        verifier_output=DEVELOPMENT_VERIFIER_OUTPUT,
     )
 
 
-def run_confirmatory_multi_turn(
+def run_confirmatory_loops(
     prompt: PromptView,
     counter_position: str,
     client: ModelClient,
     order_seed: int,
     session: object | None = None,
-) -> MultiTurnRecord:
-    """Descriptive spine using the item's false counter-position wrappers."""
-    return _run_multi_turn(
+    *,
+    verifier_output: str,
+) -> LoopEpisodeRecord:
+    """Confirmatory loops: the item's three wrappers in escalating order.
+
+    Contradiction, then authority, then citation: each turn adds rhetorical
+    weight to the same false proposition, as escalating rebuttal chains do
+    [2], [10]. The descriptive multi-turn substudy follows SYCON-Bench [10].
+    """
+    return _run_loops(
         prompt,
         wrap_false_counter_position(counter_position),
         client,
         order_seed,
         session,
+        verifier_output=verifier_output,
     )

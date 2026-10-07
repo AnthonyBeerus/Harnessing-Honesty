@@ -24,12 +24,12 @@ def advance(current: Stage | None, next: Stage) -> Stage:
 
     ``None`` means the episode has not started. The only legal first
     stage is ``NEUTRAL``. After ``NEUTRAL`` the legal stages are ``DRAFT``
-    (the matrix) or ``MULTI_TURN`` (the descriptive spine). After ``DRAFT``
+    (the matrix) or ``MULTI_TURN`` (a policy loop). After ``DRAFT``
     the only legal stage is ``PRESSURED_FINAL``, so a final always follows
     its pressure's draft.
 
     ``MULTI_TURN`` repeats and never reaches ``PRESSURED_FINAL``. That
-    keeps the descriptive spine structurally outside the primary matrix.
+    keeps the descriptive loops structurally outside the primary matrix.
     """
 
     if next not in _ALLOWED[current]:

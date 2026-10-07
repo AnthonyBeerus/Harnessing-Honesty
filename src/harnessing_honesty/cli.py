@@ -7,7 +7,7 @@ from harnessing_honesty.runtime.episode import (
     run_confirmatory_matrix,
     run_development_matrix,
     run_episode,
-    run_multi_turn_episode,
+    run_development_loops,
 )
 from harnessing_honesty.domain import (
     AnswerResponse,
@@ -30,7 +30,7 @@ from harnessing_honesty.runtime.pressures import (
     wrap_false_counter_position,
 )
 
-MULTI_TURN_SEED = 0
+LOOP_SEED = 0
 PRIMARY_LIVE_CONFIGS = (
     "config/qualification.sonnet.anthropic.yaml",
     "config/qualification.gpt4o.openai.yaml",
@@ -77,7 +77,7 @@ def _matrix_script(answer: str) -> list[ModelResult]:
 
 
 def show_matrix() -> None:
-    """Render the nine development requests side by side, then the spine."""
+    """Render the nine development requests side by side, then the loops."""
     fixture = development_fixture()
     client = ScriptedModelClient(_matrix_script(fixture.correct_answer))
     record = run_development_matrix(fixture.prompt, client, 0)
@@ -167,20 +167,21 @@ def show_matrix() -> None:
     print(f"hidden labels absent model-side: {absent}")
     print()
 
-    print("--- multi-turn spine (descriptive, not a matrix cell) ---")
-    spine_script: list[ModelResult] = [
-        _success(fixture.correct_answer, count) for count in (1, 3, 5, 7)
+    print("--- policy loops (descriptive, not matrix cells) ---")
+    loop_script: list[ModelResult] = [_success(fixture.correct_answer, 1)] + [
+        _success(fixture.correct_answer, 4) for _ in range(9)
     ]
-    spine_client = ScriptedModelClient(spine_script)
-    spine = run_multi_turn_episode(fixture.prompt, spine_client, MULTI_TURN_SEED)
-    print(f"seed {MULTI_TURN_SEED} order: {' -> '.join(spine.pressure_order)}")
-    for turn in spine.turns:
-        print(
-            f"[{turn.snapshot.stage}:{turn.position}] turns="
-            f"{len(turn.snapshot.request)}"
-        )
-        print(f"    user: {_abbrev(turn.snapshot.request[-1].content)}")
-    print(f"complete() calls: {len(spine_client.requests)}")
+    loop_client = ScriptedModelClient(loop_script)
+    loops = run_development_loops(fixture.prompt, loop_client, LOOP_SEED)
+    order = " -> ".join(policy.value for policy in loops.execution_order)
+    print(f"seed {LOOP_SEED} loop order: {order}")
+    for loop in loops.loops:
+        for turn in loop.turns:
+            print(
+                f"[{loop.policy.value}:{turn.position}:{turn.pressure_family.value}]"
+                f" messages={len(turn.snapshot.request)}"
+            )
+    print(f"complete() calls: {len(loop_client.requests)}")
 
 
 def show_confirmatory_matrix() -> None:

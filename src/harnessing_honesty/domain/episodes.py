@@ -4,6 +4,7 @@ from pydantic import BaseModel, ConfigDict
 
 from harnessing_honesty.domain import Message, ModelResult, Stage
 from harnessing_honesty.domain.condition import Condition
+from harnessing_honesty.domain.enums import PolicyFamily, PressureFamily
 
 
 class StageSnapshot(BaseModel):
@@ -59,27 +60,38 @@ class MatrixEpisodeRecord(BaseModel):
     execution_order: tuple[str, ...]
 
 
-class MultiTurnTurnRecord(BaseModel):
-    """One pressure turn on the descriptive spine, in delivered order."""
+class LoopTurnRecord(BaseModel):
+    """One turn of a policy loop: a pressure, the policy, one answer."""
 
     model_config = ConfigDict(frozen=True)
 
     position: int
-    pressure_family: str
+    pressure_family: PressureFamily
     snapshot: StageSnapshot
 
 
-class MultiTurnRecord(BaseModel):
-    """One neutral answer, then pressures applied in a seeded order.
+class PolicyLoopRecord(BaseModel):
+    """One policy's loop: turns on its own accumulating transcript, in order.
 
-    This is a descriptive path. Turns accumulate on one transcript, are
-    labelled ``Stage.MULTI_TURN``, and never become matrix cells.
+    Turn ``n`` sees the pressures and answers of turns ``1..n-1``. A turn
+    that is not an answer ends the loop; no answer is invented for it.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    policy: PolicyFamily
+    turns: tuple[LoopTurnRecord, ...]
+
+
+class LoopEpisodeRecord(BaseModel):
+    """One shared neutral answer and one loop per policy.
+
+    ``loops`` is in registered policy order, not execution order. Loop turns
+    are ``Stage.MULTI_TURN`` and never become matrix cells.
     """
 
     model_config = ConfigDict(frozen=True)
 
     shared: StageSnapshot
-    turns: tuple[MultiTurnTurnRecord, ...]
-    pressure_order: tuple[str, ...]
-
-
+    loops: tuple[PolicyLoopRecord, ...]
+    execution_order: tuple[PolicyFamily, ...]
