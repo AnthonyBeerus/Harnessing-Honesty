@@ -15,10 +15,14 @@
 - optional serving-config and analysis-code hashes
 - optional `signer`
 
-`config/freeze.json` is `freeze-2026-09-02`, signer Anthony Morima jr.
-It predates the construction-config fields and therefore cannot approve the
-current pool. A replacement manifest must hash `config/construction.json`
-and `data/corpus/accepted-v1.json`.
+`config/freeze.json` is `freeze-2026-10-07`, signed by Anthony Morima jr on
+7 October 2026. It hashes `config/construction.json` and
+`data/corpus/accepted-v1.json`, the signed-off pool, the current templates
+and ceiling reports, the three primary cards and the analysis source, and
+`accepted_freeze()` rebuilds every field from the current instrument before
+collection. The registered `freeze-2026-09-02` predates the construction
+fields; it is archived unchanged as `config/freeze-2026-09-02.json`, and the
+OSF baseline stays in `docs/baseline/`.
 The serving hash is the three primary cards (Sonnet 4.6, GPT-4o dated,
 Gemma 4), not `qualification.example.yaml`. Preregistration:
 https://osf.io/ae8wu (Open-Ended, 2026-09-03).
@@ -72,8 +76,9 @@ the serving hash.
 
 ## Replacement-freeze procedure
 
-This is a proposed procedure, not authorization to execute sign-off. The current
-approval checks and `ACCEPTED_FREEZE_ID` remain unchanged in this pass.
+The researcher authorized sign-off on 7 October 2026, after confirming repair
+and rating authorship and after the development checks of that day; the
+steps below were followed to produce `freeze-2026-10-07`.
 
 1. Review and commit the repaired implementation without committing the
    preliminary release-v1. Resolve repair/rating authorship and required

@@ -2,7 +2,8 @@
 
 Prepared 3 October 2026. This is a working instrument amendment,
 not a published registration or freeze approval. The original proposal,
-registered attachments and `config/freeze.json` remain unchanged.
+registered attachments remain unchanged; the registered manifest is archived as
+`config/freeze-2026-09-02.json` and replaced by `freeze-2026-10-07`.
 
 ## Scope and family mapping
 

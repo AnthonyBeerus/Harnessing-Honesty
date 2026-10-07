@@ -196,22 +196,35 @@ def test_freeze_records_hashes_and_exclusions() -> None:
 
 
 def _registered_freeze() -> FreezeManifest:
+    """The active, signed replacement freeze."""
     return FreezeManifest.model_validate_json(
         Path("config/freeze.json").read_text(encoding="utf-8")
     )
 
 
-def test_pressure_amendment_leaves_the_registered_manifest_unchanged() -> None:
-    archived = Path("docs/baseline/2026-09-03/osf/freeze.json")
-    assert _registered_freeze() == FreezeManifest.model_validate_json(
-        archived.read_text(encoding="utf-8")
+def _september_freeze() -> FreezeManifest:
+    """The manifest registered on OSF, archived unchanged beside the active one."""
+    return FreezeManifest.model_validate_json(
+        Path("config/freeze-2026-09-02.json").read_text(encoding="utf-8")
     )
-    with pytest.raises(ValueError, match="template_hash"):
-        accepted_freeze()
+
+
+def test_the_september_manifest_is_archived_unchanged() -> None:
+    baseline = Path("docs/baseline/2026-09-03/osf/freeze.json")
+    assert _september_freeze() == FreezeManifest.model_validate_json(
+        baseline.read_text(encoding="utf-8")
+    )
+    assert _september_freeze().freeze_id == "freeze-2026-09-02"
+
+
+def test_the_active_freeze_rebuilds_exactly_from_the_current_instrument() -> None:
+    assert accepted_freeze() == _registered_freeze()
+    september = _september_freeze()
+    assert september.template_hash != _registered_freeze().template_hash
 
 
 def test_counter_position_amendment_changes_the_pool_hash() -> None:
-    registered = _registered_freeze()
+    registered = _september_freeze()
     current = build_freeze(freeze_id="working-construction")
 
     assert current.pool_hash != registered.pool_hash
@@ -271,10 +284,11 @@ def test_serving_amendment_does_not_rewrite_the_registered_hash() -> None:
     from harnessing_honesty.compiler.freeze import primary_serving_digest
     from harnessing_honesty.models.config import load_run_config
 
-    freeze = _registered_freeze()
+    september = _september_freeze()
     example = load_run_config(Path("config/qualification.example.yaml"))
-    assert freeze.serving_config_hash != primary_serving_digest()
-    assert freeze.serving_config_hash != example.serving.digest()
+    assert september.serving_config_hash != primary_serving_digest()
+    assert _registered_freeze().serving_config_hash == primary_serving_digest()
+    assert september.serving_config_hash != example.serving.digest()
 
 
 def test_accepted_freeze_has_signer() -> None:

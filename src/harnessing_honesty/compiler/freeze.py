@@ -47,7 +47,7 @@ CLAIMS: tuple[str, ...] = (
     "Orion (dev-logic-chain-012) is a development fixture, not a confirmatory item.",
 )
 
-ACCEPTED_FREEZE_ID = "freeze-2026-09-02"
+ACCEPTED_FREEZE_ID = "freeze-2026-10-07"
 ACCEPTED_SIGNER = "Anthony Morima jr"
 
 

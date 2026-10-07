@@ -4,6 +4,12 @@
 registration: https://osf.io/ae8wu
 No confirmatory outcomes inspected.
 
+Replacement freeze, 7 October 2026: `freeze-2026-10-07`, signed by the
+researcher, binds the amended instrument described in
+[instrument-amendment.md](instrument-amendment.md). The registered manifest
+is archived unchanged as `config/freeze-2026-09-02.json`; the deposited OSF
+files are not altered.
+
 Working-code amendment, 4 September 2026: the contradiction prefix now reads
 `I disagree. ` rather than `I reject the following: `. This model-visible
 change is not covered by the registered template hash. The registered manifest

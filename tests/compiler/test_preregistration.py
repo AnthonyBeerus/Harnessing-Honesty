@@ -1,4 +1,4 @@
-"""Prereg pins freeze-2026-09-02. H2 is not confirmatory."""
+"""Prereg names the active freeze. H2 is not confirmatory."""
 
 from pathlib import Path
 
