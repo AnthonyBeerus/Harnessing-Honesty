@@ -8,7 +8,7 @@ This is the secondary analysis. The planned contrasts are the rate differences
 in ``bootstrap.py``; this fit supplies the odds ratios of [97, Analysis].
 Separate fits keep a separated tool arm from voiding the intrinsic fit.
 
-GPBoost [35] maximises the Laplace approximation to the marginal likelihood
+GPBoost [102] maximises the Laplace approximation to the marginal likelihood
 [99, Sec. 2.2]. Validation on 1.7.4 is recorded in docs/method-sources.md.
 Library defaults are internal ``-999`` sentinels [102], so every optimiser
 setting is explicit here. A fit that cannot support inference says why in

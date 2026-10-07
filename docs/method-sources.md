@@ -135,7 +135,7 @@ results notebook shows it on a labelled synthetic run with known effects.
 The mixed logit (`analysis/fit.py`) is secondary and supplies odds ratios. It
 fits each treatment against `none` within one SUT and one population, with a
 scenario random intercept. GPBoost [30],
-[35] maximises the Laplace approximation to the marginal likelihood [99, Sec.
+[102] maximises the Laplace approximation to the marginal likelihood [99, Sec.
 2.2]; [30] itself covers Gaussian likelihoods only. Version 1.7.4 was validated
 offline on Windows with Python 3.12.3: its likelihood matched an independent
 Laplace computation to 7e-9, fitted estimates match the independent optimum,

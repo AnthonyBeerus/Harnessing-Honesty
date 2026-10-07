@@ -11,7 +11,7 @@ The archived registration retains its original references.
 
 <a id="fanous2025syceval"></a>
 
-[2] A. Fanous et al., “SycEval: evaluating LLM sycophancy,” arXiv preprint arXiv:2502.08177, 2025. Version 4, 2025-09-19. doi: [10.48550/arXiv.2502.08177](https://doi.org/10.48550/arXiv.2502.08177). [Source](https://arxiv.org/abs/2502.08177v4).
+[2] A. Fanous et al., “SycEval: Evaluating LLM sycophancy,” in *Proc. AAAI/ACM Conf. AI, Ethics, Soc. (AIES)*, vol. 8, no. 1, 2025, pp. 893–900. doi: [10.1609/aies.v8i1.36598](https://doi.org/10.1609/aies.v8i1.36598). [Source](https://ojs.aaai.org/index.php/AIES/article/view/36598).
 
 <a id="ye2026taxonomy"></a>
 
@@ -25,33 +25,9 @@ The archived registration retains its original references.
 
 [5] Y. Yao et al., “Harness-Bench: measuring harness effects across models in realistic agent workflows,” arXiv preprint arXiv:2605.27922, 2026. Version 1, 2026-05-27. doi: [10.48550/arXiv.2605.27922](https://doi.org/10.48550/arXiv.2605.27922). [Source](https://arxiv.org/abs/2605.27922v1).
 
-<a id="zhang2026disclosing"></a>
-
-[6] Y. Zhang, J. Wang, Y. Ge, W. Xu, J. Hamm, and C. K. Reddy, “Stop comparing LLM agents without disclosing the harness,” arXiv preprint arXiv:2605.23950, 2026. Version 1. doi: [10.48550/arXiv.2605.23950](https://doi.org/10.48550/arXiv.2605.23950). [Source](https://arxiv.org/abs/2605.23950v1).
-
-<a id="lee2026metaharness"></a>
-
-[7] Y. Lee, R. Nair, Q. Zhang, K. Lee, O. Khattab, and C. Finn, “Meta-Harness: end-to-end optimization of model harnesses,” arXiv preprint arXiv:2603.28052, 2026. Version 1, 2026-03-30. doi: [10.48550/arXiv.2603.28052](https://doi.org/10.48550/arXiv.2603.28052). [Source](https://arxiv.org/abs/2603.28052v1).
-
-<a id="wang2026trajectories"></a>
-
-[8] B. Wang, B. Li, M. Wang, Y. Tao, and F. Kong, “Harnesses for inference-time alignment over execution trajectories,” arXiv preprint arXiv:2605.21516, 2026. Version 1. doi: [10.48550/arXiv.2605.21516](https://doi.org/10.48550/arXiv.2605.21516). [Source](https://arxiv.org/abs/2605.21516v1).
-
-<a id="inokuchi2019citations"></a>
-
-[9] A. Inokuchi et al., “From academia to software development: publication citations in source code comments,” arXiv preprint arXiv:1910.06932, 2019. Version 2, 2020-05-01. doi: [10.48550/arXiv.1910.06932](https://doi.org/10.48550/arXiv.1910.06932). [Source](https://arxiv.org/abs/1910.06932v2).
-
 <a id="hong2025sycon"></a>
 
 [10] J. Hong, G. Byun, S. Kim, and K. Shu, “Measuring sycophancy of language models in multi-turn dialogues,” in *Findings Assoc. Comput. Linguistics: EMNLP 2025*, 2025, pp. 2239–2259. doi: [10.18653/v1/2025.findings-emnlp.121](https://doi.org/10.18653/v1/2025.findings-emnlp.121). [Source](https://aclanthology.org/2025.findings-emnlp.121/).
-
-<a id="kim2025evaluator"></a>
-
-[11] S. W. Kim and D. Khashabi, “Challenging the evaluator: LLM sycophancy under user rebuttal,” in *Findings Assoc. Comput. Linguistics: EMNLP 2025*, 2025, pp. 22461–22478. doi: [10.18653/v1/2025.findings-emnlp.1222](https://doi.org/10.18653/v1/2025.findings-emnlp.1222). [Source](https://aclanthology.org/2025.findings-emnlp.1222/).
-
-<a id="tan2025duetpd"></a>
-
-[12] B. C. Z. Tan, D. W. K. Chin, Z. Liu, N. F. Chen, and R. K.-W. Lee, “Persuasion dynamics in LLMs: investigating robustness and adaptability in knowledge and safety with DuET-PD,” in *Proc. Conf. Empirical Methods Natural Lang. Process. (EMNLP)*, 2025, pp. 1550–1575. doi: [10.18653/v1/2025.emnlp-main.81](https://doi.org/10.18653/v1/2025.emnlp-main.81). [Source](https://aclanthology.org/2025.emnlp-main.81/).
 
 <a id="dhuliawala2024verification"></a>
 
@@ -69,26 +45,6 @@ The archived registration retains its original references.
 
 [16] R. Kamoi, Y. Zhang, N. Zhang, J. Han, and R. Zhang, “When can LLMs actually correct their own mistakes? A critical survey of self-correction of LLMs,” *Trans. Assoc. Comput. Linguistics*, vol. 12, pp. 1417–1440, 2024. doi: [10.1162/tacl_a_00713](https://doi.org/10.1162/tacl_a_00713). [Source](https://arxiv.org/abs/2406.01297v3).
 
-<a id="madaan2023selfrefine"></a>
-
-[17] A. Madaan et al., “Self-Refine: iterative refinement with self-feedback,” in *Advances in Neural Information Processing Systems*, 2023, vol. 36, pp. 46534–46594. doi: [10.52202/075280-2019](https://doi.org/10.52202/075280-2019). [Source](https://proceedings.neurips.cc/paper_files/paper/2023/file/91edff07232fb1b55a505a9e9f6c0ff3-Paper-Conference.pdf).
-
-<a id="ashkboos2024quarot"></a>
-
-[18] S. Ashkboos et al., “QuaRot: outlier-free 4-bit inference in rotated LLMs,” in *Advances in Neural Information Processing Systems*, 2024, vol. 37, pp. 100213–100240. doi: [10.52202/079017-3180](https://doi.org/10.52202/079017-3180). [Source](https://proceedings.neurips.cc/paper_files/paper/2024/file/b5b939436789f76f08b9d0da5e81af7c-Paper-Conference.pdf).
-
-<a id="zheng2023mtbench"></a>
-
-[19] L. Zheng et al., “Judging LLM-as-a-Judge with MT-Bench and chatbot arena,” in *Advances in Neural Information Processing Systems*, 2023, vol. 36, pp. 46595–46623. doi: [10.52202/075280-2020](https://doi.org/10.52202/075280-2020). [Source](https://proceedings.neurips.cc/paper_files/paper/2023/file/91f18a1287b398d378ef22505bf41832-Paper-Datasets_and_Benchmarks.pdf).
-
-<a id="gao2025equality"></a>
-
-[20] I. Gao, P. Liang, and C. Guestrin, “Model equality testing: which model is this API serving?,” in *Proc. Int. Conf. Learn. Represent. (ICLR)*, 2025. [Source](https://proceedings.iclr.cc/paper_files/paper/2025/file/d73234a13815fc1f9779dd17d89be9b4-Paper-Conference.pdf).
-
-<a id="nist2024genai"></a>
-
-[21] National Institute of Standards and Technology, “Artificial intelligence risk management framework: generative artificial intelligence profile,” NIST AI 600-1, July 2024. doi: [10.6028/NIST.AI.600-1](https://doi.org/10.6028/NIST.AI.600-1). [Source](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf).
-
 <a id="parnas1972modules"></a>
 
 [22] D. L. Parnas, “On the criteria to be used in decomposing systems into modules,” *Commun. ACM*, vol. 15, no. 12, pp. 1053–1058, 1972. doi: [10.1145/361598.361623](https://doi.org/10.1145/361598.361623). [Source](https://doi.org/10.1145/361598.361623).
@@ -96,22 +52,6 @@ The archived registration retains its original references.
 <a id="wilson2014practices"></a>
 
 [23] G. Wilson et al., “Best practices for scientific computing,” *PLoS Biol.*, vol. 12, no. 1, 2014, Art. no. e1001745. doi: [10.1371/journal.pbio.1001745](https://doi.org/10.1371/journal.pbio.1001745). [Source](https://doi.org/10.1371/journal.pbio.1001745).
-
-<a id="barker2022fair4rs"></a>
-
-[24] M. Barker et al., “Introducing the FAIR principles for research software,” *Sci. Data*, vol. 9, no. 1, 2022, Art. no. 622. doi: [10.1038/s41597-022-01710-x](https://doi.org/10.1038/s41597-022-01710-x). [Source](https://doi.org/10.1038/s41597-022-01710-x).
-
-<a id="smith2016softwarecitation"></a>
-
-[25] A. M. Smith, D. S. Katz, K. E. Niemeyer, and FORCE11 Software Citation Working Group, “Software citation principles,” *PeerJ Comput. Sci.*, vol. 2, 2016, Art. no. e86. doi: [10.7717/peerj-cs.86](https://doi.org/10.7717/peerj-cs.86). [Source](https://doi.org/10.7717/peerj-cs.86).
-
-<a id="rule2019notebooks"></a>
-
-[26] A. Rule et al., “Ten simple rules for writing and sharing computational analyses in Jupyter Notebooks,” *PLoS Comput. Biol.*, vol. 15, no. 7, 2019, Art. no. e1007007. doi: [10.1371/journal.pcbi.1007007](https://doi.org/10.1371/journal.pcbi.1007007). [Source](https://doi.org/10.1371/journal.pcbi.1007007).
-
-<a id="romano2020softwarepaper"></a>
-
-[27] J. D. Romano and J. H. Moore, “Ten simple rules for writing a paper about scientific software,” *PLoS Comput. Biol.*, vol. 16, no. 11, 2020, Art. no. e1008390. doi: [10.1371/journal.pcbi.1008390](https://doi.org/10.1371/journal.pcbi.1008390). [Source](https://doi.org/10.1371/journal.pcbi.1008390).
 
 <a id="nosek2018preregistration"></a>
 
@@ -141,18 +81,6 @@ The archived registration retains its original references.
 
 [34] OpenRouter, “Router metadata,” Accessed: Oct. 4, 2026. [Online]. [Available](https://openrouter.ai/docs/guides/features/router-metadata).
 
-<a id="gpboostgpmodel"></a>
-
-[35] F. Sigrist, “GPBoost: GPModel API reference,” Accessed: Sep. 4, 2026. [Online]. [Available](https://gpboost.readthedocs.io/en/latest/pythonapi/gpboost.GPModel.html).
-
-<a id="numpydocformat"></a>
-
-[36] numpydoc contributors, “numpydoc: style guide,” Accessed: Sep. 4, 2026. [Online]. [Available](https://numpydoc.readthedocs.io/en/latest/format.html).
-
-<a id="citationfileformat"></a>
-
-[37] Citation File Format contributors, “Citation file format,” Accessed: Sep. 4, 2026. [Online]. [Available](https://citation-file-format.github.io/).
-
 <a id="jupytext"></a>
 
 [38] Jupytext contributors, “Jupytext,” Accessed: Sep. 4, 2026. [Online]. [Available](https://github.com/jupytext/jupytext).
@@ -160,10 +88,6 @@ The archived registration retains its original references.
 <a id="nbclient"></a>
 
 [39] Jupyter contributors, “Executing notebooks,” Accessed: Sep. 4, 2026. [Online]. [Available](https://nbclient.readthedocs.io/en/latest/client.html).
-
-<a id="openrouterpromptcaching"></a>
-
-[40] OpenRouter, “Prompt caching,” Accessed: Sep. 4, 2026. [Online]. [Available](https://openrouter.ai/docs/guides/best-practices/prompt-caching).
 
 <a id="anthropic2026evals"></a>
 
@@ -197,17 +121,13 @@ The archived registration retains its original references.
 
 [48] Pydantic, “Pydantic Evals,” sec. “Code-First Evaluation.” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/evals/evals/).
 
-<a id="ieeereferenceguide"></a>
-
-[49] IEEE, “IEEE reference guide for authors.” Accessed: Sep. 4, 2026. [Online]. [Available](https://journals.ieeeauthorcenter.ieee.org/wp-content/uploads/sites/7/IEEE_Reference_Guide.pdf).
 <a id="pydanticvalidators"></a> [50] Pydantic, “Validators,” *Pydantic Validation Documentation*. Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/validation/latest/concepts/validators/).
 <a id="osfregistrations"></a> [51] Center for Open Science, “Welcome to registrations & preregistrations,” *OSF Support*. Accessed: Sep. 4, 2026. [Online]. [Available](https://help.osf.io/article/330-welcome-to-registrations).
 <a id="horn2015linearizability"></a> [52] A. Horn and D. Kroening, “Faster linearizability checking via P-compositionality,” arXiv:1504.00204, 2015. doi: [10.48550/arXiv.1504.00204](https://doi.org/10.48550/arXiv.1504.00204). [Source](https://arxiv.org/abs/1504.00204).
-<a id="lamport2002specifying"></a> [53] L. Lamport, *Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers*. Boston, MA, USA: Addison-Wesley, 2002. [Source](https://www.microsoft.com/en-us/research/publication/specifying-systems-the-tla-language-and-tools-for-hardware-and-software-engineers/).
-<a id="cutler2024cedar"></a> [54] J. W. Cutler *et al.*, “Cedar: A new language for expressive, fast, safe, and analyzable authorization,” arXiv:2403.04651, 2024. doi: [10.48550/arXiv.2403.04651](https://doi.org/10.48550/arXiv.2403.04651). [Source](https://arxiv.org/abs/2403.04651).
+<a id="cutler2024cedar"></a> [54] J. W. Cutler *et al.*, “Cedar: A new language for expressive, fast, safe, and analyzable authorization,” *Proc. ACM Program. Lang.*, vol. 8, no. OOPSLA1, pp. 670–697, 2024. doi: [10.1145/3649835](https://doi.org/10.1145/3649835). [Source](https://arxiv.org/abs/2403.04651).
 <a id="sqlite-sqllogictest"></a> [55] SQLite, “About sqllogictest,” *sqllogictest Documentation*. Accessed: Sep. 4, 2026. [Online]. [Available](https://www.sqlite.org/sqllogictest/doc/trunk/about.wiki).
 <a id="gu2024cruxeval"></a>
-[56] A. Gu, B. Rozière, H. Leather, A. Solar-Lezama, G. Synnaeve, and S. I. Wang, “CRUXEval: A benchmark for code reasoning, understanding and execution,” arXiv:2401.03065, 2024. doi: [10.48550/arXiv.2401.03065](https://doi.org/10.48550/arXiv.2401.03065). [Source](https://arxiv.org/abs/2401.03065).
+[56] A. Gu, B. Rozière, H. Leather, A. Solar-Lezama, G. Synnaeve, and S. I. Wang, “CRUXEval: A benchmark for code reasoning, understanding and execution,” in *Proc. 41st Int. Conf. Mach. Learn. (ICML)*, PMLR vol. 235, 2024, pp. 16568–16621. [Source](https://arxiv.org/abs/2401.03065).
 <a id="chambon2025bigobench"></a>
 [57] P. Chambon, B. Rozière, B. Sagot, and G. Synnaeve, “BigO(Bench)—Can LLMs generate code with controlled time and space complexity?” arXiv:2503.15242, 2025. doi: [10.48550/arXiv.2503.15242](https://doi.org/10.48550/arXiv.2503.15242). [Source](https://arxiv.org/abs/2503.15242).
 <a id="demoura2008z3"></a>
@@ -231,7 +151,7 @@ The archived registration retains its original references.
 
 <a id="srivastava2022bigbench"></a>
 
-[65] A. Srivastava *et al.*, “Beyond the imitation game: Quantifying and extrapolating the capabilities of language models,” arXiv:2206.04615, 2022, sec. 2.1. doi: [10.48550/arXiv.2206.04615](https://doi.org/10.48550/arXiv.2206.04615).
+[65] A. Srivastava *et al.*, “Beyond the imitation game: Quantifying and extrapolating the capabilities of language models,” *Trans. Mach. Learn. Res.*, 2023, sec. 2.1. [Source](https://openreview.net/forum?id=uyTL5Bvosj).
 
 <a id="sinha2026sycobench"></a>
 
@@ -267,7 +187,7 @@ The archived registration retains its original references.
 
 <a id="petrov2025brokenmath"></a>
 
-[74] I. Petrov, J. Dekoninck, and M. Vechev, “BrokenMath: A benchmark for sycophancy in theorem proving with LLMs,” arXiv:2510.04721v1, 2025, secs. 1 and 3.1. [Source](https://arxiv.org/html/2510.04721v1).
+[74] I. Petrov, J. Dekoninck, and M. Vechev, “BrokenMath: A benchmark for sycophancy in theorem proving with LLMs,” presented at the 5th Workshop on Mathematical Reasoning and AI (MATH-AI), NeurIPS, 2025, secs. 1 and 3.1. arXiv:2510.04721. [Source](https://arxiv.org/html/2510.04721v1).
 
 <a id="mirzadeh2025gsmsymbolic"></a>
 
@@ -315,19 +235,11 @@ The archived registration retains its original references.
 
 <a id="yao2024taubench"></a>
 
-[86] S. Yao, N. Shinn, P. Razavi, and K. Narasimhan, “Tau-bench: A benchmark for tool-agent-user interaction in real-world domains,” arXiv:2406.12045v1, 2024, secs. 3–4. [Source](https://arxiv.org/html/2406.12045v1).
+[86] S. Yao, N. Shinn, P. Razavi, and K. Narasimhan, “τ-bench: A benchmark for tool-agent-user interaction in real-world domains,” in *Proc. Int. Conf. Learn. Represent. (ICLR)*, 2025, secs. 3–4. [Source](https://proceedings.iclr.cc/paper_files/paper/2025/hash/1b126cc38b8638e07bef37e7b2bb72bf-Abstract-Conference.html).
 
 <a id="li2025autobencher"></a>
 
 [87] X. L. Li, F. Kaiyom, E. Z. Liu, Y. Mai, P. Liang, and T. Hashimoto, “AutoBencher: Towards declarative benchmark construction,” in *Proc. ICLR*, 2025, arXiv:2407.08351v2, secs. 4.1, 5.2, and 6.4. [Source](https://arxiv.org/html/2407.08351v2).
-
-<a id="anthropic2026fable51"></a>
-
-[88] Anthropic, “Claude Fable 5.1,” *Claude Platform Docs*, model ID, availability and pricing. Accessed: Sep. 19, 2026. [Source](https://platform.claude.com/docs/en/models/fable-5-1/overview).
-
-<a id="anthropic2026modelsnapshots"></a>
-
-[89] Anthropic, “System prompts,” *Claude Platform Docs*, model-snapshot statement. Accessed: Sep. 19, 2026. [Source](https://platform.claude.com/docs/en/release-notes/system-prompts/overview).
 
 <a id="openrouter2026fable51"></a>
 
@@ -379,7 +291,7 @@ The archived registration retains its original references.
 
 <a id="gpboost174source"></a>
 
-[102] F. Sigrist, “GPBoost v1.7.4: `python-package/gpboost/basic.py`,” `GPModel.fit`, `GPModel.summary`, `GPModel._get_num_optim_iter`; Apache-2.0. Accessed: Oct. 5, 2026. [Source](https://github.com/fabsig/GPBoost/blob/v1.7.4/python-package/gpboost/basic.py).
+[102] F. Sigrist, “GPBoost v1.7.4: `python-package/gpboost/basic.py`,” class `GPModel`, including `fit`, `summary` and `_get_num_optim_iter`; Apache-2.0. Accessed: Oct. 5, 2026. [Source](https://github.com/fabsig/GPBoost/blob/v1.7.4/python-package/gpboost/basic.py).
 
 <a id="holm1979sequential"></a>
 
