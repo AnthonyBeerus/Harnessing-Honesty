@@ -155,7 +155,7 @@ def test_a_finished_collection_is_not_run_again(tmp_path: Path) -> None:
     directory = start_collection(tmp_path, spec)
     _execute(directory, spec, [])
 
-    with pytest.raises(ValueError, match="is closed"):
+    with pytest.raises(ValueError, match="collection is complete"):
         _execute(directory, spec, [])
 
 

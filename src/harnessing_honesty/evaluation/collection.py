@@ -38,6 +38,7 @@ from harnessing_honesty.domain import (
 )
 from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.domain.events import DomainEvent
+from harnessing_honesty.domain.results import ProtocolFailure
 from harnessing_honesty.domain.episodes import MatrixEpisodeRecord
 from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.domain.protocols import Clock, ModelClient
@@ -338,16 +339,23 @@ def _run(
             {**card, "track": spec.track, "freeze_id": spec.freeze_id}
         )
         run_id = sut_run_id(spec, sut.card)
-        resume = (runs_root / spec.track.value / run_id).exists()
+        run_dir = runs_root / spec.track.value / run_id
+        resume = run_dir.exists()
+        if resume and not reconstruct_run(run_dir).interrupted:
+            continue  # this SUT finished in an earlier execution
         session = open_session(config, runs_root, run_id, resume=resume)
         sessions[sut.card] = session
         clients[sut.card] = client_factory(config.serving)
         recorded[sut.card] = _recorded_blocks(session.run_dir)
+    if not sessions:
+        raise ValueError("collection is complete")
     started = dict.fromkeys(sessions, 0)
     for block in schedule:
         reason = stop_reason(directory)
         if reason is not None:
             raise CollectionStopped(reason)
+        if block.card not in sessions or stop_reason(directory, block.card):
+            continue
         item = items[block.item_id]
         events, prior = recorded[block.card]
         index = started[block.card]
@@ -359,20 +367,29 @@ def _run(
             if item_id != block.item_id:
                 raise ValueError(f"recorded {block_id} is not scheduled block {block}")
         recorder = sessions[block.card].wrap(clients[block.card], block_id)
-        replay = _Replay(recorder, RetryingClient(recorder, clock=clock), calls, events)
-        run_confirmatory_matrix(
-            item.prompt,
-            item.false_counter_position,
-            replay,
-            block.order_seed,
-            verifier_output=item_ceiling(item),
-        )
+        retrying = RetryingClient(recorder, clock=clock)
+        pause = _pause_path(directory, block.card)
+        replay = _Replay(recorder, retrying, calls, events, pause)
+        try:
+            run_confirmatory_matrix(
+                item.prompt,
+                item.false_counter_position,
+                replay,
+                block.order_seed,
+                verifier_output=item_ceiling(item),
+            )
+        except SutPaused:
+            continue
         if replay.calls:
             raise ValueError(
                 f"{recorder.block_id} recorded calls the runner did not repeat"
             )
-    for session in sessions.values():
-        session.close()
+    paused = [card for card in sessions if stop_reason(directory, card)]
+    for card, session in sessions.items():
+        if card not in paused:
+            session.close()
+    if paused:
+        raise CollectionStopped(f"paused: {', '.join(paused)}")
 
 
 # One recorded block: its id, item label and attempts keyed by request hash.
@@ -408,11 +425,13 @@ class _Replay:
         retrying: RetryingClient,
         calls: dict[str, list[AttemptRecord]],
         events: tuple[DomainEvent, ...],
+        pause: Path,
     ) -> None:
         self._recorder = recorder
         self._retrying = retrying
         self.calls = dict(calls)
         self._events = events
+        self._pause = pause
 
     def label(
         self, stage: str | None, cell_identity: str | None, scenario_id: str
@@ -422,7 +441,7 @@ class _Replay:
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
         attempts = self.calls.pop(request_hash(messages), None)
         if not attempts:
-            return self._retrying.complete(messages)
+            return self._dispatch(messages)
         last = attempts[-1]
         failures = [item.failure for item in attempts if not item.indeterminate]
         remaining = remaining_retries(failures)
@@ -433,18 +452,59 @@ class _Replay:
             return result
         self._recorder.resume_call(str(last.call_id), len(attempts))
         self._retrying.resume(remaining)
-        return self._retrying.complete(messages)
+        return self._dispatch(messages)
+
+    def _dispatch(self, messages: tuple[Message, ...]) -> ModelResult:
+        """Send a call; a serving-contract failure pauses this SUT at once.
+
+        A replayed failure was handled when it happened and pauses nothing.
+        """
+        result = self._retrying.complete(messages)
+        if isinstance(result, ProtocolFailure):
+            record = {
+                "reason": "serving contract failed",
+                "call_id": self._recorder.call_id,
+                "block_id": self._recorder.block_id,
+                "detail": result.detail,
+                "at": datetime.now(timezone.utc).isoformat(),
+            }
+            write_new(self._pause, json.dumps(record))
+            raise SutPaused(result.detail)
+        return result
 
 
 class CollectionStopped(RuntimeError):
     """Collection ended between blocks; its runs stay incomplete and resumable."""
 
 
-def stop_reason(directory: Path) -> str | None:
-    """Why no further block may start, or ``None``. Checked before every block."""
+class SutPaused(RuntimeError):
+    """A SUT's serving contract failed; its remaining blocks wait."""
+
+
+def _pause_path(directory: Path, card: str) -> Path:
+    return directory / f"paused-{Path(card).stem}.json"
+
+
+def stop_reason(directory: Path, card: str | None = None) -> str | None:
+    """Why no further block may start (for ``card``), or ``None``.
+
+    The one place collection stops are decided, checked before every block.
+    A stop request halts every SUT. A failed serving contract pauses only its
+    SUT, without fallback to another route; docs/preregistration-template.md,
+    "SUT controls". Neither reads a response, score or eligibility.
+    """
     if (directory / "stop.json").exists():
         return "stop requested"
+    if card is not None:
+        return _paused(directory, card)
     return None
+
+
+def _paused(directory: Path, card: str) -> str | None:
+    path = _pause_path(directory, card)
+    if not path.exists():
+        return None
+    return f"paused: {json.loads(path.read_text(encoding='utf-8'))['reason']}"
 
 
 def request_stop(directory: Path) -> None:
@@ -458,6 +518,11 @@ def request_stop(directory: Path) -> None:
 def clear_stop(directory: Path) -> None:
     """Withdraw a stop request so the collection can be resumed."""
     (directory / "stop.json").unlink(missing_ok=True)
+
+
+def clear_pause(directory: Path, card: str) -> None:
+    """Resume a paused SUT once its pinned route serves the frozen contract."""
+    _pause_path(directory, card).unlink(missing_ok=True)
 
 
 @contextmanager
@@ -513,6 +578,7 @@ class SutProgress(BaseModel):
     attempts: int
     indeterminate_attempts: int
     closed: bool
+    paused: str | None
 
 
 class CollectionStatus(BaseModel):
@@ -542,10 +608,11 @@ def collection_status(directory: Path) -> CollectionStatus:
     for sut in spec.suts:
         run_dir = directory.parents[1] / spec.track.value / sut_run_id(spec, sut.card)
         scheduled = sum(block.card == sut.card for block in schedule)
+        paused = _paused(directory, sut.card)
         if not run_dir.exists():
             progress.append(SutProgress(
                 card=sut.card, scheduled_blocks=scheduled, recorded_blocks=0,
-                attempts=0, indeterminate_attempts=0, closed=False,
+                attempts=0, indeterminate_attempts=0, closed=False, paused=paused,
             ))
             continue
         rebuilt = reconstruct_run(run_dir)
@@ -557,6 +624,7 @@ def collection_status(directory: Path) -> CollectionStatus:
             attempts=len(attempts),
             indeterminate_attempts=sum(attempt.indeterminate for attempt in attempts),
             closed=not rebuilt.interrupted,
+            paused=paused,
         ))
     return CollectionStatus(
         collection_id=spec.collection_id,

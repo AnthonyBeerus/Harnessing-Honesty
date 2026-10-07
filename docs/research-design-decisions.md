@@ -713,3 +713,21 @@ collection is reported rather than started again. The worker's client is
 hash) or `live`. A status read while the worker appends can meet an
 unfinished final line and raise; reading again succeeds. A final line left
 unfinished by a hard kill is still reported unreadable and blocks resume.
+
+## 2026-10-07 — Pausing a SUT whose serving contract fails
+
+The registered rule is "If a pin dies after collection starts: pause that
+SUT. Do not fall back" (docs/preregistration-template.md, "SUT controls").
+A newly dispatched call that returns `ProtocolFailure` (the served system is
+not the requested one: route mismatch, cache hit, material pipeline or
+silent substitution) writes `paused-{card}.json` with the call and block,
+and ends that SUT's current block at once. Its remaining blocks are skipped
+while the other SUTs continue; finished runs close, the paused run stays
+incomplete, and `execute` reports the pause. `stop_reason` is the single
+place stops are decided, before every block: a stop request halts all SUTs,
+a pause only its own, and neither reads a response, score or eligibility.
+After the route is restored, `clear_pause` lets `execute` continue the
+paused block in place: the failed call is replayed from the record, not
+resent, and a replayed failure pauses nothing. Runs already closed are
+skipped. An exhausted provider failure does not pause a SUT; the call is
+recorded as missing and collection continues.
