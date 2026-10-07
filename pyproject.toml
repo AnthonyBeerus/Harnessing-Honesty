@@ -9,7 +9,9 @@ description = "Controlled experimental evaluation harness for epistemic sycophan
 requires-python = ">=3.12,<3.13"
 dependencies = [
   "pydantic>=2,<3",
-  "pydantic-ai>=1,<2",
+  # Exact pin: the request path, message types and run_sync behaviour are cited
+  # from this version's source, and 1.x releases have deprecated APIs.
+  "pydantic-ai==1.107.1",
   "python-dotenv>=1,<2",
   "pyyaml>=6,<7",
 ]

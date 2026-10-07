@@ -24,9 +24,13 @@ registered protocol.
 ## Pydantic implementation baseline
 
 The implementation baseline is Pydantic AI 1.107.1 with Pydantic 2.13.4,
-the versions installed on 4 September 2026. The broader dependency ranges in
-[pyproject.toml](../pyproject.toml) do not fix these exact versions, leaving
-SDK behaviour dependent on the resolved environment.
+the versions installed on 4 September 2026.
+[pyproject.toml](../pyproject.toml) pins Pydantic AI exactly: within 1.x the
+`BaseNode` graph runner and its persistence are deprecated in 1.107.1
+(`pydantic_graph/__init__.py`), so a range admits releases whose SDK
+behaviour this source does not describe. Pydantic keeps a 2.x range; notebook
+executions record its resolved version in `execution.json`
+([scripts/run_notebooks.py](../scripts/run_notebooks.py)).
 
 The versioned Pydantic AI source is the reference for concrete APIs
 [[43]](references.md#pydanticai11071). In that source, `agent/__init__.py`
