@@ -260,13 +260,11 @@ def show_matrix() -> None:
 
 def show_confirmatory_matrix() -> None:
     """Render one confirmatory item's 3×3 with per-item pressure wrappers."""
+    from harnessing_honesty.compiler.freeze import item_ceiling
+
     item = confirmatory_pool()[0]
     client = ScriptedModelClient(_matrix_script(item.answer_key.canonical_answer))
-    ceiling = confirmatory_ceiling_output(
-        evidence_ids=item.evidence_ids,
-        supported=item.oracle_status.value == "entailed",
-        witness_id=item.evidence_ids[0],
-    )
+    ceiling = item_ceiling(item)
     record = run_confirmatory_matrix(
         item.prompt,
         item.false_counter_position,

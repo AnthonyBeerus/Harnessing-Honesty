@@ -628,3 +628,21 @@ dispatch order only, not request content. No confirmatory run used the old
 order. Orders reproduce under the pinned Python 3.12, since `random`
 guarantees only `random()` across versions [62, Sec. "Notes on
 Reproducibility"].
+
+## 2026-10-07 — Collection specification and readiness
+
+A collection is fixed by a `CollectionSpec`: track, freeze id, scheduler
+seed, item ids, each serving card with the digest of its run configuration at
+acceptance, and the resolved versions of Python and the request-path packages
+(`pydantic`, `pydantic-ai`, `openai`, `httpx`). Declared ranges do not say
+what ran; the resolved versions do. `readiness` lists every reason the
+collection may not start and dispatches nothing: unknown or repeated items, a
+card changed since acceptance, a scheduler seed that differs from a card's.
+A MAIN collection also needs a signed freeze that matches the current
+instrument and names the same freeze id, items, primary serving cards and
+scheduler seed. On 7 October 2026 the registered freeze does not match the
+amended instrument, so a MAIN collection is refused until a replacement
+freeze exists. `preview` renders the 13 requests of one block through the
+collection runner with a scripted client; no provider is contacted. The tool
+arm's report comes from `item_ceiling`, the function the freeze's report
+hash uses, so preview and freeze cannot disagree about the ceiling text.

@@ -130,8 +130,10 @@ requires matching requests, schedule, retries and reconstructed outcomes on the
 same deterministic fixture, with identifiers and timestamps accounted for.
 The current synchronous client also requires execution outside Jupyter's active
 event loop (`Agent.run_sync`, versioned source [[43]](references.md#pydanticai11071)).
-The worker and interface contract remain unimplemented. Release execution of
-notebook checks use offline fixtures and cannot launch paid runs.
+Validate and Preview are implemented in `evaluation/collection.py`
+(`readiness`, `preview`); launch, status, stop, resume and the worker are not
+yet. Release execution of notebook checks uses offline fixtures and cannot
+launch paid runs.
 
 ## Organization and alternatives
 

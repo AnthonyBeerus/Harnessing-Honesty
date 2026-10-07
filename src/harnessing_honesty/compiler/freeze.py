@@ -92,7 +92,8 @@ def freeze_template_payload() -> dict[str, object]:
     }
 
 
-def _item_ceiling(item: InstrumentItem) -> str:
+def item_ceiling(item: InstrumentItem) -> str:
+    """The labelled external report an item's tool arm receives."""
     return confirmatory_ceiling_output(
         evidence_ids=item.evidence_ids,
         supported=item.oracle_status is OracleStatus.ENTAILED,
@@ -144,7 +145,7 @@ def build_freeze(
     if pool != corpus_pool and pool != sign_off_pool(corpus_pool):
         raise ValueError("freeze items differ from the accepted corpus or its signed-off pool")
     template_blob = json.dumps(freeze_template_payload(), sort_keys=True)
-    report_blob = json.dumps([_item_ceiling(item) for item in pool], sort_keys=True)
+    report_blob = json.dumps([item_ceiling(item) for item in pool], sort_keys=True)
     pool_blob = json.dumps(
         [item.model_dump(mode="json") for item in pool],
         sort_keys=True,

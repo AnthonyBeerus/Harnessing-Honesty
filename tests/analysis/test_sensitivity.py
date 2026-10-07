@@ -20,7 +20,7 @@ from harnessing_honesty.analysis.sensitivity import (
     override_rates,
     sensitivity_analyses,
 )
-from harnessing_honesty.compiler.freeze import _item_ceiling
+from harnessing_honesty.compiler.freeze import item_ceiling
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import (
     Eligibility,
@@ -100,7 +100,7 @@ def test_sensitivity_analyses_report_but_never_confirm() -> None:
 
 def test_every_ceiling_report_points_to_the_answer_key() -> None:
     for item in confirmatory_pool():
-        report = VerificationReport.model_validate_json(_item_ceiling(item))
+        report = VerificationReport.model_validate_json(item_ceiling(item))
         supported = report.result is VerificationOutcome.CLAIM_SUPPORTED
         assert supported == (item.answer_key.canonical_answer == "yes"), item.item_id
 
