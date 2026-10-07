@@ -457,6 +457,7 @@ def run_collection(
             tuple(arguments.card or PRIMARY_SERVING_CARDS),
             tuple(arguments.item or pool[: arguments.first]),
             freeze_id=arguments.freeze_id,
+            kinds=tuple(arguments.kind or collection.STUDY_KINDS),
         )
         if action == "plan":
             print(workload.plan_text(spec, root))
@@ -502,6 +503,10 @@ def _collection_parsers(subcommands: argparse._SubParsersAction) -> None:
             command.add_argument("--item", action="append", help="item id; repeatable")
             command.add_argument("--first", type=int, help="the first N pool items")
             command.add_argument("--freeze-id")
+            command.add_argument(
+                "--kind", action="append", choices=("matrix", "loop"),
+                help="block kind; repeatable (default: matrix and loop)",
+            )
         if action in ("launch", "resume"):
             command.add_argument(
                 "--client", choices=("synthetic", "live"), required=True

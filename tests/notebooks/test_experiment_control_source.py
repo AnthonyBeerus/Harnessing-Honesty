@@ -45,7 +45,7 @@ def test_as_it_stands_it_dispatches_and_writes_nothing(
     _run({})
 
     out = capsys.readouterr().out
-    assert "2340 planned calls" in out
+    assert "4140 planned calls" in out
     assert "No launch requested." in out and "No control action requested." in out
     assert "Not started." in out
     assert _tree(ROOT / "data" / "runs") == before
@@ -59,7 +59,7 @@ def test_a_synthetic_launch_runs_once_and_keeps_its_specification(
         "ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())":
             "ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())[:2]",
         "LAUNCH: bool = False": "LAUNCH: bool = True",
-        "APPROVED_CALLS: int | None = None": "APPROVED_CALLS = 78",
+        "APPROVED_CALLS: int | None = None": "APPROVED_CALLS = 138",
     }
     directory = Path(_run(selection))
     deadline = time.monotonic() + 300
@@ -76,7 +76,7 @@ def test_a_synthetic_launch_runs_once_and_keeps_its_specification(
         **selection,
         "ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())":
             "ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())[:3]",
-        "APPROVED_CALLS: int | None = None": "APPROVED_CALLS = 117",
+        "APPROVED_CALLS: int | None = None": "APPROVED_CALLS = 207",
     }
     with pytest.raises(ValueError, match="different specification"):
         _run(changed)

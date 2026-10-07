@@ -32,6 +32,7 @@ from harnessing_honesty.observability.reconstruct import (
     recorded_result,
     saved_request,
 )
+from harnessing_honesty.runtime.episode import LOOP_NEUTRAL
 from harnessing_honesty.scoring import (
     LOOP_PRESSURES,
     MatrixEpisodeScore,
@@ -139,8 +140,8 @@ def closed_run(run_dir: Path) -> ReconstructedRun:
 def run_blocks(rebuilt: ReconstructedRun) -> dict[str, tuple[str, bool]]:
     """Each block's item and whether it is a loop block, in recorded order.
 
-    A block whose calls name no item, or that mixes loop turns with matrix
-    calls, is refused.
+    Loop turns and a loop's labelled neutral mark a loop block. A block whose
+    calls name no item, or that mixes loop calls with matrix calls, is refused.
     """
     items: dict[str, str | None] = {}
     kinds: dict[str, set[bool]] = {}
@@ -150,8 +151,9 @@ def run_blocks(rebuilt: ReconstructedRun) -> dict[str, tuple[str, bool]]:
         block_id = str(event.block_id)
         items.setdefault(block_id, event.scenario_id)
         stages = kinds.setdefault(block_id, set())
-        if event.stage != Stage.NEUTRAL:
-            stages.add(event.stage == Stage.MULTI_TURN)
+        loop_neutral = event.cell_identity == LOOP_NEUTRAL
+        if event.stage != Stage.NEUTRAL or loop_neutral:
+            stages.add(event.stage == Stage.MULTI_TURN or loop_neutral)
     found: dict[str, tuple[str, bool]] = {}
     for block_id, item_id in items.items():
         if item_id is None:

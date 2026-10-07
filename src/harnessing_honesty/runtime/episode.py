@@ -40,6 +40,10 @@ from harnessing_honesty.runtime.prompt_view import messages_for
 from harnessing_honesty.runtime.stages import advance
 from harnessing_honesty.runtime.transcript import Transcript
 
+# The cell label of a loop block's neutral call. A matrix neutral has none; a
+# loop block that ends at its neutral is still known to be a loop block.
+LOOP_NEUTRAL = "loop"
+
 
 def _bound(client: ModelClient, session: object | None) -> ModelClient:
     wrap = getattr(session, "wrap", None)
@@ -245,7 +249,7 @@ def _run_loops(
     for message in messages_for(prompt):
         transcript = transcript.append(message)
     request = transcript.snapshot()
-    _label(client, current, None, prompt.id)
+    _label(client, current, LOOP_NEUTRAL, prompt.id)
     result = client.complete(request)
     shared = StageSnapshot(stage=current, request=request, result=result)
     if not isinstance(result, AnswerSuccess):

@@ -408,3 +408,23 @@ The archived registration retains its original references.
 <a id="yao2023react"></a>
 
 [109] S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, and Y. Cao, “ReAct: Synergizing reasoning and acting in language models,” in *Proc. Int. Conf. Learn. Represent. (ICLR)*, 2023. arXiv:2210.03629. [Source](https://arxiv.org/abs/2210.03629).
+
+<a id="anthropic2026claudecode"></a>
+
+[110] Anthropic, “Best practices for Claude Code,” *Claude Code documentation*, secs. “Give Claude a way to verify its work,” “Explore first, then plan, then code,” “Manage context aggressively” and “Use subagents for investigation.” Accessed: Oct. 7, 2026. [Source](https://code.claude.com/docs/en/best-practices).
+
+<a id="rajasekaran2025context"></a>
+
+[111] P. Rajasekaran, E. Dixon, C. Ryan, and J. Hadfield, “Effective context engineering for AI agents,” Anthropic, Sep. 29, 2025, secs. on compaction, structured note-taking and sub-agent architectures. Accessed: Oct. 7, 2026. [Source](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents).
+
+<a id="openai2026codex"></a>
+
+[112] OpenAI, “Best practices,” *Codex documentation*, on plan mode, AGENTS.md, task context and verification. Accessed: Oct. 7, 2026. [Source](https://learn.chatgpt.com/guides/best-practices).
+
+<a id="chatlatanagulchai2025agentreadmes"></a>
+
+[113] W. Chatlatanagulchai, H. Li, Y. Kashiwa, B. Reid, K. Thonglek, P. Leelaprute, A. Rungsawang, B. Manaskasemsak, B. Adams, A. E. Hassan, and H. Iida, “Agent READMEs: An empirical study of context files for agentic coding,” arXiv:2511.12884, 2025. [Source](https://arxiv.org/abs/2511.12884).
+
+<a id="abubakar2026agentplans"></a>
+
+[114] M. A. Abubakar, S. Mohsenimofidi, J. L. Lulla, J. M. Zhang, C. Treude, S. Baltes, and M. Galster, “An exploratory study of agent plans for agentic AI coding tools in open-source software,” arXiv:2608.04661, 2026. [Source](https://arxiv.org/abs/2608.04661).

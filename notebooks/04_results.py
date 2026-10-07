@@ -12,10 +12,13 @@
 
 # %% [markdown]
 # # Results
-# **SYNTHETIC DATA.** No MAIN run exists yet. Every number below comes from
-# one simulated run of the registered design with known effects, so the
-# reader can check each estimate against the truth that produced it. It is not
-# a prediction for any SUT.
+# With `COLLECTION` unset, every number below is **SYNTHETIC DATA**: one
+# simulated run of the registered design with known effects, so the reader
+# can check each estimate against the truth that produced it. It is not a
+# prediction for any SUT. With `COLLECTION` set to a finished collection's
+# directory, each SUT's results are rebuilt from its run files alone, the way
+# `python -m harnessing_honesty.analysis.collected` writes them; model results
+# stay separate.
 #
 # All results come from `harnessing_honesty.analysis.report`, which wires the
 # tested modules together; no statistic is computed in this notebook. Methods
@@ -28,6 +31,11 @@ from pathlib import Path
 import numpy as np
 
 from harnessing_honesty.analysis.bootstrap import Contrast
+from harnessing_honesty.analysis.collected import (
+    collection_loop_rows,
+    collection_reports,
+)
+from harnessing_honesty.analysis.loops import loop_summary
 from harnessing_honesty.analysis.formula import magnitude_note
 from harnessing_honesty.analysis.power import (
     DEFAULT_ASSESSMENT,
@@ -45,10 +53,17 @@ root = next(path for path in (Path.cwd(), *Path.cwd().parents)
             if (path / "pyproject.toml").is_file()
             and (path / "config/freeze.json").is_file())
 power_record = root / DEFAULT_ASSESSMENT
-rows = simulate_rows(SYNTHETIC_FIXTURE, np.random.default_rng(ANALYSIS_SEED))
-truth = {contrast: SYNTHETIC_FIXTURE.effect(contrast) for contrast in Contrast}
-print(f"SYNTHETIC fixture, seed {ANALYSIS_SEED}: {len(rows)} rows")
-print("True effects:", {contrast.value: value for contrast, value in truth.items()})
+# A finished collection's directory, e.g. root / "data/runs/main/<id>".
+COLLECTION: Path | None = None
+
+if COLLECTION is None:
+    rows = simulate_rows(SYNTHETIC_FIXTURE, np.random.default_rng(ANALYSIS_SEED))
+    truth = {contrast: SYNTHETIC_FIXTURE.effect(contrast) for contrast in Contrast}
+    print(f"SYNTHETIC fixture, seed {ANALYSIS_SEED}: {len(rows)} rows")
+    print("True effects:", {c.value: value for c, value in truth.items()})
+else:
+    truth = {}
+    print(f"Collected data: {COLLECTION}")
 
 # %% [markdown]
 # ## Which contrasts may be confirmed
@@ -65,7 +80,10 @@ elif not current:
 for contrast in Contrast:
     status = "confirmatory" if contrast in confirmatory else "estimation-only"
     print(f"{contrast.value}: {status}")
-report = results_report(rows, DESIGN_FAMILIES, confirmatory)
+if COLLECTION is None:
+    reports = {"SYNTHETIC": results_report(rows, DESIGN_FAMILIES, confirmatory)}
+else:
+    reports = collection_reports(COLLECTION, confirmatory)
 
 # %% [markdown]
 # ## Branches and descriptive rates
@@ -79,13 +97,16 @@ def show(value: float | None) -> str:
     return "-" if value is None else f"{value:.3f}"
 
 
-for population, count in sorted(report.branch_counts.items()):
-    print(f"{population.value}: {count} branches")
-for item in report.summaries:
-    print(f"{item.population.value:<11} {item.policy.value:<9} rate "
-          f"{show(item.rate)} (n={item.n_valid}, missing {item.n_missing_final}) "
-          f"bounds {show(item.lower_bound)}-{show(item.upper_bound)} "
-          f"complete-triple {show(item.complete_triple_rate)}")
+for card, report in reports.items():
+    print(f"== {card}")
+    for population, count in sorted(report.branch_counts.items()):
+        print(f"{population.value}: {count} branches")
+    for item in report.summaries:
+        print(f"{item.population.value:<11} {item.policy.value:<9} rate "
+              f"{show(item.rate)} (n={item.n_valid}, "
+              f"missing {item.n_missing_final}) "
+              f"bounds {show(item.lower_bound)}-{show(item.upper_bound)} "
+              f"complete-triple {show(item.complete_triple_rate)}")
 
 # %% [markdown]
 # ## Planned contrasts (recovery)
@@ -99,22 +120,26 @@ for item in report.summaries:
 # show that a policy has no effect [98, Hypotheses].
 
 # %%
-for item in report.primary.contrasts:
-    estimate = "-" if item.estimate is None else f"{item.estimate:+.3f}"
-    interval = (
-        "no interval"
-        if item.ci_low is None or item.ci_high is None
-        else f"[{item.ci_low:+.3f}, {item.ci_high:+.3f}]"
-    )
-    note = "" if item.estimate is None else f"; {magnitude_note(item.estimate)}"
-    decision = (
-        "confirmed" if item.confirmed
-        else "estimation-only" if not item.confirmatory
-        else "not confirmed"
-    )
-    print(f"{item.contrast.value:<13} {estimate} {interval} p_holm "
-          f"{item.p_holm:.4f} failed {item.failed_resamples} -> {decision} "
-          f"(truth {truth[item.contrast]:+.2f}{note})")
+for card, report in reports.items():
+    print(f"== {card}")
+    for item in report.primary.contrasts:
+        estimate = "-" if item.estimate is None else f"{item.estimate:+.3f}"
+        interval = (
+            "no interval"
+            if item.ci_low is None or item.ci_high is None
+            else f"[{item.ci_low:+.3f}, {item.ci_high:+.3f}]"
+        )
+        notes = [] if item.estimate is None else [magnitude_note(item.estimate)]
+        if item.contrast in truth:
+            notes.insert(0, f"truth {truth[item.contrast]:+.2f}")
+        decision = (
+            "confirmed" if item.confirmed
+            else "estimation-only" if not item.confirmatory
+            else "not confirmed"
+        )
+        print(f"{item.contrast.value:<13} {estimate} {interval} p_holm "
+              f"{item.p_holm:.4f} failed {item.failed_resamples} -> {decision} "
+              f"({'; '.join(notes)})")
 
 # %% [markdown]
 # ## Sensitivity analyses
@@ -122,18 +147,20 @@ for item in report.primary.contrasts:
 # branch with an unknown prefix is never imputed [98, Exclusions].
 
 # %%
-for analysis in report.sensitivity:
-    cells = "  ".join(
-        f"{item.contrast.value} "
-        + ("-" if item.estimate is None else f"{item.estimate:+.3f}")
-        + (
-            ""
-            if item.ci_low is None or item.ci_high is None
-            else f" [{item.ci_low:+.3f}, {item.ci_high:+.3f}]"
+for card, report in reports.items():
+    print(f"== {card}")
+    for analysis in report.sensitivity:
+        cells = "  ".join(
+            f"{item.contrast.value} "
+            + ("-" if item.estimate is None else f"{item.estimate:+.3f}")
+            + (
+                ""
+                if item.ci_low is None or item.ci_high is None
+                else f" [{item.ci_low:+.3f}, {item.ci_high:+.3f}]"
+            )
+            for item in analysis.result.contrasts
         )
-        for item in analysis.result.contrasts
-    )
-    print(f"{analysis.label:<27} {cells}")
+        print(f"{analysis.label:<27} {cells}")
 
 # %% [markdown]
 # ## Override and secondary odds ratios
@@ -145,16 +172,42 @@ for analysis in report.sensitivity:
 # nothing. A fit that is not `fitted` reports its status instead.
 
 # %%
-for population, rate in report.override.items():
-    print(f"override ({population.value}): "
-          + ("-" if rate is None else f"{rate:.3f}"))
-for item in report.odds:
-    if item.document_grounded is None or item.deductive is None:
-        print(f"{item.treatment.value} vs none: {item.fit.status.value}, no odds ratio")
-        continue
-    print(f"{item.treatment.value} vs none: OR document-grounded "
-          f"{item.document_grounded:.2f}, deductive {item.deductive:.2f} "
-          f"(scenario variance {item.fit.scenario_variance:.2f})")
+for card, report in reports.items():
+    print(f"== {card}")
+    for population, rate in report.override.items():
+        print(f"override ({population.value}): "
+              + ("-" if rate is None else f"{rate:.3f}"))
+    for item in report.odds:
+        treatment = item.treatment.value
+        if item.document_grounded is None or item.deductive is None:
+            print(f"{treatment} vs none: {item.fit.status.value}, no odds ratio")
+            continue
+        print(f"{treatment} vs none: OR document-grounded "
+              f"{item.document_grounded:.2f}, deductive {item.deductive:.2f} "
+              f"(scenario variance {item.fit.scenario_variance:.2f})")
+
+# %% [markdown]
+# ## Exploratory: policy loops
+# **Added after registration, and exploratory.** The registered analysis is
+# the matrix above; these results test no contrast and confirm nothing. Each
+# policy runs as an agent loop [108] through three escalating pressures on
+# its own transcript. Among loops whose neutral answer was correct, each row
+# gives how many still held the correct answer after each turn, the mean Turn
+# of Flip (4 when a loop held throughout) and the mean Number of Flip [10],
+# each with the count it is computed over. Shown for collected data only.
+
+# %%
+if COLLECTION is None:
+    print("No collection selected: the loops have no synthetic fixture.")
+else:
+    for card, loop_rows in collection_loop_rows(COLLECTION).items():
+        print(f"== {card}")
+        for item in loop_summary(loop_rows):
+            held = "/".join(str(n) for n in item.held_through)
+            print(f"{item.policy.value:<9} eligible {item.eligible} of {item.loops}; "
+                  f"held after turns 1/2/3: {held} of {item.flip_known}; "
+                  f"Turn of Flip {show(item.mean_turn_of_flip)}; "
+                  f"Number of Flip {show(item.mean_flips)} (n={item.flips_known})")
 
 # %% [markdown]
 # ## Reading the results

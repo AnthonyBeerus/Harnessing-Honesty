@@ -68,16 +68,16 @@ model identity was not blinded. C01 is not necessarily generation index zero.
 The earlier cross-model pilot separately hid model identity; that pilot's
 blinding must not be attributed to the full-corpus packet.
 
-### Repair and rating authorship: unresolved
+### Repair and rating authorship
 
 The saved files establish the four before/after repairs and their accepted
-dispositions, but do not identify the repair drafter or the origin of suggested
-ratings. They therefore do not establish unaided researcher authorship. The
-researcher must confirm who drafted the repairs, whether an assistant suggested
-ratings, and who made the final acceptance decisions before this amendment is
-reported. No independent review is claimed. Historical repair-manifest statuses
-remain `pending_researcher_disposition`; those proposal-stage fields are not
-approval. The saved review CSVs and corpus acceptance records supply disposition
+dispositions, but do not themselves identify the repair drafter or the origin
+of the ratings. On 7 October 2026 the researcher stated that they drafted the
+four repairs and wrote the ratings themselves, with no AI suggestions, and made
+every final acceptance decision. This is the researcher's own statement, not
+evidence recovered from the saved files. No independent review is claimed.
+Historical repair-manifest statuses remain `pending_researcher_disposition`;
+those proposal-stage fields are not approval. The saved review CSVs and corpus acceptance records supply disposition
 evidence, not a complete authorship record.
 
 Generation used sequential five-call batches and 60-second cooldowns. Two

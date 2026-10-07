@@ -10,6 +10,7 @@ from harnessing_honesty.compiler.freeze import (
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Stage, Track
 from harnessing_honesty.evaluation.collection import (
+    STUDY_KINDS,
     CollectionSpec,
     block_items,
     build_spec,
@@ -29,6 +30,7 @@ def _spec(track: Track = Track.DEV, **changes: object) -> CollectionSpec:
         tuple(item.item_id for item in ITEMS),
         scheduler_seed=0,
         freeze_id="freeze-test" if track is Track.MAIN else None,
+        kinds=STUDY_KINDS if track is Track.MAIN else ("matrix",),
     )
     return spec.model_copy(update=changes)
 
@@ -111,6 +113,10 @@ def test_main_needs_a_matching_signed_freeze() -> None:
     one_card = spec.model_copy(update={"suts": spec.suts[:1]})
     assert "freeze: cards differ from the primary serving cards" in readiness(
         one_card, freeze=lambda: _freeze(one_card)
+    )
+    matrix_only = spec.model_copy(update={"kinds": ("matrix",)})
+    assert readiness(matrix_only, freeze=lambda: _freeze(matrix_only)) == (
+        "kinds: MAIN runs matrix and loop blocks",
     )
 
 

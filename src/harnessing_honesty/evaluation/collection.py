@@ -74,6 +74,8 @@ CALLS_PER_BLOCK = 13
 LOOP_CALLS = 10
 BlockKind = Literal["matrix", "loop"]
 BLOCK_CALLS: dict[str, int] = {"matrix": CALLS_PER_BLOCK, "loop": LOOP_CALLS}
+# The study runs every item as a matrix block and as a loop block.
+STUDY_KINDS: tuple[BlockKind, ...] = ("matrix", "loop")
 
 # Consecutive calls on one SUT ending in a provider failure after all registered
 # retries that pause it as a dead pin; docs/research-design-decisions.md,
@@ -202,12 +204,12 @@ def selection(
     item_ids: tuple[str, ...],
     *,
     freeze_id: str | None = None,
-    kinds: tuple[BlockKind, ...] = ("matrix",),
+    kinds: tuple[BlockKind, ...] = STUDY_KINDS,
 ) -> CollectionSpec:
     """The specification a notebook or CLI selection defines.
 
     The scheduler seed is the first card's; readiness requires every card to
-    agree with it.
+    agree with it. Both block kinds run unless fewer are named.
     """
     return build_spec(
         collection_id,
@@ -261,7 +263,7 @@ def readiness(
 def _main_findings(
     spec: CollectionSpec, freeze: Callable[[], FreezeManifest]
 ) -> list[str]:
-    """MAIN runs only the registered items, cards and seed under a matching freeze."""
+    """MAIN runs the frozen items, cards and seed, and both block kinds."""
     try:
         manifest = freeze()
     except ValueError as exc:
@@ -277,6 +279,8 @@ def _main_findings(
         findings.append("freeze: cards differ from the primary serving cards")
     if spec.scheduler_seed != manifest.scheduler_seed:
         findings.append("freeze: scheduler seed differs from the freeze")
+    if spec.kinds != STUDY_KINDS:
+        findings.append("kinds: MAIN runs matrix and loop blocks")
     return findings
 
 

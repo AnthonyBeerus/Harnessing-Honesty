@@ -98,11 +98,26 @@ def _selected_endpoint(metadata: dict[str, Any]) -> dict[str, Any]:
     return selected[0] if len(selected) == 1 else {}
 
 
+# A moderation check that did not flag passes the request on unchanged. Its
+# label keeps the outcome, so a flagged or unreported check stays distinct.
+UNFLAGGED_MODERATION = "guardrail:moderation:unflagged"
+
+
 def _pipeline_stages(metadata: dict[str, Any]) -> tuple[str, ...]:
     pipeline = metadata.get("pipeline")
     if not isinstance(pipeline, list):
         return ()
-    return tuple(_text(_mapping(stage).get("type")) or "unknown" for stage in pipeline)
+    return tuple(_stage_label(_mapping(stage)) for stage in pipeline)
+
+
+def _stage_label(stage: dict[str, Any]) -> str:
+    """The stage type; a moderation guardrail also names its outcome."""
+    kind = _text(stage.get("type")) or "unknown"
+    if kind != "guardrail" or stage.get("name") != "moderation":
+        return kind
+    flagged = _mapping(stage.get("data")).get("flagged")
+    outcome = {False: "unflagged", True: "flagged"}.get(flagged, "unreported")
+    return f"guardrail:moderation:{outcome}"
 
 
 def _router_attempts(metadata: dict[str, Any]) -> int | None:

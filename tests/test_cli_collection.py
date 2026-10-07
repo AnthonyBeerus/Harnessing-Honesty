@@ -38,11 +38,22 @@ def test_plan_prints_the_shared_plan_and_creates_nothing(
     assert list(runs_root.iterdir()) == []
 
 
+def test_a_plan_can_name_fewer_block_kinds(
+    runs_root: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    cli.main([
+        "collection-plan", "--id", "c1", "--first", "2", "--card", GEMMA,
+        "--kind", "matrix",
+    ])
+
+    assert "x 13 calls (matrix) = 26 planned calls" in capsys.readouterr().out
+
+
 def test_launch_and_resume_need_the_planned_count(runs_root: Path) -> None:
-    with pytest.raises(SystemExit, match="--confirm-calls 26"):
+    with pytest.raises(SystemExit, match="--confirm-calls 46"):
         cli.main([
             "collection-launch", "--id", "c2", "--first", "2", "--card", GEMMA,
-            "--client", "synthetic", "--confirm-calls", "25",
+            "--client", "synthetic", "--confirm-calls", "45",
         ])
     assert list(runs_root.iterdir()) == []
 
@@ -52,7 +63,7 @@ def test_a_launch_runs_once_and_the_controls_act_on_files(
 ) -> None:
     launch = [
         "collection-launch", "--id", "c3", "--first", "2", "--card", GEMMA,
-        "--client", "synthetic", "--confirm-calls", "26",
+        "--client", "synthetic", "--confirm-calls", "46",
     ]
     cli.main(launch)
     directory = runs_root / "dev" / "c3"
@@ -64,7 +75,7 @@ def test_a_launch_runs_once_and_the_controls_act_on_files(
 
     assert collection.worker_logs(directory) == logs
     assert "complete: True" in capsys.readouterr().out
-    with pytest.raises(SystemExit, match="--confirm-calls 26"):
+    with pytest.raises(SystemExit, match="--confirm-calls 46"):
         cli.main([
             "collection-resume", "--id", "c3", "--client", "synthetic",
             "--confirm-calls", "1",

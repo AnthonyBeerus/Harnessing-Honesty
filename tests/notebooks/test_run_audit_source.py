@@ -77,4 +77,4 @@ def test_a_recorded_answer_that_does_not_parse_is_a_discrepancy(
     out = capsys.readouterr().out
 
     assert "parse discrepancy: call-000001 #1 answered 'Yes, probably.'" in out
-    assert "No matrix rebuilt: integrity issues or no stage labels." in out
+    assert "No block rebuilt: integrity issues or no stage labels." in out

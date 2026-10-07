@@ -1,10 +1,13 @@
 """Loop blocks of a collected run into loop rows and their summary."""
 
+import json
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
 
+from harnessing_honesty.analysis import collected
 from harnessing_honesty.analysis.collected import collection_loop_rows
 from harnessing_honesty.analysis.loops import LoopRow, loop_rows_from_run, loop_summary
 from harnessing_honesty.analysis.reconstruct import (
@@ -106,6 +109,24 @@ def test_loop_blocks_give_loop_rows_and_no_matrix_rows(
     assert [row.turn_correct for row in rows[:3]] == [s.turn_correct for s in scores]
     assert first.task_stratum == ITEMS[first.scenario_id].stratum.value
     assert collection_loop_rows(collection) == {CARD: rows}
+
+
+def test_the_results_file_carries_each_suts_loop_summary(
+    collection: Path, run_dir: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    output = tmp_path / "results.json"
+    # The matrix reports are tested elsewhere; only the loop field is read here.
+    monkeypatch.setattr(collected, "collection_reports", lambda *_, **__: {})
+    monkeypatch.setattr(
+        sys, "argv", ["collected", str(collection), "--output", str(output)]
+    )
+
+    collected.main()
+
+    summary = loop_summary(loop_rows_from_run(run_dir, ITEMS))
+    assert json.loads(output.read_text(encoding="utf-8"))["loops"] == {
+        CARD: [row.model_dump(mode="json") for row in summary]
+    }
 
 
 def test_a_block_mixing_loop_turns_and_matrix_calls_is_refused(

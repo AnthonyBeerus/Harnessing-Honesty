@@ -1,10 +1,22 @@
-"""The results notebook source runs offline on its labelled synthetic fixture."""
+"""The results notebook runs offline on its synthetic fixture or a collection."""
 
 from pathlib import Path
 
 import pytest
 
+from harnessing_honesty.analysis.collected import collection_loop_rows
+from harnessing_honesty.analysis.loops import loop_summary
 from harnessing_honesty.analysis.power import assess_power
+from harnessing_honesty.compiler.pool import confirmatory_pool
+from harnessing_honesty.domain.enums import Track
+from harnessing_honesty.evaluation.collection import (
+    STUDY_KINDS,
+    build_spec,
+    execute,
+    start_collection,
+)
+from harnessing_honesty.models.fake import HashedAnswerClient
+from harnessing_honesty.observability.clock import FakeClock
 
 SOURCE = Path(__file__).resolve().parents[2] / "notebooks" / "04_results.py"
 SELECTION = "power_record = root / DEFAULT_ASSESSMENT"
@@ -59,3 +71,30 @@ def test_the_recorded_gate_decides_what_may_be_confirmed(
     record.write_text(stale.model_dump_json(), encoding="utf-8")
     _run_notebook(record)
     assert "earlier analysis code" in capsys.readouterr().out
+
+
+def test_a_collection_shows_each_suts_results_and_exploratory_loops(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    card = "config/qualification.gemma4.deepinfra.yaml"
+    items = tuple(item.item_id for item in confirmatory_pool())[:6]
+    spec = build_spec("results", Track.DEV, (card,), items, scheduler_seed=0,
+                      kinds=STUDY_KINDS)
+    directory = start_collection(tmp_path, spec)
+    execute(directory, lambda serving: HashedAnswerClient(),
+            approved_calls=spec.planned_calls, clock=FakeClock())
+    source = SOURCE.read_text(encoding="utf-8")
+    switch = "COLLECTION: Path | None = None"
+    assert source.count(switch) == 1
+    source = source.replace(switch, f"COLLECTION = Path({str(directory)!r})")
+
+    exec(compile(source, str(SOURCE), "exec"), {"__name__": "__main__"})
+    out = capsys.readouterr().out
+
+    assert f"Collected data: {directory}" in out and "SYNTHETIC" not in out
+    assert out.count(f"== {card}") == 5
+    assert "truth" not in out
+    rows = collection_loop_rows(directory)[card]
+    for summary in loop_summary(rows):
+        held = "/".join(str(n) for n in summary.held_through)
+        assert f"held after turns 1/2/3: {held} of {summary.flip_known}" in out

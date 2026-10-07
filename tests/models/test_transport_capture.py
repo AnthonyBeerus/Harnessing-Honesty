@@ -196,6 +196,25 @@ def test_absent_or_malformed_identity_is_not_an_observation() -> None:
     assert call_evidence([]).exchanges == ()
 
 
+def _moderation(flagged: bool | None) -> dict[str, object]:
+    """The moderation stage OpenRouter reported on some Sonnet calls, 7 October."""
+    data: dict[str, object] = {"engine": "openai-moderations"}
+    if flagged is not None:
+        data["flagged"] = flagged
+    return {"type": "guardrail", "name": "moderation", "data": data}
+
+
+def test_a_moderation_check_that_did_not_flag_keeps_the_answer() -> None:
+    body = _completion(openrouter_metadata=_metadata(pipeline=[_moderation(False)]))
+    client = _replies(httpx.Response(200, json=body))
+
+    result = client.complete(REQUEST)
+
+    assert not isinstance(result, ProtocolFailure)
+    assert client.last_evidence is not None
+    assert client.last_evidence.pipeline_stages == ("guardrail:moderation:unflagged",)
+
+
 @pytest.mark.parametrize(
     ("metadata", "detail"),
     [
@@ -207,6 +226,16 @@ def test_absent_or_malformed_identity_is_not_an_observation() -> None:
             "router retried or fell back",
         ),
         (_metadata(pipeline=[{"type": "context_compression"}]), "pipeline"),
+        (_metadata(pipeline=[_moderation(True)]), "guardrail:moderation:flagged"),
+        (_metadata(pipeline=[_moderation(None)]), "moderation:unreported"),
+        (
+            _metadata(pipeline=[{**_moderation(False), "name": "pii-redaction"}]),
+            "['guardrail']",
+        ),
+        (
+            _metadata(pipeline=[_moderation(False), {"type": "context_compression"}]),
+            "['context_compression']",
+        ),
         (_metadata(strategy="fallback"), "routing strategy"),
         (_metadata(model="anthropic/claude-4.6-sonnet-20260901"), "snapshot"),
         (

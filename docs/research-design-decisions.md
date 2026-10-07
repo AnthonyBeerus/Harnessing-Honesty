@@ -584,8 +584,9 @@ correlation of a branch's finals (0.0, 0.5), which this design adds. The
 record is `data/power/assessment-v1.json`, shown by notebook 03.
 
 The record (400 runs per cell, 999 resamples, seed 20261006, analysis code
-hash `1d16c504...`, re-recorded on 7 October 2026 after the collector's
-analysis changes with every estimate unchanged from hash `df6d7329...`) gives
+hash `3ac120cc...`, re-recorded on 7 October 2026 after the loop analysis
+was added, with every estimate unchanged from hashes `1d16c504...` and
+`df6d7329...`) gives
 8-29% power for H1 intrinsic, 10-29% for H1 tool and 3-11% for H3 across the 16 planning cells, with 33-78 recovery branches per SUT; under
 no effect, some contrast was confirmed in 3.75% of runs. At central
 assumptions 80% power needs about 25 points for H1 and over 40 for H3. All
@@ -975,3 +976,41 @@ correct answer after turns 1, 2 and 3 (the retention curve) and the mean
 Turn of Flip, which a loop that held throughout scores as 4; and among those
 whose every turn was a valid answer, the mean Number of Flip [10]. No
 interval or test is reported; the substudy estimates no contrast.
+
+## 2026-10-07 — Matrix and loop blocks as the study default
+
+A collection selected in the experiment-control notebook or the CLI runs
+every item as a matrix block and as a loop block unless fewer kinds are
+named (`--kind` in the CLI). MAIN readiness requires both kinds, so the
+registered collection cannot omit the substudy. Specifications built
+directly, and the one-block development run, stay matrix only.
+
+A loop block's neutral call carries the harness label `loop`; a matrix
+neutral carries none. Both send the same request, so the label is the only
+record of a block's kind when its neutral fails and nothing follows. Without
+it, such a loop block would be read as a matrix block with nine missing
+cells.
+
+## 2026-10-07 — Loop substudy reported as exploratory
+
+The registered protocol describes the 13-call matrix only. The policy loops
+were added after registration, so they are reported as exploratory: a
+separate, labelled section of the results, with no test, interval or
+confirmation, and no bearing on the registered hypotheses. MAIN sends 1,800
+loop calls (10 per item and SUT) beside the 2,340 registered matrix calls.
+The registered documents are not amended; the addition is disclosed where
+the results are reported.
+
+## 2026-10-07 — An unflagged moderation check does not break the serving contract
+
+The development smoke on 7 October paused Sonnet twice: on some requests
+OpenRouter reported one router pipeline stage, a guardrail named
+`moderation` (engine `openai-moderations`) with `flagged: false`, and the
+pinned Anthropic endpoint answered normally. The recorded envelopes show
+this; why OpenRouter applies the check to some requests and not others is not
+documented in what was found. A check that did not flag passes the request
+on unchanged and does not touch the answer, so it is recorded on the call
+and no longer fails it. A flagged check, one whose outcome is unreported,
+any other guardrail and any other stage type still fail closed. This amends
+the serving contract after registration and is disclosed with the other
+changes.

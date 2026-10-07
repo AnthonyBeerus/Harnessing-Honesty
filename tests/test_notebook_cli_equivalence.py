@@ -17,7 +17,10 @@ from pathlib import Path
 import pytest
 
 from harnessing_honesty import cli
-from harnessing_honesty.analysis.collected import collection_rows
+from harnessing_honesty.analysis.collected import (
+    collection_loop_rows,
+    collection_rows,
+)
 from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.domain.events import RequestSent
@@ -29,6 +32,8 @@ from harnessing_honesty.runtime import live
 
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK = ROOT / "notebooks" / "05_experiment_control.py"
+# A matrix block and a loop block per item, the study default.
+CALLS = collection.CALLS_PER_BLOCK + collection.LOOP_CALLS
 POOL_LINE = "ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())"
 
 
@@ -41,7 +46,7 @@ def _notebook(runs_root: Path, collection_id: str, *, launch: bool, items: int =
     if launch:
         replacements["LAUNCH: bool = False"] = "LAUNCH: bool = True"
         replacements["APPROVED_CALLS: int | None = None"] = (
-            f"APPROVED_CALLS = {13 * items * 3}"
+            f"APPROVED_CALLS = {CALLS * items * 3}"
         )
     source = NOTEBOOK.read_text(encoding="utf-8")
     for old, new in replacements.items():
@@ -56,7 +61,7 @@ def _cli(*arguments: str) -> None:
 
 def _launch_cli(collection_id: str, items: int) -> None:
     _cli("collection-launch", "--id", collection_id, "--first", str(items),
-         "--client", "synthetic", "--confirm-calls", str(13 * items * 3))
+         "--client", "synthetic", "--confirm-calls", str(CALLS * items * 3))
 
 
 def _wait(directory: Path) -> None:
@@ -106,12 +111,14 @@ def test_notebook_and_cli_record_the_same_collection(runs_root: Path) -> None:
         for name in names:
             assert (saved / name).read_bytes() == (other / name).read_bytes()
     strip = {"run_id"}
-    notebook_rows = collection_rows(notebook_dir)
-    cli_rows = collection_rows(cli_dir)
-    for card in PRIMARY_SERVING_CARDS:
-        assert [r.model_dump(exclude=strip) for r in notebook_rows[card]] == [
-            r.model_dump(exclude=strip) for r in cli_rows[card]
-        ]
+    assert notebook_spec.kinds == collection.STUDY_KINDS
+    for rows in (collection_rows, collection_loop_rows):
+        notebook_rows, cli_rows = rows(notebook_dir), rows(cli_dir)
+        for card in PRIMARY_SERVING_CARDS:
+            assert notebook_rows[card]
+            assert [r.model_dump(exclude=strip) for r in notebook_rows[card]] == [
+                r.model_dump(exclude=strip) for r in cli_rows[card]
+            ]
 
     # A restarted kernel reconnects by collection id and reads the same status.
     _notebook(runs_root, "from-notebook", launch=False)
@@ -142,7 +149,7 @@ def test_a_killed_worker_is_released_and_resumed_without_losing_attempts(
     assert stopped.owner is not None and not stopped.complete
     collection.release_owner(directory, pid)
     _cli("collection-resume", "--id", "killed", "--client", "synthetic",
-         "--confirm-calls", str(13 * 60 * 3))
+         "--confirm-calls", str(CALLS * 60 * 3))
     _wait(directory)
 
     for card in PRIMARY_SERVING_CARDS:
@@ -151,7 +158,7 @@ def test_a_killed_worker_is_released_and_resumed_without_losing_attempts(
         by_call: dict[str, list] = {}
         for attempt in reconstruct_run(run_dir).attempts:
             by_call.setdefault(str(attempt.call_id), []).append(attempt)
-        assert len(by_call) == 13 * 60
+        assert len(by_call) == CALLS * 60
         for history in by_call.values():
             assert history[-1].outcome == "answered"
             assert all(a.indeterminate for a in history[:-1])
@@ -201,7 +208,7 @@ def test_concurrent_launches_leave_one_owner_and_one_record(runs_root: Path) -> 
         run_dir = directory / Path(card).stem
         events = reconstruct_run(run_dir).events
         sent = [e for e in events if isinstance(e, RequestSent)]
-        assert len(sent) == 13 * 2
+        assert len(sent) == CALLS * 2
         assert check_integrity(run_dir) == ()
 
 

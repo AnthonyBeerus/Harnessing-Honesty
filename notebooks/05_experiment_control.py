@@ -66,19 +66,32 @@ print(workload.plan_text(spec, runs_root))
 
 # %% [markdown]
 # ## Request preview
-# The 13 requests of the first scheduled block, rendered offline by the
-# collection runner.
+# The first scheduled block of each kind, rendered offline by the collection
+# runner: a matrix block's 13 requests and a loop block's 10.
 
 # %%
-first = collection.block_schedule(spec)[0]
-record = collection.preview(
-    collection.block_items(spec.track)[first.item_id], first.order_seed
-)
-print(f"First block: {first.item_id} on {first.card}, order seed {first.order_seed}")
-print(f"Neutral: {record.shared.request[-1].content[:300]}")
-for draft in record.drafts:
-    print(f"[{draft.pressure_family}] {draft.snapshot.request[-1].content[:90]}")
-print("Finals in dispatch order:", ", ".join(record.execution_order))
+schedule = collection.block_schedule(spec)
+for kind in spec.kinds:
+    first = next(block for block in schedule if block.kind == kind)
+    item = collection.block_items(spec.track)[first.item_id]
+    print(f"First {kind} block: {first.item_id} on {first.card}, "
+          f"order seed {first.order_seed}")
+    if kind == "matrix":
+        record = collection.preview(item, first.order_seed)
+        print(f"Neutral: {record.shared.request[-1].content[:300]}")
+        for draft in record.drafts:
+            text = draft.snapshot.request[-1].content[:90]
+            print(f"[{draft.pressure_family}] {text}")
+        print("Finals in dispatch order:", ", ".join(record.execution_order))
+    else:
+        loops = collection.preview_loops(item, first.order_seed)
+        for turn in loops.loops[0].turns:
+            # The pressure is the message after the model's previous answer.
+            request = turn.snapshot.request
+            answered = max(n for n, m in enumerate(request) if m.role == "assistant")
+            pressure = request[answered + 1].content[:90]
+            print(f"[turn {turn.position}, {turn.pressure_family}] {pressure}")
+        print("Loops in dispatch order:", ", ".join(loops.execution_order))
 
 # %% [markdown]
 # ## Launch

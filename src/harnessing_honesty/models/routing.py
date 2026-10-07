@@ -4,6 +4,7 @@ from typing import Any, Mapping
 
 from harnessing_honesty.domain.evidence import CallEvidence
 from harnessing_honesty.models.config import RoutingCard, ServingManifest
+from harnessing_honesty.models.transport import UNFLAGGED_MODERATION
 from harnessing_honesty.domain.results import ProtocolFailure
 
 
@@ -68,8 +69,9 @@ def classify_evidence(
     """Fail closed unless the evidence matches the card.
 
     Router metadata: one direct attempt on the pinned endpoint, the registered
-    snapshot and no pipeline stage [34]. No cache hit [33]. Zero reported
-    reasoning tokens [94].
+    snapshot and no pipeline stage [34] other than a moderation check that did
+    not flag, which leaves the request and the answer unchanged. No cache hit
+    [33]. Zero reported reasoning tokens [94].
     """
     if evidence.observed_endpoint is None:
         return ProtocolFailure(detail="router metadata has no selected endpoint")
@@ -88,10 +90,9 @@ def classify_evidence(
         return ProtocolFailure(
             detail=f"router retried or fell back: {evidence.router_attempts} attempts"
         )
-    if evidence.pipeline_stages:
-        return ProtocolFailure(
-            detail=f"router pipeline stages: {list(evidence.pipeline_stages)}"
-        )
+    material = [s for s in evidence.pipeline_stages if s != UNFLAGGED_MODERATION]
+    if material:
+        return ProtocolFailure(detail=f"router pipeline stages: {material}")
     if evidence.cache_status is not None and evidence.cache_status.upper() == "HIT":
         return ProtocolFailure(detail="response cache HIT")
     if evidence.observed_snapshot != manifest.served_snapshot:

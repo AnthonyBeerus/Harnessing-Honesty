@@ -28,7 +28,11 @@
 from collections import Counter
 from pathlib import Path
 
-from harnessing_honesty.analysis.reconstruct import matrix_record_from_run
+from harnessing_honesty.analysis.reconstruct import (
+    loop_record_from_run,
+    matrix_record_from_run,
+    run_blocks,
+)
 from harnessing_honesty.domain.matrix import development_conditions
 from harnessing_honesty.observability.integrity import check_integrity
 from harnessing_honesty.observability.reconstruct import reconstruct_run
@@ -101,8 +105,8 @@ if run_path is not None:
 
 # %% [markdown]
 # ## Missingness and reconstruction discrepancies
-# A matrix block is rebuilt from saved requests and raw outcomes. Slots that
-# were never filled or ended indeterminate are missing. A discrepancy is an
+# Each matrix or loop block is rebuilt from saved requests and raw outcomes.
+# Slots that were never filled or ended indeterminate are missing. A discrepancy is an
 # attempt whose raw text, parsed again, disagrees with its recorded outcome.
 
 # %%
@@ -112,13 +116,18 @@ if run_path is not None:
         print(f"parse discrepancy: {a.call_id} #{a.attempt} {a.outcome} {a.raw_response!r}")
     print(f"{len(disagreements)} parse discrepancies")
     if issues or not any(a.stage for a in attempts):
-        print("No matrix rebuilt: integrity issues or no stage labels.")
+        print("No block rebuilt: integrity issues or no stage labels.")
     else:
-        # A collection run holds one matrix block per item; each is rebuilt.
+        # A collection run holds a matrix block, and may hold a loop block, per
+        # item; each is rebuilt by its kind.
         conditions = development_conditions()
         families = len({condition.pressure for condition in conditions})
-        blocks = list(dict.fromkeys(a.block_id for a in attempts if a.stage))
-        for block_id in blocks:
+        for block_id, (_, loop) in run_blocks(reconstruct_run(run_path)).items():
+            if loop:
+                loops = loop_record_from_run(run_path, block_id)
+                turns = [len(policy_loop.turns) for policy_loop in loops.loops]
+                print(f"{block_id}: loop turns present {turns}, of {families} each")
+                continue
             matrix = matrix_record_from_run(run_path, block_id)
             print(f"{block_id}: drafts present {len(matrix.drafts)} of {families}; "
                   f"finals present {len(matrix.branches)} of {len(conditions)}")
