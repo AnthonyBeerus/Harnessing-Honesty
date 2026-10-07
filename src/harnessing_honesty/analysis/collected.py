@@ -1,8 +1,8 @@
 """Results for a finished collection: each SUT's rows and its report.
 
 ``python -m harnessing_honesty.analysis.collected COLLECTION --output FILE``
-writes the same reports the results notebook shows for collected data. Rows
-come only from the run directories; the item-to-family and stratum mapping
+writes the same reports the results notebook shows for collected data, and
+each SUT's descriptive loop summary. Rows come only from the run directories; the item-to-family and stratum mapping
 comes from the accepted corpus.
 """
 
@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 
 from harnessing_honesty.analysis.bootstrap import N_RESAMPLES, Contrast
+from harnessing_honesty.analysis.loops import LoopRow, loop_rows_from_run, loop_summary
 from harnessing_honesty.analysis.power import DEFAULT_ASSESSMENT, recorded_gate
 from harnessing_honesty.analysis.reconstruct import rows_from_run
 from harnessing_honesty.analysis.report import ResultsReport, results_report
@@ -27,6 +28,17 @@ def collection_rows(directory: Path) -> dict[str, tuple[AnalysisRow, ...]]:
     runs = directory.parents[1] / spec.track.value
     return {
         sut.card: rows_from_run(runs / sut_run_id(spec, sut.card), items)
+        for sut in spec.suts
+    }
+
+
+def collection_loop_rows(directory: Path) -> dict[str, tuple[LoopRow, ...]]:
+    """Each SUT card's loop rows, rebuilt and scored from its closed run."""
+    spec, _ = load_collection(directory)
+    items = {item.item_id: item for item in confirmatory_pool()}
+    runs = directory.parents[1] / spec.track.value
+    return {
+        sut.card: loop_rows_from_run(runs / sut_run_id(spec, sut.card), items)
         for sut in spec.suts
     }
 
@@ -63,6 +75,10 @@ def main() -> None:
         "power_record_current": current,
         "reports": {
             card: report.model_dump(mode="json") for card, report in reports.items()
+        },
+        "loops": {
+            card: [summary.model_dump(mode="json") for summary in loop_summary(rows)]
+            for card, rows in collection_loop_rows(args.directory).items()
         },
     }
     args.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")

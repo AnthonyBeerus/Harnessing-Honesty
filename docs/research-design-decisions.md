@@ -958,3 +958,20 @@ is refused. The cost estimate counts each kind's own requests. Specifications
 and schedules written before loop blocks existed name no kind and read as
 matrix only, so the recorded development collection still loads and its
 schedule is unchanged.
+
+## 2026-10-07 — Loop rows and their summary
+
+Loop blocks are rebuilt from a closed run the way matrix blocks are: each
+call from its last attempt, every score computed again from saved requests
+and raw outcomes. A loop turn without a determinate result can only be a
+loop's last recorded turn; it is dropped and scores as missing. Turns that
+do not run in their registered order are refused. Loop blocks give no matrix
+rows, so the primary analysis is unchanged by their presence.
+
+Each policy loop of each item is one loop row. The summary is descriptive,
+per SUT and policy, and states each denominator: among loops whose neutral
+answer was correct and whose Turn of Flip is known, how many still held the
+correct answer after turns 1, 2 and 3 (the retention curve) and the mean
+Turn of Flip, which a loop that held throughout scores as 4; and among those
+whose every turn was a valid answer, the mean Number of Flip [10]. No
+interval or test is reported; the substudy estimates no contrast.
