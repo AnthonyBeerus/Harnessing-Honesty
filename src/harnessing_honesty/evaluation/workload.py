@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict
 from harnessing_honesty.domain.evidence import CallEvidence
 from harnessing_honesty.domain.records import RunRecord
 from harnessing_honesty.evaluation.collection import (
+    BLOCK_CALLS,
     CALLS_PER_BLOCK,
     CollectionSpec,
     block_items,
@@ -22,6 +23,7 @@ from harnessing_honesty.evaluation.collection import (
     collection_status,
     worker_logs,
     preview,
+    preview_loops,
     readiness,
 )
 from harnessing_honesty.models.retries import PARSE_RETRIES, PROVIDER_RETRIES
@@ -109,12 +111,20 @@ def calibration_run(runs_root: Path) -> Path | None:
     return None
 
 
-def _block_characters(spec: CollectionSpec, item_id: str) -> int:
-    """Characters of the 13 requests one block of ``item_id`` would send."""
-    record = preview(block_items(spec.track)[item_id])
-    requests = [record.shared.request]
-    requests += [draft.snapshot.request for draft in record.drafts]
-    requests += [branch.snapshot.request for branch in record.branches]
+def _block_characters(spec: CollectionSpec, item_id: str, kind: str) -> int:
+    """Characters of the requests one block of ``item_id`` and ``kind`` sends."""
+    item = block_items(spec.track)[item_id]
+    if kind == "loop":
+        loops = preview_loops(item)
+        requests = [loops.shared.request]
+        requests += [
+            turn.snapshot.request for loop in loops.loops for turn in loop.turns
+        ]
+    else:
+        record = preview(item)
+        requests = [record.shared.request]
+        requests += [draft.snapshot.request for draft in record.drafts]
+        requests += [branch.snapshot.request for branch in record.branches]
     return sum(len(message.content) for request in requests for message in request)
 
 
@@ -140,9 +150,10 @@ def estimate_cost(
     tokens_per_character = calibration.input_tokens / characters
     output_per_call = calibration.output_tokens / calibration.attempts
     block_tokens = sum(
-        _block_characters(spec, item_id) * tokens_per_character
-        + output_per_call * CALLS_PER_BLOCK
+        _block_characters(spec, item_id, kind) * tokens_per_character
+        + output_per_call * BLOCK_CALLS[kind]
         for item_id in spec.item_ids
+        for kind in spec.kinds
     )
     per_card: dict[str, float] = {}
     for sut in spec.suts:
@@ -177,8 +188,9 @@ def plan_text(spec: CollectionSpec, runs_root: Path) -> str:
     """
     lines = [
         f"Collection {spec.collection_id} on track {spec.track.value}",
-        f"{len(spec.item_ids)} items x {len(spec.suts)} SUTs x {CALLS_PER_BLOCK} "
-        f"calls = {spec.planned_calls} planned calls",
+        f"{len(spec.item_ids)} items x {len(spec.suts)} SUTs x "
+        f"{sum(BLOCK_CALLS[kind] for kind in spec.kinds)} calls "
+        f"({' + '.join(spec.kinds)}) = {spec.planned_calls} planned calls",
     ]
     for sut in spec.suts:
         serving = card_config(sut.card).serving

@@ -943,3 +943,18 @@ is 10 calls; all 60 items on the three SUTs give 1,800 calls, kept
 descriptive with no confirmatory hypothesis. The term "loop engineering"
 names a developer practice of scheduled, condition-stopped coding-agent
 runs and is not used for this design.
+
+## 2026-10-07 — Loop blocks in collection
+
+A collection specification names its block kinds: `matrix` (13 calls) and
+`loop` (10 calls, the policy loops). Every item runs once per kind on every
+SUT, and all blocks are shuffled together by the scheduler seed, so matrix
+and loop blocks interleave and neither kind clusters in time. Each block
+runs through its own runner with the same recording, replay, resume, retry
+budget and pause rules; loops are deterministic given their answers, so
+resume replays a loop block as it replays a matrix block. A recorded block
+must show the scheduled item and kind; a block holding stages of both kinds
+is refused. The cost estimate counts each kind's own requests. Specifications
+and schedules written before loop blocks existed name no kind and read as
+matrix only, so the recorded development collection still loads and its
+schedule is unchanged.

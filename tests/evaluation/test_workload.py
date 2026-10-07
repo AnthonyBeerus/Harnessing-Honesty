@@ -11,7 +11,11 @@ from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.domain.evidence import CallEvidence, TransportExchange
 from harnessing_honesty.domain.results import ModelResult
-from harnessing_honesty.evaluation.collection import build_spec
+from harnessing_honesty.evaluation.collection import (
+    block_items,
+    build_spec,
+    preview_loops,
+)
 from harnessing_honesty.evaluation.workload import estimate_cost, run_usage
 from harnessing_honesty.models.transport import call_evidence
 from harnessing_honesty.observability.clock import FakeClock
@@ -104,3 +108,35 @@ def test_the_estimate_scales_with_price_and_items(tmp_path: Path) -> None:
     assert estimate_cost(one, {CARD: [dear]}, cheap).total == doubled
     assert estimate_cost(two, {CARD: [cheap]}, cheap).total == doubled
     assert base.retry_ceiling_factor == 5 and len(base.assumptions) == 4
+
+
+def test_loop_blocks_add_their_own_requests_to_the_estimate(tmp_path: Path) -> None:
+    cheap = _block_run(tmp_path, "cheap", 1e-6)
+    item = (ITEMS[0].item_id,)
+    matrix = build_spec("m", Track.DEV, (CARD,), item, scheduler_seed=0)
+    both = build_spec(
+        "b", Track.DEV, (CARD,), item, scheduler_seed=0, kinds=("matrix", "loop")
+    )
+    loops = build_spec("l", Track.DEV, (CARD,), item, scheduler_seed=0, kinds=("loop",))
+
+    estimates = [
+        estimate_cost(spec, {CARD: [cheap]}, cheap).total
+        for spec in (matrix, both, loops)
+    ]
+
+    assert estimates[1] == pytest.approx(estimates[0] + estimates[2])
+    # The loop share comes from the loop block's own 10 requests.
+    estimate = estimate_cost(loops, {CARD: [cheap]}, cheap)
+    record = preview_loops(block_items(Track.DEV)[ITEMS[0].item_id])
+    requests = [record.shared.request] + [
+        turn.snapshot.request for loop in record.loops for turn in loop.turns
+    ]
+    characters = sum(len(m.content) for request in requests for m in request)
+    usage = run_usage(cheap)
+    price = usage.cost / (usage.input_tokens + usage.output_tokens)
+    tokens = (
+        characters * estimate.tokens_per_character
+        + estimate.output_tokens_per_call * len(requests)
+    )
+    assert len(requests) == 10
+    assert estimates[2] == pytest.approx(price * tokens)

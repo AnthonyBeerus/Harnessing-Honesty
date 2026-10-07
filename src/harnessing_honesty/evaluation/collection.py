@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from importlib.metadata import version
 from pathlib import Path
 from random import Random
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter
 
@@ -39,7 +40,7 @@ from harnessing_honesty.domain import (
 from harnessing_honesty.domain.enums import Failure, Track
 from harnessing_honesty.domain.events import DomainEvent
 from harnessing_honesty.domain.results import ProtocolFailure, ProviderFailure
-from harnessing_honesty.domain.episodes import MatrixEpisodeRecord
+from harnessing_honesty.domain.episodes import LoopEpisodeRecord, MatrixEpisodeRecord
 from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.protocols import Clock, ModelClient
 from harnessing_honesty.evaluation.fixtures.scenarios import checked_development_blocks
@@ -58,12 +59,21 @@ from harnessing_honesty.observability.recording import (
     RunSession,
 )
 from harnessing_honesty.observability.store import write_new
-from harnessing_honesty.runtime.episode import run_confirmatory_matrix
+from harnessing_honesty.runtime.episode import (
+    run_confirmatory_loops,
+    run_confirmatory_matrix,
+)
 from harnessing_honesty.runtime.live import open_session
 
 # One neutral, three pressure drafts and nine policy finals per item and SUT;
 # docs/preregistration-template.md, "Sample".
 CALLS_PER_BLOCK = 13
+# One neutral, then three policy loops of three escalating pressure turns: the
+# descriptive multi-turn substudy (docs/research-design-decisions.md,
+# "2026-10-07 — The multi-turn substudy as policy loops").
+LOOP_CALLS = 10
+BlockKind = Literal["matrix", "loop"]
+BLOCK_CALLS: dict[str, int] = {"matrix": CALLS_PER_BLOCK, "loop": LOOP_CALLS}
 
 # Consecutive calls on one SUT ending in a provider failure after all registered
 # retries that pause it as a dead pin; docs/research-design-decisions.md,
@@ -100,10 +110,13 @@ class CollectionSpec(BaseModel):
     item_ids: tuple[str, ...]
     suts: tuple[SutEntry, ...]
     environment: tuple[tuple[str, str], ...]
+    # Specifications written before loop blocks existed name no kinds.
+    kinds: tuple[BlockKind, ...] = ("matrix",)
 
     @property
     def planned_calls(self) -> int:
-        return CALLS_PER_BLOCK * len(self.item_ids) * len(self.suts)
+        per_item = sum(BLOCK_CALLS[kind] for kind in self.kinds)
+        return per_item * len(self.item_ids) * len(self.suts)
 
 
 def resolved_environment() -> tuple[tuple[str, str], ...]:
@@ -159,6 +172,7 @@ def build_spec(
     *,
     scheduler_seed: int,
     freeze_id: str | None = None,
+    kinds: tuple[BlockKind, ...] = ("matrix",),
 ) -> CollectionSpec:
     """Fix the cards' current digests and the environment into a specification."""
     return CollectionSpec(
@@ -167,6 +181,7 @@ def build_spec(
         freeze_id=freeze_id,
         scheduler_seed=scheduler_seed,
         item_ids=item_ids,
+        kinds=kinds,
         suts=tuple(
             SutEntry(card=card, config_digest=load_run_config(_ROOT / card).digest())
             for card in cards
@@ -187,6 +202,7 @@ def selection(
     item_ids: tuple[str, ...],
     *,
     freeze_id: str | None = None,
+    kinds: tuple[BlockKind, ...] = ("matrix",),
 ) -> CollectionSpec:
     """The specification a notebook or CLI selection defines.
 
@@ -200,6 +216,7 @@ def selection(
         item_ids,
         scheduler_seed=card_config(cards[0]).scheduler_seed,
         freeze_id=freeze_id,
+        kinds=kinds,
     )
 
 
@@ -219,6 +236,8 @@ def readiness(
         findings.append("items: none selected")
     if len(set(spec.item_ids)) != len(spec.item_ids):
         findings.append("items: repeated item id")
+    if not spec.kinds or len(set(spec.kinds)) != len(spec.kinds):
+        findings.append("kinds: none selected, or one repeated")
     unknown = sorted(set(spec.item_ids) - known)
     if unknown:
         findings.append(f"items: not in the pool: {', '.join(unknown)}")
@@ -261,30 +280,43 @@ def _main_findings(
     return findings
 
 
-def preview(item: BlockItem, order_seed: int = 0) -> MatrixEpisodeRecord:
-    """The 13 requests one block would send, rendered offline.
+def _scripted(calls: int) -> ScriptedModelClient:
+    """A client answering ``yes`` to every call, so every branch renders."""
+    answer = AnswerSuccess(
+        response=AnswerResponse(answer="yes"),
+        raw_response="yes",
+        requested_message_count=1,
+    )
+    return ScriptedModelClient([answer] * calls)
 
-    The runner is the one used for collection; a scripted client answers every
-    call so all branches render. No provider is contacted.
+
+def preview(item: BlockItem, order_seed: int = 0) -> MatrixEpisodeRecord:
+    """The 13 requests one matrix block would send, rendered offline.
+
+    The runner is the one used for collection. No provider is contacted.
     """
-    scripted: list[ModelResult] = [
-        AnswerSuccess(
-            response=AnswerResponse(answer="yes"),
-            raw_response="yes",
-            requested_message_count=1,
-        )
-    ] * CALLS_PER_BLOCK
     return run_confirmatory_matrix(
         item.prompt,
         item.false_counter_position,
-        ScriptedModelClient(scripted),
+        _scripted(CALLS_PER_BLOCK),
+        order_seed,
+        verifier_output=item.verifier_output,
+    )
+
+
+def preview_loops(item: BlockItem, order_seed: int = 0) -> LoopEpisodeRecord:
+    """The 10 requests one loop block would send, rendered offline."""
+    return run_confirmatory_loops(
+        item.prompt,
+        item.false_counter_position,
+        _scripted(LOOP_CALLS),
         order_seed,
         verifier_output=item.verifier_output,
     )
 
 
 class Block(BaseModel):
-    """One item on one SUT: one matrix of 13 calls."""
+    """One item on one SUT: a matrix of 13 calls or a loop block of 10."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -292,6 +324,8 @@ class Block(BaseModel):
     item_id: str
     card: str
     order_seed: int
+    # Schedules written before loop blocks existed hold matrix blocks only.
+    kind: BlockKind = "matrix"
 
 
 _SCHEDULE = TypeAdapter(tuple[Block, ...])
@@ -305,21 +339,33 @@ _DEEPEST_FILE = Path("requests") / f"{'0' * 64}.json.tmp"
 
 
 def block_schedule(spec: CollectionSpec) -> tuple[Block, ...]:
-    """Every item on every SUT once, in a seeded order that interleaves SUTs.
+    """Every item on every SUT once per kind, in a seeded order that interleaves.
 
     Only the specification enters: no response, score or eligibility can change
     which block runs or when. Each block's ``order_seed`` comes from the same
     generator, after the shuffle. The scheduler seed is not the sampling seed
-    sent to providers.
+    sent to providers. A matrix-only specification gives the schedule it gave
+    before loop blocks existed.
     """
     rng = Random(spec.scheduler_seed)
-    pairs = [(item_id, sut.card) for item_id in spec.item_ids for sut in spec.suts]
-    rng.shuffle(pairs)
+    triples = [
+        (item_id, sut.card, kind)
+        for item_id in spec.item_ids
+        for sut in spec.suts
+        for kind in spec.kinds
+    ]
+    rng.shuffle(triples)
     blocks: list[Block] = []
-    for position, (item_id, card) in enumerate(pairs):
+    for position, (item_id, card, kind) in enumerate(triples):
         seed = rng.randrange(2**31)
         blocks.append(
-            Block(position=position, item_id=item_id, card=card, order_seed=seed)
+            Block(
+                position=position,
+                item_id=item_id,
+                card=card,
+                order_seed=seed,
+                kind=kind,
+            )
         )
     return tuple(blocks)
 
@@ -453,14 +499,16 @@ def _run(
         calls: dict[str, list[AttemptRecord]] = {}
         block_id = None
         if index < len(prior):
-            block_id, item_id, calls = prior[index]
-            if item_id != block.item_id:
+            block_id, item_id, kind, calls = prior[index]
+            if item_id != block.item_id or kind not in (None, block.kind):
                 raise ValueError(f"recorded {block_id} is not scheduled block {block}")
         recorder = sessions[block.card].wrap(clients[block.card], block_id)
         retrying = RetryingClient(recorder, clock=clock)
         replay = _Replay(recorder, retrying, calls, events, guards[block.card])
+        loop = block.kind == "loop"
+        runner = run_confirmatory_loops if loop else run_confirmatory_matrix
         try:
-            run_confirmatory_matrix(
+            runner(
                 item.prompt,
                 item.false_counter_position,
                 replay,
@@ -481,8 +529,9 @@ def _run(
         raise CollectionStopped(f"paused: {', '.join(paused)}")
 
 
-# One recorded block: its id, item label and attempts keyed by request hash.
-_Block = tuple[str, str | None, dict[str, list[AttemptRecord]]]
+# One recorded block: its id, item label, kind and attempts by request hash.
+# The kind is ``None`` when only the neutral call, shared by both kinds, ran.
+_Block = tuple[str, str | None, str | None, dict[str, list[AttemptRecord]]]
 
 
 def _recorded_blocks(
@@ -491,12 +540,29 @@ def _recorded_blocks(
     """A run's events, its recorded blocks in order, and its provider streak."""
     rebuilt = reconstruct_run(run_dir)
     blocks: dict[str, tuple[str | None, dict[str, list[AttemptRecord]]]] = {}
+    stages: dict[str, set[str | None]] = {}
     for attempt in rebuilt.attempts:
         entry = blocks.setdefault(str(attempt.block_id), (attempt.scenario_id, {}))
         calls = entry[1]
         calls.setdefault(str(attempt.request_hash), []).append(attempt)
-    listed = [(block_id, item, calls) for block_id, (item, calls) in blocks.items()]
+        stages.setdefault(str(attempt.block_id), set()).add(attempt.stage)
+    listed = [
+        (block_id, item, _recorded_kind(stages[block_id]), calls)
+        for block_id, (item, calls) in blocks.items()
+    ]
     return rebuilt.events, listed, _provider_streak(rebuilt.attempts)
+
+
+def _recorded_kind(stages: set[str | None]) -> str | None:
+    """The block kind its stages show; ``None`` after only the shared neutral.
+
+    Stages of both kinds in one block match no schedule and are refused.
+    """
+    loop = "multi_turn" in stages
+    matrix = bool(stages & {"draft", "pressured_final"})
+    if loop and matrix:
+        return "mixed"
+    return "loop" if loop else "matrix" if matrix else None
 
 
 def _provider_streak(attempts: tuple[AttemptRecord, ...]) -> int:
