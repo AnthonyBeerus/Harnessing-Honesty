@@ -93,33 +93,13 @@ The archived registration retains its original references.
 
 [41] Anthropic, “Demystifying evals for AI agents,” Jan. 9, 2026. Accessed: Sep. 4, 2026. [Online]. [Available](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents).
 
-<a id="anthropic2026managed"></a>
-
-[42] Anthropic, “Scaling Managed Agents: Decoupling the brain from the hands,” Apr. 8, 2026. Accessed: Sep. 4, 2026. [Online]. [Available](https://www.anthropic.com/engineering/managed-agents).
-
 <a id="pydanticai11071"></a>
 
 [43] Pydantic AI contributors, “Pydantic AI source code, version 1.107.1,” Source code. Accessed: Sep. 4, 2026. [Online]. [Available](https://github.com/pydantic/pydantic-ai/tree/v1.107.1/pydantic_ai_slim/pydantic_ai).
 
-<a id="pydanticharness"></a>
-
-[44] Pydantic, “Pydantic AI Harness,” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/harness/).
-
-<a id="pydanticdependencies"></a>
-
-[45] Pydantic, “Dependencies,” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/core-concepts/dependencies/).
-
-<a id="pydanticharnessexamples"></a>
-
-[46] Pydantic, “Pydantic AI Harness: Examples,” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/harness/examples/).
-
 <a id="blueskytutorial"></a>
 
 [47] Bluesky Project, “Tutorial,” *Bluesky 1.13.1 Documentation*, sec. “The RunEngine.” Accessed: Sep. 4, 2026. [Online]. [Available](https://blueskyproject.io/bluesky/v1.13.1/tutorial.html).
-
-<a id="pydanticevals"></a>
-
-[48] Pydantic, “Pydantic Evals,” sec. “Code-First Evaluation.” Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/ai/evals/evals/).
 
 <a id="pydanticvalidators"></a> [50] Pydantic, “Validators,” *Pydantic Validation Documentation*. Accessed: Sep. 4, 2026. [Online]. [Available](https://pydantic.dev/docs/validation/latest/concepts/validators/).
 <a id="osfregistrations"></a> [51] Center for Open Science, “Welcome to registrations & preregistrations,” *OSF Support*. Accessed: Sep. 4, 2026. [Online]. [Available](https://help.osf.io/article/330-welcome-to-registrations).
@@ -340,3 +320,19 @@ The archived registration retains its original references.
 <a id="abubakar2026agentplans"></a>
 
 [114] M. A. Abubakar, S. Mohsenimofidi, J. L. Lulla, J. M. Zhang, C. Treude, S. Baltes, and M. Galster, “An exploratory study of agent plans for agentic AI coding tools in open-source software,” arXiv:2608.04661, 2026. [Source](https://arxiv.org/abs/2608.04661).
+
+<a id="garlan1993introduction"></a>
+
+[115] D. Garlan and M. Shaw, “An introduction to software architecture,” in *Advances in Software Engineering and Knowledge Engineering*, vol. 1, V. Ambriola and G. Tortora, Eds. Singapore: World Scientific, 1993, pp. 1–39, secs. 3.1 “Pipes and Filters” and 3.4 “Layered Systems.” Also Carnegie Mellon Univ. Tech. Rep. CMU-CS-94-166, 1994. [Source](https://www.cs.cmu.edu/afs/cs.cmu.edu/project/able/ftp/intro_softarch/intro_softarch.pdf).
+
+<a id="cockburn2005hexagonal"></a>
+
+[116] A. Cockburn, “Hexagonal (ports & adapters) architecture,” v. 0.9, Sep. 4, 2005, sec. “Intent.” Accessed: Oct. 7, 2026. [Source](https://alistair.cockburn.us/hexagonal-architecture/).
+
+<a id="fowler2005eventsourcing"></a>
+
+[117] M. Fowler, “Event sourcing,” Dec. 12, 2005. Accessed: Oct. 7, 2026. [Source](https://martinfowler.com/eaaDev/EventSourcing.html).
+
+<a id="inspectdocs"></a>
+
+[118] UK AI Security Institute, “Inspect,” sec. “Hello, Inspect”: datasets, solvers and scorers. Accessed: Oct. 7, 2026. [Source](https://inspect.aisi.org.uk).

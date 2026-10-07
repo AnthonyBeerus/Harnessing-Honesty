@@ -59,14 +59,16 @@ References are numbered as in [References](docs/references.md).
 
 ## Repository structure
 
-The [harness architecture](docs/architecture-boundaries.md) explains the
-component boundaries and their methodological basis. In `src/harnessing_honesty/`,
-`runtime/` contains context and finalization logic, `models/` contains provider
-interaction, and `evaluation/` contains trial scheduling and qualification.
-`domain/` defines shared contracts; `compiler/`, `scoring/`, `observability/`
-and `analysis/` separate construction, measurement, recording and estimation.
-Tests follow the same component structure, with dependency checks in
-`tests/architecture/`.
+One case travels one route: configuration → cases → messages → provider →
+raw attempts → scores → analysis. In `src/harnessing_honesty/`, `compiler/`
+builds and freezes the cases, `runtime/` renders messages and runs the
+treatment, `models/` reaches the provider, `observability/` records raw
+attempts, `scoring/` scores them and `analysis/` estimates; `evaluation/`
+specifies, runs and resumes collections, and `domain/` holds the shared
+contracts. The [harness architecture](docs/architecture-boundaries.md)
+explains the route, the patterns it follows (layers, pipes and filters,
+information hiding, ports and adapters, event sourcing) and the import rules
+that `tests/architecture/` enforces.
 
 See [Analysis notebooks](notebooks/README.md) for the optional Jupyter setup,
-the four entrypoints and their current scope.
+the entrypoints and their scope.
