@@ -21,6 +21,7 @@ STAMP = datetime(2026, 8, 27, tzinfo=timezone.utc)
 
 EXPECTED_KINDS = {
     "RunStarted": "run_started",
+    "RunResumed": "run_resumed",
     "RequestSent": "request_sent",
     "ResponseReceived": "response_received",
     "RequestFailed": "request_failed",

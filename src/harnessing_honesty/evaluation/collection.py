@@ -22,15 +22,30 @@ from harnessing_honesty.compiler.freeze import (
     item_ceiling,
 )
 from harnessing_honesty.compiler.pool import confirmatory_pool
-from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, ModelResult
+from harnessing_honesty.domain import (
+    AnswerResponse,
+    AnswerSuccess,
+    Message,
+    ModelResult,
+)
 from harnessing_honesty.domain.enums import Track
+from harnessing_honesty.domain.events import DomainEvent
 from harnessing_honesty.domain.episodes import MatrixEpisodeRecord
 from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.domain.protocols import Clock, ModelClient
 from harnessing_honesty.models.config import RunConfig, ServingManifest, load_run_config
 from harnessing_honesty.models.fake import ScriptedModelClient
-from harnessing_honesty.models.retries import RetryingClient
-from harnessing_honesty.observability.recording import RunSession
+from harnessing_honesty.models.retries import RetryingClient, remaining_retries
+from harnessing_honesty.observability.hashing import request_hash
+from harnessing_honesty.observability.reconstruct import (
+    AttemptRecord,
+    reconstruct_run,
+    recorded_result,
+)
+from harnessing_honesty.observability.recording import (
+    RecordingModelClient,
+    RunSession,
+)
 from harnessing_honesty.observability.store import write_new
 from harnessing_honesty.runtime.episode import run_confirmatory_matrix
 from harnessing_honesty.runtime.live import open_session
@@ -281,7 +296,8 @@ def execute(
     Refuses to start unless readiness is clean and ``approved_calls`` equals
     the planned call count. One SUT is one run directory and one block is one
     recorded block; retries sit outside the recorder, so every attempt is
-    recorded. An interruption leaves the runs incomplete with their evidence.
+    recorded. An interruption leaves the runs incomplete with their evidence;
+    calling ``execute`` again resumes them (``_Replay``).
     """
     spec, schedule = load_collection(directory)
     items = {item.item_id: item for item in confirmatory_pool()}
@@ -293,22 +309,103 @@ def execute(
     runs_root = directory.parents[1]
     sessions: dict[str, RunSession] = {}
     clients: dict[str, ModelClient] = {}
+    recorded: dict[str, tuple[tuple[DomainEvent, ...], list[_Block]]] = {}
     for sut in spec.suts:
         card = load_run_config(_ROOT / sut.card).model_dump()
         config = RunConfig.model_validate(
             {**card, "track": spec.track, "freeze_id": spec.freeze_id}
         )
-        sessions[sut.card] = open_session(config, runs_root, sut_run_id(spec, sut.card))
+        run_id = sut_run_id(spec, sut.card)
+        resume = (runs_root / spec.track.value / run_id).exists()
+        session = open_session(config, runs_root, run_id, resume=resume)
+        sessions[sut.card] = session
         clients[sut.card] = client_factory(config.serving)
+        recorded[sut.card] = _recorded_blocks(session.run_dir)
+    started = dict.fromkeys(sessions, 0)
     for block in schedule:
         item = items[block.item_id]
-        recorded = sessions[block.card].wrap(clients[block.card])
+        events, prior = recorded[block.card]
+        index = started[block.card]
+        started[block.card] += 1
+        calls: dict[str, list[AttemptRecord]] = {}
+        block_id = None
+        if index < len(prior):
+            block_id, item_id, calls = prior[index]
+            if item_id != block.item_id:
+                raise ValueError(f"recorded {block_id} is not scheduled block {block}")
+        recorder = sessions[block.card].wrap(clients[block.card], block_id)
+        replay = _Replay(recorder, RetryingClient(recorder, clock=clock), calls, events)
         run_confirmatory_matrix(
             item.prompt,
             item.false_counter_position,
-            RetryingClient(recorded, clock=clock),
+            replay,
             block.order_seed,
             verifier_output=item_ceiling(item),
         )
+        if replay.calls:
+            raise ValueError(
+                f"{recorder.block_id} recorded calls the runner did not repeat"
+            )
     for session in sessions.values():
         session.close()
+
+
+# One recorded block: its id, item label and attempts keyed by request hash.
+_Block = tuple[str, str | None, dict[str, list[AttemptRecord]]]
+
+
+def _recorded_blocks(run_dir: Path) -> tuple[tuple[DomainEvent, ...], list[_Block]]:
+    """A run's events and its recorded blocks in the order they began."""
+    rebuilt = reconstruct_run(run_dir)
+    blocks: dict[str, tuple[str | None, dict[str, list[AttemptRecord]]]] = {}
+    for attempt in rebuilt.attempts:
+        entry = blocks.setdefault(str(attempt.block_id), (attempt.scenario_id, {}))
+        calls = entry[1]
+        calls.setdefault(str(attempt.request_hash), []).append(attempt)
+    listed = [(block_id, item, calls) for block_id, (item, calls) in blocks.items()]
+    return rebuilt.events, listed
+
+
+class _Replay:
+    """Serves a recorded block's finished calls from its files; dispatches the rest.
+
+    The runner is deterministic given its answers, so on resume it asks for the
+    recorded requests again in order. A call whose retries were finished is
+    answered from its recorded outcome without dispatch. A call left
+    indeterminate, or stopped during a retry wait, continues under its own
+    ``call_id`` with the retries it had left; its earlier attempts stay. Any
+    recorded call the runner does not ask for again is left in ``calls``.
+    """
+
+    def __init__(
+        self,
+        recorder: RecordingModelClient,
+        retrying: RetryingClient,
+        calls: dict[str, list[AttemptRecord]],
+        events: tuple[DomainEvent, ...],
+    ) -> None:
+        self._recorder = recorder
+        self._retrying = retrying
+        self.calls = dict(calls)
+        self._events = events
+
+    def label(
+        self, stage: str | None, cell_identity: str | None, scenario_id: str
+    ) -> None:
+        self._retrying.label(stage, cell_identity, scenario_id)
+
+    def complete(self, messages: tuple[Message, ...]) -> ModelResult:
+        attempts = self.calls.pop(request_hash(messages), None)
+        if not attempts:
+            return self._retrying.complete(messages)
+        last = attempts[-1]
+        failures = [item.failure for item in attempts if not item.indeterminate]
+        remaining = remaining_retries(failures)
+        if remaining is None:
+            result = recorded_result(self._events[last.request_sequence + 1], messages)
+            if result is None:
+                raise ValueError(f"call {last.call_id} is finished but indeterminate")
+            return result
+        self._recorder.resume_call(str(last.call_id), len(attempts))
+        self._retrying.resume(remaining)
+        return self._retrying.complete(messages)

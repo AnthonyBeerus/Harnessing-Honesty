@@ -166,7 +166,9 @@ to items by identity rather than position; Inspect's retry reuse states the
 same requirement [31, Sec. "Eval Retries: Sample Preservation"].
 A collection is refused where its deepest evidence path would exceed the
 Windows path limit [104]; this is a portability constraint on the evidence,
-not a method.
+not a method. Resume keeps an interrupted attempt and continues its call,
+unlike durable-execution engines that re-run an interrupted step [105], [106];
+those sources are a contrast, not a basis.
 
 ## Software structure and citation practice
 

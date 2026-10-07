@@ -388,3 +388,11 @@ The archived registration retains its original references.
 <a id="microsoft2024maxpath"></a>
 
 [104] Microsoft, “Maximum path length limitation,” *Win32 apps documentation*, updated Apr. 15, 2025. Accessed: Oct. 7, 2026. [Source](https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation).
+
+<a id="temporal2026activities"></a>
+
+[105] Temporal Technologies, “Activities,” *Temporal documentation*, secs. “Activity Execution” and “Idempotency.” Accessed: Oct. 6, 2026. [Source](https://docs.temporal.io/activities).
+
+<a id="dbos2026steps"></a>
+
+[106] DBOS, “Steps,” *DBOS Python documentation*, tutorial “Steps.” Accessed: Oct. 6, 2026. [Source](https://docs.dbos.dev/python/tutorials/step-tutorial).

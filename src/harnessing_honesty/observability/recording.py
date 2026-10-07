@@ -11,6 +11,7 @@ from harnessing_honesty.domain.events import (
     RequestSent,
     ResponseReceived,
     RunClosed,
+    RunResumed,
     RunStarted,
     UsageCounts,
 )
@@ -30,6 +31,13 @@ from harnessing_honesty.observability.hashing import (
     digest_text,
     request_hash,
 )
+from harnessing_honesty.domain.responses import normalize_binary_answer
+from harnessing_honesty.observability.integrity import (
+    Integrity,
+    IntegrityError,
+    check_integrity,
+)
+from harnessing_honesty.observability.reconstruct import reconstruct_run, saved_request
 from harnessing_honesty.observability.redact import redact_text
 from harnessing_honesty.observability.sink import JsonlEventSink, NullSink
 from harnessing_honesty.observability.store import FilesystemRecordStore
@@ -64,17 +72,21 @@ class RunSession:
         scheduler_seed: int | None = None,
         sampling_seed: int | None = None,
         requested_endpoint: str | None = None,
+        resume: bool = False,
     ) -> None:
         self.run_id = run_id
         self.requested_model = requested_model
         self.requested_endpoint = requested_endpoint
         self._clock = clock or SystemClock()
         self._store = store
-        store.create(run_id)
-        self.sink = JsonlEventSink(store, run_id)
         self._blocks = 0
         self._calls = 0
         self._continuations: dict[str, str] = {}
+        if resume:
+            self._restore(config_hash)
+            return
+        store.create(run_id)
+        self.sink = JsonlEventSink(store, run_id)
         self.record = RunRecord(
             run_id=run_id,
             requested_model=requested_model,
@@ -87,6 +99,42 @@ class RunSession:
             sampling_seed=sampling_seed,
         )
         self._store.replace_summary(run_id, self.record.model_dump_json())
+
+    def _restore(self, config_hash: str | None) -> None:
+        """Continue an incomplete run: sequence, counters and answered prefixes.
+
+        A closed run, a different configuration or an integrity failure is
+        refused. A request saved just before a crash, with no ``RequestSent``,
+        is the one exception: resuming re-saves and references it.
+        """
+        run_dir = self.run_dir
+        issues = tuple(
+            issue
+            for issue in check_integrity(run_dir)
+            if not (
+                issue.kind is Integrity.UNREFERENCED_FILE
+                and issue.where.startswith("requests/")
+            )
+        )
+        if issues:
+            raise IntegrityError(issues)
+        rebuilt = reconstruct_run(run_dir)
+        if not rebuilt.interrupted:
+            raise ValueError(f"run {self.run_id} is closed")
+        if rebuilt.record.config_hash != config_hash:
+            raise ValueError(f"run {self.run_id} was recorded under another config")
+        self.record = rebuilt.record
+        self.sink = JsonlEventSink(self._store, self.run_id, start=len(rebuilt.events))
+        attempts = rebuilt.attempts
+        self._blocks = len({attempt.block_id for attempt in attempts})
+        self._calls = len({attempt.call_id for attempt in attempts})
+        for attempt in attempts:
+            answer = normalize_binary_answer(attempt.raw_response or "")
+            if attempt.outcome != "answered" or answer is None:
+                continue
+            messages = saved_request(run_dir, str(attempt.request_hash))
+            prefix = continuation_hash(messages, answer)
+            self._continuations[prefix] = str(attempt.call_id)
 
     @property
     def run_dir(self) -> Path:
@@ -104,6 +152,15 @@ class RunSession:
                 requested_model=self.requested_model,
                 config_hash=self.record.config_hash,
                 track=self.record.track,
+            )
+        )
+
+    def resumed(self) -> None:
+        self.sink.emit(
+            RunResumed(
+                sequence=self.sink.next_sequence,
+                run_id=self.run_id,
+                occurred_at=self._now(),
             )
         )
 
@@ -161,9 +218,11 @@ class RunSession:
                 return self._continuations[digest], digest
         return None, None
 
-    def wrap(self, client: object) -> "RecordingModelClient":
-        """One wrapped client is one block: an episode, or one live client."""
-        return RecordingModelClient(client, self)
+    def wrap(
+        self, client: object, block_id: str | None = None
+    ) -> "RecordingModelClient":
+        """One wrapped client is one block; ``block_id`` continues a recorded one."""
+        return RecordingModelClient(client, self, block_id)
 
 
 class RecordingModelClient:
@@ -174,7 +233,9 @@ class RecordingModelClient:
     a retrying client sets higher attempts for the same call.
     """
 
-    def __init__(self, inner: object, session: RunSession) -> None:
+    def __init__(
+        self, inner: object, session: RunSession, block_id: str | None = None
+    ) -> None:
         self._inner = inner
         self._session = session
         self.stage: str | None = None
@@ -182,9 +243,15 @@ class RecordingModelClient:
         self.scenario_id: str | None = None
         self.verification_report_ids: tuple[str, ...] = ()
         self.attempt: int = 1
-        self.block_id = session.next_block_id()
+        self.block_id = block_id or session.next_block_id()
         self.call_id: str | None = None
         self._parent: tuple[str | None, str | None] = (None, None)
+        self._offset = 0
+        self._resumed: tuple[str, int] | None = None
+
+    def resume_call(self, call_id: str, recorded_attempts: int) -> None:
+        """Continue a recorded call: its next attempts are numbered after these."""
+        self._resumed = (call_id, recorded_attempts)
 
     def label(
         self, stage: str | None, cell_identity: str | None, scenario_id: str
@@ -196,10 +263,16 @@ class RecordingModelClient:
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
         session = self._session
-        if self.attempt == 1 or self.call_id is None:
+        if self._resumed is not None and self.attempt == 1:
+            self.call_id, self._offset = self._resumed
+            self._resumed = None
+            self._parent = session.parent_of(messages)
+        elif self.attempt == 1 or self.call_id is None:
             self.call_id = session.next_call_id()
+            self._offset = 0
             self._parent = session.parent_of(messages)
         call_id = self.call_id
+        attempt = self.attempt + self._offset
         parent_call_id, prefix_hash = self._parent
         digest = session.save_request(messages)
         request_sequence = session.sink.next_sequence
@@ -212,7 +285,7 @@ class RecordingModelClient:
                 requested_model=session.requested_model,
                 requested_endpoint=session.requested_endpoint,
                 request_hash=digest,
-                attempt=self.attempt,
+                attempt=attempt,
                 call_id=call_id,
                 block_id=self.block_id,
                 parent_call_id=parent_call_id,
@@ -232,7 +305,7 @@ class RecordingModelClient:
                     run_id=session.run_id,
                     occurred_at=session._now(),
                     call_id=call_id,
-                    attempt=self.attempt,
+                    attempt=attempt,
                     detail=f"{type(exc).__name__}: {exc}",
                 )
             )
@@ -250,7 +323,7 @@ class RecordingModelClient:
                     call_id=call_id,
                     raw_response=result.raw_response,
                     observed_message_count=result.observed_message_count,
-                    attempt=self.attempt,
+                    attempt=attempt,
                     verification_report_ids=self.verification_report_ids,
                     **observed,
                 )
@@ -266,7 +339,7 @@ class RecordingModelClient:
                     failure=failure,
                     detail=getattr(result, "detail", failure.value),
                     raw_response=getattr(result, "raw_response", None),
-                    attempt=self.attempt,
+                    attempt=attempt,
                     **observed,
                 )
             )

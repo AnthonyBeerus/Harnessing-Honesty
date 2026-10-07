@@ -22,8 +22,10 @@ def run_id(kind: str, card: Path) -> str:
     return f"{kind}-{card.stem}-{stamp}"
 
 
-def open_session(config: RunConfig, runs_root: Path, run_name: str) -> RunSession:
-    """Create ``runs_root/{track}/{run_name}`` and record that the run started."""
+def open_session(
+    config: RunConfig, runs_root: Path, run_name: str, *, resume: bool = False
+) -> RunSession:
+    """Create ``runs_root/{track}/{run_name}``, or reopen it to continue."""
     session = RunSession(
         FilesystemRecordStore(runs_root, config.track),
         run_name,
@@ -35,8 +37,12 @@ def open_session(config: RunConfig, runs_root: Path, run_name: str) -> RunSessio
         scheduler_seed=config.scheduler_seed,
         sampling_seed=config.sampling_seed,
         requested_endpoint=",".join(config.serving.routing.provider_only),
+        resume=resume,
     )
-    session.start()
+    if resume:
+        session.resumed()
+    else:
+        session.start()
     return session
 
 

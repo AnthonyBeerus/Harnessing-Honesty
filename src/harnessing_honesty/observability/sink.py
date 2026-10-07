@@ -20,10 +20,12 @@ class NullSink:
 class JsonlEventSink:
     """Assigns and checks sequence. Persists one JSON object per line."""
 
-    def __init__(self, store: FilesystemRecordStore, run_id: str) -> None:
+    def __init__(
+        self, store: FilesystemRecordStore, run_id: str, start: int = 0
+    ) -> None:
         self._store = store
         self._run_id = run_id
-        self._next = 0
+        self._next = start
 
     @property
     def next_sequence(self) -> int:

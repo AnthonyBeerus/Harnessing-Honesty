@@ -131,9 +131,9 @@ same deterministic fixture, with identifiers and timestamps accounted for.
 The current synchronous client also requires execution outside Jupyter's active
 event loop (`Agent.run_sync`, versioned source [[43]](references.md#pydanticai11071)).
 Validate and Preview are implemented in `evaluation/collection.py`
-(`readiness`, `preview`), with the persisted block schedule and in-process
-execution (`start_collection`, `execute`); status, stop, resume and the worker
-process are not yet. Release execution of notebook checks uses offline fixtures and cannot
+(`readiness`, `preview`), with the persisted block schedule, in-process
+execution and resume (`start_collection`, `execute`); status, stop and the
+worker process are not yet. Release execution of notebook checks uses offline fixtures and cannot
 launch paid runs.
 
 ## Organization and alternatives

@@ -669,3 +669,27 @@ location where it would exceed 259 characters is refused before anything is
 written, on every system. A complete synthetic collection of 60 items on the
 three primary cards recorded 2,340 calls and rebuilt all 180 blocks from the
 files.
+
+## 2026-10-07 — Resuming an interrupted collection
+
+Calling `execute` again resumes a collection with incomplete runs. Each SUT
+run is reopened from its files (event sequence, block and call counters,
+answered prefixes) and a `run_resumed` event marks the restart. A closed run,
+another configuration, or any `check_integrity` failure is refused, except a
+request saved just before a crash with no `RequestSent`, which the resumed
+dispatch references. Every scheduled block runs through the same matrix
+runner, which, being deterministic given its answers, asks for each recorded
+request again in order. A call whose retries had finished is answered from
+its recorded outcome via `recorded_result`, the function matrix
+reconstruction uses, without dispatch. An indeterminate call is sent again
+under its own `call_id` as the next attempt, so its earlier attempt stays and
+reconstruction reads the last one. A call stopped during a provider-retry
+wait keeps the retries it had left (`remaining_retries`, the rule
+`RetryingClient` applies). A recorded block whose item is not the scheduled
+one is refused before dispatch, and a block whose recorded calls the runner
+does not repeat is refused. Durable-execution engines default the other way:
+Temporal retries failed activities and asks for idempotent ones [105], and
+DBOS resumes from the last completed step [106], so an interrupted model call
+would run again without record of the first attempt; neither was adopted.
+Moving `recorded_result` out of the analysis package changes the analysis
+code hash; the power record is re-recorded after the collected-row loader.

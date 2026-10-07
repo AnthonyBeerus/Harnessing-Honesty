@@ -61,6 +61,16 @@ class RunStarted(_Event):
     track: Track = Track.DEV
 
 
+class RunResumed(_Event):
+    """Recording continues in an existing incomplete run after an interruption.
+
+    Earlier attempts keep their outcomes; one left without an outcome stays
+    indeterminate, and any later attempt of that call carries a higher number.
+    """
+
+    kind: Literal["run_resumed"] = "run_resumed"
+
+
 class RequestSent(_Event):
     """The harness handed a conversation to the client.
 
@@ -162,6 +172,7 @@ class RunClosed(_Event):
 
 DomainEvent = Annotated[
     RunStarted
+    | RunResumed
     | RequestSent
     | ResponseReceived
     | RequestFailed
