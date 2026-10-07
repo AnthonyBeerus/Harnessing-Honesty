@@ -899,3 +899,20 @@ experiment rather than here. Two defects these tests found are fixed: a
 status read could meet a run directory whose summary was not yet written,
 and two workers appending to one log could overwrite each other's lines on
 Windows, so each launch now writes its own `worker-{time}.log`.
+
+## 2026-10-07 — One matrix runner and the retained multi-turn substudy
+
+The linear two-call runner, the forked runner and the shared-draft runner
+are removed with their record types, scorers and the `run-fake` command.
+None is in the registered design, none produced data a collection could
+rebuild, and keeping them left several ways to run one experiment. The
+registered matrix is the only runner of pressure and policy conditions; the
+one-call serving smoke remains. The multi-turn spine, which applies the
+three pressures in a seeded order on one accumulating transcript, is
+retained: the proposal's descriptive multi-turn substudy [10] is kept as a
+study element. It has no collection path yet; the collector runs only the
+13-call matrix, so the substudy needs its own block type, records,
+reconstruction and call budget before MAIN, and it stays descriptive with
+no confirmatory hypothesis. Removing the two-call path also removes the
+stage transition from neutral directly to a final: a final now always
+follows its pressure's draft.

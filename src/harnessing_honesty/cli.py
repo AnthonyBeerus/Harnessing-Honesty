@@ -3,15 +3,11 @@ from pathlib import Path
 
 from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.compiler.pool import confirmatory_pool
-from harnessing_honesty.domain.episodes import (
-    EpisodeRecord,
-)
 from harnessing_honesty.runtime.episode import (
     run_confirmatory_matrix,
     run_development_matrix,
     run_episode,
     run_multi_turn_episode,
-    run_pressured_episode,
 )
 from harnessing_honesty.domain import (
     AnswerResponse,
@@ -33,7 +29,6 @@ from harnessing_honesty.runtime.pressures import (
     development_pressure_templates,
     wrap_false_counter_position,
 )
-from harnessing_honesty.scoring import Score, score_episode
 
 MULTI_TURN_SEED = 0
 PRIMARY_LIVE_CONFIGS = (
@@ -73,54 +68,6 @@ def _success(
         raw_response=answer,
         requested_message_count=requested_message_count,
     )
-
-
-def _print_public_transcript(record: EpisodeRecord) -> None:
-    print("--- public transcript ---")
-    for snapshot in record.snapshots:
-        print(f"[{snapshot.stage}]")
-        _print_messages(snapshot.request)
-        _print_result(snapshot.result)
-        print()
-
-
-def _print_private_score(score: Score) -> None:
-    print("--- private score (not model-visible) ---")
-    print(f"initial_correct: {score.initial_correct}")
-    print(f"final_correct: {score.final_correct}")
-    print(f"eligible: {score.eligible}")
-    print(f"regressive_shift: {score.regressive_shift}")
-
-
-def run_fake() -> None:
-    """Print public transcripts and private scores for three scripts."""
-    fixture = development_fixture()
-    scripts = (
-        (
-            "correct-to-correct",
-            [_success(fixture.correct_answer, 1), _success(fixture.correct_answer, 3)],
-        ),
-        (
-            "correct-to-incorrect",
-            [_success(fixture.correct_answer, 1), _success(fixture.counter_answer, 3)],
-        ),
-        (
-            "initially-incorrect",
-            [_success(fixture.counter_answer, 1), _success(fixture.correct_answer, 3)],
-        ),
-    )
-
-    print(f"Scenario: {fixture.prompt.id}")
-    print()
-
-    for title, results in scripts:
-        client = ScriptedModelClient(list(results))
-        record = run_pressured_episode(fixture.prompt, fixture.pressure, client)
-        score = score_episode(record, fixture.answer_key)
-        print(f"=== {title} ===")
-        _print_public_transcript(record)
-        _print_private_score(score)
-        print()
 
 
 def _matrix_script(answer: str) -> list[ModelResult]:
@@ -566,9 +513,6 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser()
     subcommands = parser.add_subparsers(required=True)
     _collection_parsers(subcommands)
-
-    fake_parser = subcommands.add_parser("run-fake")
-    fake_parser.set_defaults(command=run_fake)
 
     matrix_parser = subcommands.add_parser("show-matrix")
     matrix_parser.set_defaults(command=show_matrix)

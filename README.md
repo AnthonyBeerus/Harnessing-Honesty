@@ -15,11 +15,10 @@ Python 3.12, venv on, from the repo root:
 ```bash
 pip install -e ".[dev]"
 pytest -q
-python -m harnessing_honesty.cli run-fake
 python -m harnessing_honesty.cli show-matrix
 ```
 
-`run-fake` prints public transcripts next to private scores. `show-matrix` renders the nine development requests side by side with the symmetry checks, then the multi-turn spine.
+`show-matrix` renders the nine development requests side by side with the symmetry checks, then the multi-turn spine.
 
 Design choices are recorded in [docs/research-design-decisions.md](docs/research-design-decisions.md) as they become concrete in code.
 

@@ -1,17 +1,13 @@
 """Episode runners.
 
-One-call smoke, linear pressured, forked branches, shared draft, the 3x3
-matrix, and the descriptive multi-turn spine. The matrix is the primary
-condition; the spine is kept separate and never produces a matrix cell.
+The one-call serving smoke, the 3x3 matrix, and the descriptive multi-turn
+spine. The matrix is the primary condition; the spine is kept separate and
+never produces a matrix cell.
 """
 
 
 from harnessing_honesty.domain.episodes import (
     StageSnapshot,
-    EpisodeRecord,
-    BranchRecord,
-    ForkedEpisodeRecord,
-    DraftForkedRecord,
     MatrixBranchRecord,
     MatrixDraftRecord,
     MatrixEpisodeRecord,
@@ -19,11 +15,9 @@ from harnessing_honesty.domain.episodes import (
     MultiTurnRecord,
 )
 from harnessing_honesty.runtime.branching import (
-    BranchSpec,
     clone_branch,
     matrix_order,
     permute_branch_ids,
-    unique_branch_ids,
 )
 from harnessing_honesty.domain import (
     AnswerSuccess,
@@ -70,217 +64,6 @@ def run_episode(
 ) -> ModelResult:
     """Send only the projected question. Used by the live one-call smoke."""
     return _bound(client, session).complete(messages_for(prompt))
-
-
-def run_pressured_episode(
-    prompt: PromptView,
-    pressure: str,
-    client: ModelClient,
-    session: object | None = None,
-) -> EpisodeRecord:
-    """Run neutral then pressured-final calls.
-
-    The controller owns stage order. Assistant content is the public
-    the parsed plain-text answer only. If the first call is not
-    ``AnswerSuccess``, the episode stops and no assistant turn is invented.
-    Rendering receives ``prompt`` only; the answer key never enters this
-    function.
-    """
-    client = _bound(client, session)
-    transcript = Transcript()
-    snapshots: list[StageSnapshot] = []
-    current: Stage | None = None
-
-    current = advance(current, Stage.NEUTRAL)
-    for message in messages_for(prompt):
-        transcript = transcript.append(message)
-    request = transcript.snapshot()
-    result = client.complete(request)
-    snapshots.append(
-        StageSnapshot(stage=current, request=request, result=result)
-    )
-
-    if not isinstance(result, AnswerSuccess):
-        return EpisodeRecord(snapshots=tuple(snapshots))
-
-    current = advance(current, Stage.PRESSURED_FINAL)
-    transcript = transcript.append(
-        Message(role="assistant", content=result.response.answer)
-    )
-    transcript = transcript.append(Message(role="user", content=pressure))
-    request = transcript.snapshot()
-    result = client.complete(request)
-    snapshots.append(
-        StageSnapshot(stage=current, request=request, result=result)
-    )
-
-    return EpisodeRecord(snapshots=tuple(snapshots))
-
-
-def run_forked_episode(
-    prompt: PromptView,
-    branches: tuple[BranchSpec, ...],
-    client: ModelClient,
-    order_seed: int,
-    session: object | None = None,
-) -> ForkedEpisodeRecord:
-    """Run one neutral call, then isolated pressured-final calls per branch.
-
-    Branch records are returned in spec order. ``order_seed`` only permutes
-    ``execution_order``. A failed branch does not skip remaining branches
-    and does not append failure text onto another transcript.
-    Rendering receives ``prompt`` only; the answer key never enters this
-    function.
-    """
-    spec_ids = unique_branch_ids(branches)
-    specs_by_id = {spec.branch_id: spec for spec in branches}
-    client = _bound(client, session)
-
-    current = advance(None, Stage.NEUTRAL)
-    transcript = Transcript()
-    for message in messages_for(prompt):
-        transcript = transcript.append(message)
-    request = transcript.snapshot()
-    result = client.complete(request)
-    shared = StageSnapshot(stage=current, request=request, result=result)
-
-    if not isinstance(result, AnswerSuccess):
-        return ForkedEpisodeRecord(
-            shared=shared,
-            branches=(),
-            execution_order=(),
-        )
-
-    prefix = transcript.append(
-        Message(role="assistant", content=result.response.answer)
-    )
-    states = {
-        branch_id: clone_branch(prefix, current, branch_id)
-        for branch_id in spec_ids
-    }
-    execution_order = permute_branch_ids(spec_ids, order_seed)
-    records: dict[str, BranchRecord] = {}
-
-    for branch_id in execution_order:
-        spec = specs_by_id[branch_id]
-        state = states[branch_id]
-        branch_stage = advance(state.stage, Stage.PRESSURED_FINAL)
-        branch_transcript = state.transcript.append(
-            Message(role="user", content=spec.pressure)
-        )
-        branch_request = branch_transcript.snapshot()
-        branch_result = client.complete(branch_request)
-        records[branch_id] = BranchRecord(
-            branch_id=branch_id,
-            snapshot=StageSnapshot(
-                stage=branch_stage,
-                request=branch_request,
-                result=branch_result,
-            ),
-        )
-
-    return ForkedEpisodeRecord(
-        shared=shared,
-        branches=tuple(records[branch_id] for branch_id in spec_ids),
-        execution_order=execution_order,
-    )
-
-def run_shared_draft_episode(
-    prompt: PromptView,
-    pressure: str,
-    follow_ups: tuple[BranchSpec, ...],
-    client: ModelClient,
-    order_seed: int,
-    session: object | None = None,
-) -> DraftForkedRecord:
-    """Run neutral, one post-pressure draft, then isolated finals.
-
-    The draft ``complete()`` happens once. Follow-up IDs are cloned from
-    that draft prefix. ``order_seed`` permutes execution order only.
-    Rendering receives ``prompt`` only; the answer key never enters this
-    function.
-    """
-    spec_ids = unique_branch_ids(follow_ups)
-    specs_by_id = {spec.branch_id: spec for spec in follow_ups}
-    client = _bound(client, session)
-
-    current = advance(None, Stage.NEUTRAL)
-    transcript = Transcript()
-    for message in messages_for(prompt):
-        transcript = transcript.append(message)
-    request = transcript.snapshot()
-    result = client.complete(request)
-    shared = StageSnapshot(stage=current, request=request, result=result)
-
-    if not isinstance(result, AnswerSuccess):
-        return DraftForkedRecord(
-            shared=shared,
-            draft=None,
-            branches=(),
-            execution_order=(),
-        )
-
-    transcript = transcript.append(
-        Message(role="assistant", content=result.response.answer)
-    )
-    transcript = transcript.append(Message(role="user", content=pressure))
-    current = advance(current, Stage.DRAFT)
-    draft_request = transcript.snapshot()
-    draft_result = client.complete(draft_request)
-    draft = StageSnapshot(
-        stage=current, request=draft_request, result=draft_result
-    )
-
-    if not isinstance(draft_result, AnswerSuccess):
-        return DraftForkedRecord(
-            shared=shared,
-            draft=draft,
-            branches=(),
-            execution_order=(),
-        )
-
-    prefix = transcript.append(
-        Message(
-            role="assistant",
-            content=draft_result.response.answer,
-        )
-    )
-    states = {
-        branch_id: clone_branch(prefix, current, branch_id)
-        for branch_id in spec_ids
-    }
-    execution_order = permute_branch_ids(spec_ids, order_seed)
-    records: dict[str, BranchRecord] = {}
-
-    for branch_id in execution_order:
-        spec = specs_by_id[branch_id]
-        state = states[branch_id]
-        branch_stage = advance(state.stage, Stage.PRESSURED_FINAL)
-        branch_transcript = state.transcript
-        if spec.external_report is not None:
-            branch_transcript = branch_transcript.append(
-                Message(role="user", content=spec.external_report)
-            )
-        branch_transcript = branch_transcript.append(
-            Message(role="user", content=spec.pressure)
-        )
-        branch_request = branch_transcript.snapshot()
-        branch_result = client.complete(branch_request)
-        records[branch_id] = BranchRecord(
-            branch_id=branch_id,
-            snapshot=StageSnapshot(
-                stage=branch_stage,
-                request=branch_request,
-                result=branch_result,
-            ),
-        )
-
-    return DraftForkedRecord(
-        shared=shared,
-        draft=draft,
-        branches=tuple(records[branch_id] for branch_id in spec_ids),
-        execution_order=execution_order,
-    )
 
 
 def _run_matrix(

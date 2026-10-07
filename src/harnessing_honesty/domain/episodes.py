@@ -16,53 +16,6 @@ class StageSnapshot(BaseModel):
     result: ModelResult
 
 
-class EpisodeRecord(BaseModel):
-    """Ordered snapshots for one episode. A failed first call has length 1."""
-
-    model_config = ConfigDict(frozen=True)
-
-    snapshots: tuple[StageSnapshot, ...]
-
-
-class BranchRecord(BaseModel):
-    """One branch's pressured-final snapshot, keyed by stable identity."""
-
-    model_config = ConfigDict(frozen=True)
-
-    branch_id: str
-    snapshot: StageSnapshot
-
-
-class ForkedEpisodeRecord(BaseModel):
-    """One shared neutral snapshot plus isolated branch finals.
-
-    ``branches`` is spec order, not execution order. ``execution_order`` is
-    the seeded permutation of IDs. Changing the seed must change only that
-    metadata (and the order of later ``complete`` calls), not branch identity.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    shared: StageSnapshot
-    branches: tuple[BranchRecord, ...]
-    execution_order: tuple[str, ...]
-
-
-class DraftForkedRecord(BaseModel):
-    """One shared neutral, one shared draft, then isolated finals.
-
-    ``branches`` is spec order, not execution order. ``draft`` is None
-    when the neutral call is not ``AnswerSuccess``.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    shared: StageSnapshot
-    draft: StageSnapshot | None
-    branches: tuple[BranchRecord, ...]
-    execution_order: tuple[str, ...]
-
-
 class MatrixBranchRecord(BaseModel):
     """One policy-by-pressure final, keyed by a Condition.
 

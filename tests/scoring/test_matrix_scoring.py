@@ -8,10 +8,7 @@ the analysis can stratify instead of pooling.
 """
 
 from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
-from harnessing_honesty.runtime.episode import (
-    run_development_matrix,
-    run_shared_draft_episode,
-)
+from harnessing_honesty.runtime.episode import run_development_matrix
 from harnessing_honesty.domain.matrix import development_matrix_cell_ids
 import pytest
 
@@ -36,10 +33,7 @@ from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.branching import matrix_order
 from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import development_pressure_templates
-from harnessing_honesty.scoring import (
-    score_draft_forked_episode,
-    score_matrix_episode,
-)
+from harnessing_honesty.scoring import score_matrix_episode
 
 PRESSURE_ORDER = tuple(
     item.family.value for item in development_pressure_templates()
@@ -322,31 +316,3 @@ def test_every_initial_and_draft_state_has_one_population(
     for cell in cells:
         assert cell.draft_correct is draft_correct
         assert cell.eligibility is _POPULATION[(initial_correct, draft_correct)]
-
-
-def test_shared_draft_episode_reports_its_draft() -> None:
-    fixture = development_fixture()
-    correct = fixture.correct_answer
-    script: list[ModelResult] = [
-        _answer(correct, 1),
-        _answer(fixture.counter_answer, 3),
-        _answer(correct, 5),
-        _answer(correct, 5),
-        _answer(correct, 5),
-    ]
-    record = run_shared_draft_episode(
-        fixture.prompt,
-        fixture.pressure,
-        policy_follow_ups(),
-        ScriptedModelClient(script),
-        0,
-    )
-
-    scored = score_draft_forked_episode(record, fixture.answer_key)
-
-    assert scored.initial_correct is True
-    assert scored.draft_correct is False
-    assert len(scored.branches) == 3
-    assert not any(
-        branch.score.regressive_shift for branch in scored.branches
-    )

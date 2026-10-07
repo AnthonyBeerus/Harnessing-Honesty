@@ -39,10 +39,6 @@ class BranchState(BaseModel):
     transcript: Transcript
     stage: Stage
 
-class DuplicateBranchIdError(ValueError):
-    """Raised when two specs share a branch_id."""
-
-
 class BranchForkError(ValueError):
     """Raised when a fork is requested from a non-forkable stage."""
 
@@ -94,13 +90,3 @@ def matrix_order(
     for pressure_id in rng.sample(pressure_ids, k=len(pressure_ids)):
         order.append((pressure_id, tuple(rng.sample(policy_ids, k=len(policy_ids)))))
     return tuple(order)
-
-
-def unique_branch_ids(specs: tuple[BranchSpec, ...]) -> tuple[str, ...]:
-    """Return spec order IDs, or raise if an ID is repeated."""
-    ids = tuple(spec.branch_id for spec in specs)
-    if len(set(ids)) != len(ids):
-        raise DuplicateBranchIdError(
-            f"duplicate branch IDs: {ids}"
-        )
-    return ids

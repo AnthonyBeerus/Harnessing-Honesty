@@ -10,9 +10,7 @@ __all__ = ["StageTransitionError", "advance"]
 
 _ALLOWED: dict[Stage | None, frozenset[Stage]] = {
     None: frozenset({Stage.NEUTRAL}),
-    Stage.NEUTRAL: frozenset(
-        {Stage.DRAFT, Stage.PRESSURED_FINAL, Stage.MULTI_TURN}
-    ),
+    Stage.NEUTRAL: frozenset({Stage.DRAFT, Stage.MULTI_TURN}),
     Stage.DRAFT: frozenset({Stage.PRESSURED_FINAL}),
     Stage.PRESSURED_FINAL: frozenset(),
     Stage.MULTI_TURN: frozenset({Stage.MULTI_TURN}),
@@ -26,9 +24,9 @@ def advance(current: Stage | None, next: Stage) -> Stage:
 
     ``None`` means the episode has not started. The only legal first
     stage is ``NEUTRAL``. After ``NEUTRAL`` the legal stages are ``DRAFT``
-    (shared-draft runner), ``PRESSURED_FINAL`` (two-call runners), or
-    ``MULTI_TURN`` (descriptive spine). After ``DRAFT`` the only legal
-    stage is ``PRESSURED_FINAL``.
+    (the matrix) or ``MULTI_TURN`` (the descriptive spine). After ``DRAFT``
+    the only legal stage is ``PRESSURED_FINAL``, so a final always follows
+    its pressure's draft.
 
     ``MULTI_TURN`` repeats and never reaches ``PRESSURED_FINAL``. That
     keeps the descriptive spine structurally outside the primary matrix.
