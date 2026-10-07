@@ -33,7 +33,7 @@ from harnessing_honesty.domain.episodes import (
 )
 from harnessing_honesty.domain.scenario import AnswerKey
 from harnessing_honesty.models.fake import ScriptedModelClient
-from harnessing_honesty.runtime.branching import permute_branch_ids
+from harnessing_honesty.runtime.branching import matrix_order
 from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import development_pressure_templates
 from harnessing_honesty.scoring import (
@@ -44,11 +44,12 @@ from harnessing_honesty.scoring import (
 PRESSURE_ORDER = tuple(
     item.family.value for item in development_pressure_templates()
 )
+POLICY_ORDER = tuple(spec.branch_id for spec in policy_follow_ups())
 
 
 def _answer(text: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(answer=text),
+        response=AnswerResponse.model_validate({"answer": text}),
         raw_response=text,
         requested_message_count=requested_message_count,
     )
@@ -63,14 +64,13 @@ def _matrix_script(
     """Script a matrix run in execution order, keyed by family.
 
     ``run_development_matrix`` executes pressures and policies in a seeded
-    order, so a positional script would silently mis-assign answers. Rebuild
-    the same permutation here and key by identity.
+    order, so a positional script would silently mis-assign answers. Take
+    the order from the runner's own ``matrix_order`` and key by identity.
     """
-    policy_ids = tuple(spec.branch_id for spec in policy_follow_ups())
     script: list[ModelResult] = [_answer(neutral, 1)]
-    for pressure_id in permute_branch_ids(PRESSURE_ORDER, seed):
+    for pressure_id, policy_order in matrix_order(PRESSURE_ORDER, POLICY_ORDER, seed):
         script.append(_answer(drafts[pressure_id], 3))
-        for policy_id in permute_branch_ids(policy_ids, seed):
+        for policy_id in policy_order:
             script.append(_answer(finals[f"{pressure_id}__{policy_id}"], 5))
     return script
 
@@ -230,19 +230,28 @@ def test_a_failed_neutral_scores_nine_unknown_cells() -> None:
 def test_a_failed_draft_leaves_its_cells_unknown_and_missing() -> None:
     fixture = development_fixture()
     correct = fixture.correct_answer
-    script = _matrix_script(
+    full_script = _matrix_script(
         neutral=correct,
         drafts=dict.fromkeys(PRESSURE_ORDER, correct),
         finals=_uniform(fixture.counter_answer),
     )
     # The first executed pressure fails at its draft, so its three finals
     # are never requested and the script skips them.
-    script = [script[0], ProviderFailure(detail="timeout"), *script[5:]]
-    failed_family = permute_branch_ids(PRESSURE_ORDER, 0)[0]
+    script = [full_script[0], ProviderFailure(detail="timeout"), *full_script[5:]]
+    failed_family = matrix_order(PRESSURE_ORDER, POLICY_ORDER, 0)[0][0]
     record = run_development_matrix(fixture.prompt, ScriptedModelClient(script), 0)
 
     scored = score_matrix_episode(record, fixture.answer_key)
+    full = run_development_matrix(fixture.prompt, ScriptedModelClient(full_script), 0)
 
+    order = matrix_order(PRESSURE_ORDER, POLICY_ORDER, 0)
+    assert full.execution_order == tuple(
+        f"{pressure}__{policy}" for pressure, policies in order for policy in policies
+    )
+    # Orders are drawn before dispatch: the failure removes cells, not reorders.
+    assert record.execution_order == tuple(
+        cell for cell in full.execution_order if not cell.startswith(failed_family)
+    )
     assert len(scored.cells) == 9
     for cell in scored.cells:
         if cell.condition.pressure.value == failed_family:

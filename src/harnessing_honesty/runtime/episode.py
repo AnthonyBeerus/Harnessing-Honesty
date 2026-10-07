@@ -21,6 +21,7 @@ from harnessing_honesty.domain.episodes import (
 from harnessing_honesty.runtime.branching import (
     BranchSpec,
     clone_branch,
+    matrix_order,
     permute_branch_ids,
     unique_branch_ids,
 )
@@ -319,14 +320,13 @@ def _run_matrix(
     neutral_prefix = transcript.append(
         Message(role="assistant", content=result.response.answer)
     )
-    pressure_order = permute_branch_ids(pressure_ids, order_seed)
-    policy_order = permute_branch_ids(policy_ids, order_seed)
+    order = matrix_order(pressure_ids, policy_ids, order_seed)
 
     draft_by_pressure: dict[str, MatrixDraftRecord] = {}
     records: dict[str, MatrixBranchRecord] = {}
     execution_order: list[str] = []
 
-    for pressure_id in pressure_order:
+    for pressure_id, policy_order in order:
         pressure = pressures_by_id[pressure_id]
         pressure_state = clone_branch(neutral_prefix, Stage.NEUTRAL, pressure_id)
         draft_transcript = pressure_state.transcript.append(

@@ -6,6 +6,8 @@ Definitions: docs/preregistration-template.md (Estimands, Exclusions);
 recovery, maintenance and unknown eligibility follow docs/sycophancy-primitives.md.
 """
 
+from collections.abc import Mapping
+
 import pytest
 
 from harnessing_honesty.analysis import (
@@ -41,7 +43,7 @@ from harnessing_honesty.domain.episodes import (
 from harnessing_honesty.domain.scenario import AnswerKey
 from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.models.fake import ScriptedModelClient
-from harnessing_honesty.runtime.branching import permute_branch_ids
+from harnessing_honesty.runtime.branching import matrix_order
 from harnessing_honesty.runtime.episode import run_development_matrix
 from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import development_pressure_templates
@@ -54,7 +56,9 @@ _KEY = AnswerKey(canonical_answer="yes")
 
 def _answer(text: str, count: int = 1) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(answer=text), raw_response=text, requested_message_count=count
+        response=AnswerResponse.model_validate({"answer": text}),
+        raw_response=text,
+        requested_message_count=count,
     )
 
 
@@ -158,12 +162,14 @@ _PRESSURES = tuple(item.family.value for item in development_pressure_templates(
 _POLICIES = tuple(spec.branch_id for spec in policy_follow_ups())
 
 
-def _matrix(neutral: str, drafts: str, finals: dict[str, ModelResult | str]) -> MatrixEpisodeRecord:
+def _matrix(
+    neutral: str, drafts: str, finals: Mapping[str, ModelResult | str]
+) -> MatrixEpisodeRecord:
     """Run one development matrix; ``finals`` is keyed by policy."""
     script: list[ModelResult] = [_answer(neutral)]
-    for _pressure in permute_branch_ids(_PRESSURES, 0):
+    for _pressure, policy_order in matrix_order(_PRESSURES, _POLICIES, 0):
         script.append(_answer(drafts, 3))
-        for policy in permute_branch_ids(_POLICIES, 0):
+        for policy in policy_order:
             value = finals[policy]
             script.append(_answer(value, 5) if isinstance(value, str) else value)
     fixture = development_fixture()

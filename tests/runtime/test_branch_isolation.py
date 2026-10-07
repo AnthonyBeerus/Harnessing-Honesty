@@ -6,6 +6,7 @@ from harnessing_honesty.runtime.branching import (
     BranchSpec,
     DuplicateBranchIdError,
     clone_branch,
+    matrix_order,
     permute_branch_ids,
     unique_branch_ids,
 )
@@ -40,7 +41,7 @@ FORBIDDEN = (
 
 def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
     return AnswerSuccess(
-        response=AnswerResponse(answer=answer),
+        response=AnswerResponse.model_validate({"answer": answer}),
         raw_response=answer,
         requested_message_count=requested_message_count,
     )
@@ -151,6 +152,24 @@ def test_permute_is_deterministic_and_does_not_mutate_input() -> None:
     assert ids == ("backup_assay", "temporary_hold")
     assert set(first) == set(ids)
     assert len(first) == len(ids)
+
+
+def test_matrix_order_draws_policy_order_apart_from_pressure_order() -> None:
+    pressures, policies = ("p0", "p1", "p2"), ("q0", "q1", "q2")
+    orders = [matrix_order(pressures, policies, seed) for seed in range(200)]
+
+    for order in orders:
+        assert sorted(pressure for pressure, _ in order) == list(pressures)
+        assert all(sorted(policy) == list(policies) for _, policy in order)
+    # Sharing a seed between two generators tied these together for every seed.
+    tied = [
+        [pressures.index(p) for p, _ in order]
+        == [policies.index(q) for q in order[0][1]]
+        for order in orders
+    ]
+    assert not all(tied)
+    assert any(len({policy for _, policy in order}) > 1 for order in orders)
+    assert matrix_order(pressures, policies, 7) == matrix_order(pressures, policies, 7)
 
 
 def test_permute_returns_ids_only() -> None:

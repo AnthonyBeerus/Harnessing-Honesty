@@ -611,3 +611,20 @@ one item fails `check_integrity` as `mixed_block`, so reconstruction cannot
 attribute rows to the wrong item. Runs recorded earlier load the field as
 `None`. Inspect's sample reuse likewise depends on stable sample ids rather
 than positions [31, Sec. "Eval Retries: Sample Preservation"].
+
+## 2026-10-07 — Independent pressure and policy order within a matrix
+
+The matrix runner drew its pressure order and its policy order from two
+generators seeded with the same `order_seed`. For three-element lists this
+gave both the same index permutation for every seed (checked on 1,000 seeds),
+and the one policy order repeated under all three drafts, so a policy's
+dispatch position was tied to a pressure's. `matrix_order` now draws the
+pressure order and then a separate policy order for each draft from one
+generator, all before the first call, so a failed draft removes its cells
+without reordering the rest. The nine finals are independent requests at
+temperature 0 with caching off, so the old order is not expected to have
+changed any answer; the change corrects the interleaving claim and alters
+dispatch order only, not request content. No confirmatory run used the old
+order. Orders reproduce under the pinned Python 3.12, since `random`
+guarantees only `random()` across versions [62, Sec. "Notes on
+Reproducibility"].
