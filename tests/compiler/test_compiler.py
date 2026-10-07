@@ -282,13 +282,10 @@ def test_sign_freeze_records_the_signer() -> None:
 
 def test_serving_amendment_does_not_rewrite_the_registered_hash() -> None:
     from harnessing_honesty.compiler.freeze import primary_serving_digest
-    from harnessing_honesty.models.config import load_run_config
 
     september = _september_freeze()
-    example = load_run_config(Path("config/qualification.example.yaml"))
     assert september.serving_config_hash != primary_serving_digest()
     assert _registered_freeze().serving_config_hash == primary_serving_digest()
-    assert september.serving_config_hash != example.serving.digest()
 
 
 def test_accepted_freeze_has_signer() -> None:

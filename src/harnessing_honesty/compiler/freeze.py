@@ -116,11 +116,7 @@ def analysis_package_source() -> str:
 
 
 def primary_serving_digest() -> str:
-    """Hash the three primary SUT cards, ordered by slug.
-
-    ``qualification.example.yaml`` stays the fake/fixture pin. It is not
-    the confirmatory serving identity.
-    """
+    """Hash the three primary SUT cards, ordered by slug."""
     materials: list[dict[str, object]] = []
     for path in PRIMARY_SERVING_CARDS:
         serving = load_run_config(REPO_ROOT / path).serving

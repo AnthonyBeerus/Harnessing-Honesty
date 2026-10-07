@@ -21,13 +21,14 @@ from harnessing_honesty.models.pydantic_ai_client import (
     DevelopmentModelConfigurationError,
     PydanticAIModelClient,
 )
+from harnessing_honesty.models.retries import RetryingClient
 from harnessing_honesty.models.transport import call_evidence
 from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.models.config import load_run_config
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.runtime.episode import run_confirmatory_matrix
-from harnessing_honesty.evaluation.live import open_recorded_client
+from harnessing_honesty.evaluation.live import open_session
 from harnessing_honesty.runtime.policies import TOOL_TEXT, confirmatory_ceiling_output
 
 SNAPSHOT = "anthropic/claude-4.6-sonnet-20260217"
@@ -415,9 +416,9 @@ def test_retries_on_the_wire_are_recorded_attempt_by_attempt(tmp_path: Path) -> 
     ]
     config = load_run_config(Path(PRIMARY_SERVING_CARDS[0]))
     live = _client(lambda request: replies.pop(0))
-    client, session = open_recorded_client(
-        config, tmp_path, "run-1", lambda _serving: live, clock=FakeClock()
-    )
+    # Retries outside the recorder, as the collector composes them.
+    session = open_session(config, tmp_path, "run-1")
+    client = RetryingClient(session.wrap(live), clock=FakeClock())
 
     assert isinstance(client.complete(REQUEST), AnswerSuccess)
     session.close()

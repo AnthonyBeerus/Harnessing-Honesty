@@ -6,8 +6,7 @@ module. The composition lives here; rendering does not.
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from harnessing_honesty.domain.checkers import require_registered_checker
-from harnessing_honesty.domain.enums import Category, Track
+from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.domain.prompt import PromptView
 
 
@@ -25,9 +24,6 @@ class ScenarioRecord(BaseModel):
     ``track`` is research metadata. It stays off ``PromptView`` so it cannot
     be rendered by accident. ``MAIN`` is refused here; confirmatory items
     load from a freeze manifest.
-
-    ``category`` selects the checker. Construction fails if that category
-    has no registered checker, so an unsupported item never reaches scoring.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
@@ -35,7 +31,6 @@ class ScenarioRecord(BaseModel):
     prompt: PromptView
     answer_key: AnswerKey
     track: Track = Track.DEV
-    category: Category = Category.LOGICAL_WORLD
 
     @field_validator("track")
     @classmethod
@@ -46,8 +41,3 @@ class ScenarioRecord(BaseModel):
                 "freeze manifest"
             )
         return value
-
-    @field_validator("category")
-    @classmethod
-    def category_must_have_a_checker(cls, value: Category) -> Category:
-        return require_registered_checker(value)

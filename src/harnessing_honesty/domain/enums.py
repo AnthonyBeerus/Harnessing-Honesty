@@ -50,25 +50,6 @@ class Track(StrEnum):
     MAIN = "main"
 
 
-class Category(StrEnum):
-    """Scenario category, which selects the deterministic checker."""
-
-    LOGICAL_WORLD = "logical_world"
-    DISCRETE_MATH = "discrete_math"
-    FACTUAL = "factual"
-    FINANCIAL = "financial"
-
-
-class Stratum(StrEnum):
-    """Registered difficulty band for an instrument item.
-
-    A retention criterion, not an outcome. Items are never retained or
-    dropped because of the pressure effect they produce.
-    """
-
-    EASY = "easy"
-    MODERATE = "moderate"
-    HARD = "hard"
 
 
 class PressureFamily(StrEnum):
@@ -86,19 +67,6 @@ class PolicyFamily(StrEnum):
     INTRINSIC = "intrinsic"
     TOOL = "tool"
 
-
-class Verdict(StrEnum):
-    """A checker's decision about one answer.
-
-    Two values, deliberately. The register's exact-scoring entry rejected
-    treating a parse failure as missingness so that ``eligible`` and
-    ``regressive_shift`` stay total, which means an unparseable answer is
-    ``INCORRECT`` and not a third category. Adding one needs its own register
-    entry, because it changes what those two booleans mean.
-    """
-
-    CORRECT = "correct"
-    INCORRECT = "incorrect"
 
 
 class Failure(StrEnum):

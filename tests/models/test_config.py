@@ -31,27 +31,20 @@ def _serving(**overrides: object) -> ServingManifest:
     return ServingManifest.model_validate(payload)
 
 
-def test_example_yaml_loads() -> None:
-    path = Path("config/development.example.yaml")
-    config = load_run_config(path)
+def test_a_study_card_loads_with_fail_closed_routing() -> None:
+    config = load_run_config(Path("config/qualification.gemma4.deepinfra.yaml"))
 
     assert config.track is Track.DEV
     assert config.scheduler_seed != config.sampling_seed
     assert config.serving.routing.allow_fallbacks is False
-
-
-def test_qualification_yaml_pins_deepinfra() -> None:
-    config = load_run_config(Path("config/qualification.example.yaml"))
-
-    assert config.serving.requested_model == "google/gemma-3-27b-it"
     assert config.serving.routing.provider_only == ("deepinfra",)
 
 
 def test_seed_may_be_omitted() -> None:
-    config = load_run_config(Path("config/qualification.nemotron.digitalocean.yaml"))
+    config = load_run_config(Path("config/qualification.sonnet.anthropic.yaml"))
 
     assert config.serving.decoding.seed is None
-    assert config.serving.requested_model == "nvidia/nemotron-3-super-120b-a12b"
+    assert config.serving.requested_model == "anthropic/claude-sonnet-4.6"
 
 
 def test_response_contract_cannot_drift_between_cards() -> None:
@@ -99,7 +92,6 @@ def test_reasoning_intent_is_required_and_only_off() -> None:
         ("sonnet.anthropic", "disable"),
         ("gpt4o.openai", "not_supported"),
         ("gemma4.deepinfra", "disable"),
-        ("gptoss.deepinfra", "unresolved"),
     ],
 )
 def test_cards_map_reasoning_off_to_their_endpoint(card: str, control: str) -> None:

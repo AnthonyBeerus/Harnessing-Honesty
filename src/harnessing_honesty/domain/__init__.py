@@ -6,7 +6,6 @@ that happens to satisfy it today.
 """
 
 from harnessing_honesty.domain.enums import (
-    Category,
     CompilerStage,
     Eligibility,
     Failure,
@@ -19,15 +18,11 @@ from harnessing_honesty.domain.enums import (
     RoleName,
     SourceRole,
     Stage,
-    Stratum,
     TaskFamily,
     TaskStratum,
     Track,
-    Verdict,
     VerificationOutcome,
 )
-from harnessing_honesty.domain.binding import CellBinding
-from harnessing_honesty.domain.checkers import REGISTERED_CATEGORIES
 from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.instrument import DependencyRecord, InstrumentItem
 from harnessing_honesty.domain.events import (
@@ -71,8 +66,6 @@ __all__ = [
     "AnswerSuccess",
     "AttemptInterrupted",
     "BinaryAnswer",
-    "Category",
-    "CellBinding",
     "Clock",
     "CompilerStage",
     "Condition",
@@ -91,7 +84,6 @@ __all__ = [
     "PromptView",
     "ProtocolFailure",
     "ProviderFailure",
-    "REGISTERED_CATEGORIES",
     "RecordStatus",
     "ResponseState",
     "RequestFailed",
@@ -106,12 +98,10 @@ __all__ = [
     "ScenarioRecord",
     "SequencedEvent",
     "Stage",
-    "Stratum",
     "TaskFamily",
     "TaskStratum",
     "Track",
     "UsageCounts",
-    "Verdict",
     "VerificationOutcome",
     "VerificationReport",
     "failure_class",

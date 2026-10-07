@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 
-from harnessing_honesty import cli
 from harnessing_honesty.analysis.reconstruct import require_closed_matrix
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Track
@@ -67,13 +66,6 @@ def test_one_development_block_runs_through_the_collector(tmp_path: Path) -> Non
     for branch in record.branches:
         texts = " ".join(message.content for message in branch.snapshot.request)
         assert (report in texts) is (branch.condition.policy.value == "tool")
-
-
-def test_the_paid_command_refuses_an_unconfirmed_count(tmp_path: Path) -> None:
-    with pytest.raises(SystemExit, match="--confirm-paid-requests 13"):
-        cli.run_development_block(CARD, "systems", 12, runs_root=tmp_path)
-
-    assert list(tmp_path.iterdir()) == []
 
 
 @pytest.mark.parametrize(

@@ -2,11 +2,15 @@
 
 A controlled evaluation harness for how harness design shapes epistemic sycophancy: a correct first answer that becomes incorrect after unsupported user pressure.
 
-Development episodes share one neutral response, then fork into isolated pressure branches. That stops sampling noise in the first answer from being mistaken for a treatment effect. Branch order is a seeded permutation of IDs only; clones are structural, not mutate-and-rollback.
+**Question.** Does a model abandon a correct answer under false pressure, and can the harness repair it?
 
-The controller scores the public answers. Prompt rendering receives only `PromptView`; the private `AnswerKey` is reachable from the checker and nowhere on the message path.
+**Design.** 60 frozen yes/no reasoning items, each checked by two independent oracles, on three models over pinned routes. Each item gets one neutral answer, three pressures (contradiction, authority, citation) and, after each pressure, three policies (none, an intrinsic self-check, a labelled external check report): 1 + 3 + 9 = 13 calls. The neutral answer and each pressure's draft are shared, so the nine finals differ only in their policy. An exploratory loop, added after registration, also runs each policy through three escalating pressures on one transcript (10 calls); it tests no contrast.
 
-The development condition is a 3x3 matrix: three pressure families (contradiction, authority, citation) by three policies (none, intrinsic recheck, labelled external ceiling). One neutral answer and one draft per pressure are shared, so a matrix run is 13 model calls rather than nine episodes. An exploratory multi-turn substudy, added after registration, runs one loop per policy, three escalating pressure turns on an accumulating transcript; it is descriptive, tests no contrast and never becomes a matrix cell.
+**Run.** A collection is planned, checked for readiness and costed, then run by one worker process that can be stopped and resumed; status is read from its files.
+
+**Evidence.** Every attempt is saved: the exact request, the raw provider response and an append-only event log. Scores are recomputed from these files, never stored. The private answer key never reaches the message path: requests are rendered from `PromptView` alone.
+
+**Results.** Per model: recovery (the draft conceded) and maintenance (the draft held) are reported separately, with scenario-bootstrap intervals and Holm-adjusted tests.
 
 ## Setup
 
@@ -15,10 +19,12 @@ Python 3.12, venv on, from the repo root:
 ```bash
 pip install -e ".[dev]"
 pytest -q
-python -m harnessing_honesty.cli show-matrix
+python -m harnessing_honesty.cli collection-plan --id demo --first 2
+python -m harnessing_honesty.cli collection-launch --id demo --first 2 --client synthetic --confirm-calls 138
+python -m harnessing_honesty.cli collection-status --id demo
 ```
 
-`show-matrix` renders the nine development requests side by side with the symmetry checks, then the policy loops.
+The plan prints the selection, readiness and expected cost; the launch runs two items on the three models with an offline synthetic client, so nothing is sent to a provider. The run's files appear under `data/runs/dev/demo/`.
 
 Design choices are recorded in [docs/research-design-decisions.md](docs/research-design-decisions.md) as they become concrete in code.
 

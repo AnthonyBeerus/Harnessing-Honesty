@@ -94,7 +94,7 @@ collection resumable and a finished one auditable.
 | `models` | how a request reaches a provider and how its response is classified |
 | `observability` | how evidence is written, checked for integrity and reconstructed |
 | `scoring` | what counts as a valid, correct answer and how a cell or loop is scored |
-| `evaluation` | what a collection runs (`specification`), how it runs and resumes (`collection`), live client assembly (`live`), serving qualification (`qualification`), cost and status text (`workload`) |
+| `evaluation` | what a collection runs (`specification`), how it runs and resumes (`collection`), run sessions (`live`), serving qualification (`qualification`), cost and status text (`workload`) |
 | `analysis` | estimands, the bootstrap, the secondary fit, the power gate and the loop summary |
 
 The CLI (`cli.py`) and the notebooks sit outside the packages as driving

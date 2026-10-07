@@ -39,6 +39,6 @@ execution [39]. The output directory contains executed notebooks and an
 `execution.json` record of source hashes, Git state, package versions, and
 completion status. The default run audit has no selected data.
 
-`development/live_api_smoke.py` is an interactive compatibility check using an
-excluded fixture. It is not part of offline notebook execution and must not be
-run as source-selection evidence.
+A development case runs through the same collector as MAIN, for example
+`python -m harnessing_honesty.cli collection-launch --track dev --item
+dev-exclude-004 --kind matrix --card <card> --client live --confirm-calls 13`.

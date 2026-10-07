@@ -18,3 +18,4 @@ build/*.egg-info/
 notebooks/*.ipynb
 notebooks/**/*.ipynb
 data/notebooks/
+.vscode/
