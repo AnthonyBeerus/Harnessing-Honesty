@@ -57,7 +57,7 @@ def test_a_recorded_matrix_is_audited(
     assert "0 integrity issues" in out
     assert "call-000001 #1 block-000001 neutral None parse parent=None" in out
     assert "0 parse discrepancies" in out
-    assert "Matrix drafts present: 3 of 3; finals present: 9 of 9" in out
+    assert "block-000001: drafts present 3 of 3; finals present 9 of 9" in out
 
 
 def test_a_recorded_answer_that_does_not_parse_is_a_discrepancy(

@@ -13,6 +13,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict
 
 from harnessing_honesty.domain.evidence import CallEvidence
+from harnessing_honesty.domain.records import RunRecord
 from harnessing_honesty.evaluation.collection import (
     CALLS_PER_BLOCK,
     CollectionSpec,
@@ -67,6 +68,41 @@ def run_usage(run_dir: Path) -> RunUsage:
         output_tokens=output_tokens,
         cost=cost,
     )
+
+
+def recorded_runs(runs_root: Path, requested_model: str) -> list[Path]:
+    """Recorded runs of ``requested_model`` with response envelopes, oldest first.
+
+    Runs are found by the model their summary names, at any depth below
+    ``runs_root``; collection runs sit one level deeper than single runs.
+    """
+    found: list[Path] = []
+    for summary in sorted(runs_root.rglob("summary.json")):
+        run_dir = summary.parent
+        record = RunRecord.model_validate_json(summary.read_text(encoding="utf-8"))
+        if record.requested_model == requested_model and any(
+            (run_dir / "envelopes").glob("*.json")
+        ):
+            found.append(run_dir)
+    return found
+
+
+def calibration_run(runs_root: Path) -> Path | None:
+    """The latest closed run of exactly one block with all 13 calls answered."""
+    for summary in sorted(runs_root.rglob("summary.json"), reverse=True):
+        rebuilt = reconstruct_run(summary.parent)
+        attempts = rebuilt.attempts
+        blocks = {attempt.block_id for attempt in attempts}
+        answered = all(attempt.outcome == "answered" for attempt in attempts)
+        if (
+            not rebuilt.interrupted
+            and len(blocks) == 1
+            and len(attempts) == CALLS_PER_BLOCK
+            and answered
+            and any((summary.parent / "envelopes").glob("*.json"))
+        ):
+            return summary.parent
+    return None
 
 
 def _block_characters(spec: CollectionSpec, item_id: str) -> int:

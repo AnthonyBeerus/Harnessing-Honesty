@@ -321,6 +321,22 @@ def start_collection(runs_root: Path, spec: CollectionSpec) -> Path:
     return directory
 
 
+def start_or_reuse(runs_root: Path, spec: CollectionSpec) -> Path:
+    """The directory of ``spec``: created, or reused only if it already holds ``spec``.
+
+    A collection under the same id with any other stored specification,
+    including another environment, is refused, so a changed selection cannot
+    alter an accepted run.
+    """
+    directory = runs_root / spec.track.value / spec.collection_id
+    if not (directory / "spec.json").is_file():
+        return start_collection(runs_root, spec)
+    stored, _ = load_collection(directory)
+    if stored != spec:
+        raise ValueError(f"{directory} holds a different specification")
+    return directory
+
+
 def load_collection(directory: Path) -> tuple[CollectionSpec, tuple[Block, ...]]:
     """Read the accepted spec and schedule; a schedule it does not imply is refused."""
     spec_text = (directory / "spec.json").read_text(encoding="utf-8")

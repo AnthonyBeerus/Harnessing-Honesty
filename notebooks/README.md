@@ -6,9 +6,12 @@
 | `02_run_audit.py` | Offline reconstruction of a selected recorded run |
 | `03_power.py` | Recorded power assessment, its assumptions and the resulting collection decision |
 | `04_results.py` | Planned contrasts, sensitivity analyses, override and odds ratios on a labelled synthetic run |
+| `05_experiment_control.py` | Collection configuration, readiness, request preview, cost estimate, and switch-gated launch, stop, resume and status |
 
 Calculations belong in the package; notebooks supply inputs and present shared
-outputs. None of these entrypoints dispatches a live model request.
+outputs. None of these entrypoints dispatches a live model request as it
+stands; `05_experiment_control.py` launches a collection worker only when its
+launch switch and approved call count are set.
 
 ## Setup
 

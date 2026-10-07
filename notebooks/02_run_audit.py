@@ -38,6 +38,7 @@ root = next(path for path in (Path.cwd(), *Path.cwd().parents)
             and (path / "config/freeze.json").is_file())
 run_directory = None  # Set an explicit Path relative to the repository root.
 run_path = None if run_directory is None else root / run_directory
+attempts = issues = ()  # filled below once a run is selected
 if run_path is None:
     print("No run selected. No audit results are available.")
 
@@ -113,8 +114,11 @@ if run_path is not None:
     if issues or not any(a.stage for a in attempts):
         print("No matrix rebuilt: integrity issues or no stage labels.")
     else:
-        matrix = matrix_record_from_run(run_path)
+        # A collection run holds one matrix block per item; each is rebuilt.
         conditions = development_conditions()
         families = len({condition.pressure for condition in conditions})
-        print(f"Matrix drafts present: {len(matrix.drafts)} of {families}; "
-              f"finals present: {len(matrix.branches)} of {len(conditions)}")
+        blocks = list(dict.fromkeys(a.block_id for a in attempts if a.stage))
+        for block_id in blocks:
+            matrix = matrix_record_from_run(run_path, block_id)
+            print(f"{block_id}: drafts present {len(matrix.drafts)} of {families}; "
+                  f"finals present {len(matrix.branches)} of {len(conditions)}")

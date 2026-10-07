@@ -19,6 +19,7 @@ from harnessing_honesty.evaluation.collection import (
     execute,
     load_collection,
     start_collection,
+    start_or_reuse,
     sut_run_id,
 )
 from harnessing_honesty.models.config import ServingManifest, load_run_config
@@ -114,6 +115,17 @@ def test_collection_files_are_written_once(tmp_path: Path) -> None:
     (tmp_path / "dev" / "leftover" / "stray").mkdir(parents=True)
     with pytest.raises(FileExistsError):
         start_collection(tmp_path, leftover)
+
+
+def test_an_accepted_collection_is_reused_only_unchanged(tmp_path: Path) -> None:
+    spec = _spec(2)
+
+    directory = start_or_reuse(tmp_path, spec)
+
+    assert start_or_reuse(tmp_path, spec) == directory
+    with pytest.raises(ValueError, match="different specification"):
+        fewer = spec.model_copy(update={"item_ids": spec.item_ids[:1]})
+        start_or_reuse(tmp_path, fewer)
 
 
 def test_a_schedule_its_spec_does_not_imply_is_refused(tmp_path: Path) -> None:

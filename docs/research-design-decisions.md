@@ -847,3 +847,19 @@ retry ceiling (each call at most five attempts). On 7 October the 2,340
 MAIN calls were estimated at 0.80 credits (Sonnet 4.6 0.45, GPT-4o 0.35,
 Gemma 4 0.01), at most 4.00 if every call used every retry, priced from the
 4 October serving smokes and the development block.
+
+## 2026-10-07 — Experiment-control notebook
+
+`notebooks/05_experiment_control.py` operates collection through the same
+functions as the CLI and holds no procedure of its own. It shows the
+selected collection, its planned calls and environment, readiness findings,
+the first scheduled block's 13 requests and the cost estimate with its
+assumptions; launch, stop, resume and clearing a pause each run only when a
+switch is set, and launching also needs the approved call count. As it
+stands it dispatches nothing and writes nothing, so it runs in the offline
+notebook batch. `start_or_reuse` creates a collection or reuses one only if
+its stored specification, environment included, equals the selection, so a
+changed notebook variable cannot alter an accepted run. Status comes from
+the collection's files, so reopening the notebook reconnects by collection
+id and a lost kernel does not imply a stopped worker. The run-audit notebook
+now rebuilds every block of a collection run, not only single-block runs.
