@@ -179,16 +179,20 @@ class RecordingModelClient:
         self._session = session
         self.stage: str | None = None
         self.cell_identity: str | None = None
+        self.scenario_id: str | None = None
         self.verification_report_ids: tuple[str, ...] = ()
         self.attempt: int = 1
         self.block_id = session.next_block_id()
         self.call_id: str | None = None
         self._parent: tuple[str | None, str | None] = (None, None)
 
-    def label(self, stage: str | None, cell_identity: str | None) -> None:
-        """Name the stage and cell of the next logical call, set by the runner."""
+    def label(
+        self, stage: str | None, cell_identity: str | None, scenario_id: str
+    ) -> None:
+        """Name the stage, cell and item of the next logical call, set by the runner."""
         self.stage = stage
         self.cell_identity = cell_identity
+        self.scenario_id = scenario_id
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
         session = self._session
@@ -215,6 +219,7 @@ class RecordingModelClient:
                 prefix_hash=prefix_hash,
                 stage=self.stage,
                 cell_identity=self.cell_identity,
+                scenario_id=self.scenario_id,
                 verification_report_ids=self.verification_report_ids,
             )
         )

@@ -161,7 +161,9 @@ integrity failures and reconstruction discrepancies. Inspect's evaluation logs
 keep comparable elements (status, sample input and output, model usage, error
 information, recoverable interrupted logs) [31]; this is a retrospective
 comparison of coverage, not the source of the design, and Inspect is not a
-dependency.
+dependency. Every matrix call also records its item id, so blocks are matched
+to items by identity rather than position; Inspect's retry reuse states the
+same requirement [31, Sec. "Eval Retries: Sample Preservation"].
 
 ## Software structure and citation practice
 

@@ -100,6 +100,10 @@ def _reparent(events: list[dict]) -> None:
     request["parent_call_id"] = "call-000001"
 
 
+def _relabel_item(events: list[dict]) -> None:
+    _last("request_sent")(events)["scenario_id"] = "another-item"
+
+
 def _swap(events: list[dict]) -> None:
     events[3], events[4] = events[4], events[3]
 
@@ -123,6 +127,7 @@ CORRUPTIONS: list[tuple[str, Callable[[Path], None], Integrity]] = [
     ("mislinked outcome", _edit_events(_relink_outcome), Integrity.MISLINKED_OUTCOME),
     ("duplicated attempt", _edit_events(_repeat_call), Integrity.DUPLICATE_ATTEMPT),
     ("mislinked parent", _edit_events(_reparent), Integrity.BROKEN_LINEAGE),
+    ("block names two items", _edit_events(_relabel_item), Integrity.MIXED_BLOCK),
     ("stray request", lambda d: (d / "requests" / "x.json").write_text("[]"), Integrity.UNREFERENCED_FILE),
 ]
 

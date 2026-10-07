@@ -69,6 +69,8 @@ class RequestSent(_Event):
     its retries share it, and ``(call_id, attempt)`` names one attempt.
     ``parent_call_id`` is the earlier call whose request plus answer is the
     longest prefix of this request; ``prefix_hash`` hashes that prefix.
+    ``scenario_id`` names the item the call belongs to. Like ``stage`` and
+    ``cell_identity`` it is a harness label and is never sent.
     Runs recorded before these fields existed load them as ``None``.
     """
 
@@ -84,6 +86,7 @@ class RequestSent(_Event):
     prefix_hash: str | None = None
     stage: str | None = None
     cell_identity: str | None = None
+    scenario_id: str | None = None
     verification_report_ids: tuple[str, ...] = ()
 
 

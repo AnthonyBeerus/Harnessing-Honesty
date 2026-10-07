@@ -27,11 +27,13 @@ class RetryingClient:
         self._clock = clock or SystemClock()
         self.attempts: list[tuple[int, str, Failure | None]] = []
 
-    def label(self, stage: str | None, cell_identity: str | None) -> None:
+    def label(
+        self, stage: str | None, cell_identity: str | None, scenario_id: str
+    ) -> None:
         """Pass a runner's call label to a recording client underneath."""
         label = getattr(self._inner, "label", None)
         if label is not None:
-            label(stage, cell_identity)
+            label(stage, cell_identity, scenario_id)
 
     def complete(self, messages: tuple[Message, ...]) -> ModelResult:
         digest = request_hash(messages)

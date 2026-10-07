@@ -52,6 +52,9 @@ def test_matrix_calls_link_to_the_prefix_they_extend(tmp_path: Path) -> None:
 
     assert [event.call_id for event in sent] == [f"call-{n:06d}" for n in range(1, 14)]
     assert {event.block_id for event in sent} == {"block-000001"}
+    assert {attempt.scenario_id for attempt in rebuilt.attempts} == {fixture.prompt.id}
+    sent_text = [message.content for request in client.requests for message in request]
+    assert not any(fixture.prompt.id in text for text in sent_text)
     neutral = sent[0]
     drafts = [event for event in sent if event.requested_message_count == 3]
     finals = [event for event in sent[1:] if event not in drafts]

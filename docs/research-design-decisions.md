@@ -598,3 +598,16 @@ Override, as recorded above, needs no separate computation: every confirmatory
 ceiling report agrees with the answer key (a test checks all 60 items), so a
 tool-arm final that disagrees with its report is an incorrect final, and the
 override rate is the tool-arm shift rate of each population.
+
+## 2026-10-06 — Item label on recorded calls
+
+A collection run holds many matrix blocks, so each block must name its item
+before its rows can carry family and stratum. The matrix runner now labels
+every call with its item id (`PromptView.id`) alongside stage and cell; the
+recorder writes it to `RequestSent.scenario_id` before dispatch. It is a
+harness label: the rendered request contains only the question, and a test
+checks the id appears in no sent message. A block whose calls name more than
+one item fails `check_integrity` as `mixed_block`, so reconstruction cannot
+attribute rows to the wrong item. Runs recorded earlier load the field as
+`None`. Inspect's sample reuse likewise depends on stable sample ids rather
+than positions [31, Sec. "Eval Retries: Sample Preservation"].

@@ -54,6 +54,7 @@ class AttemptRecord(BaseModel):
     block_id: str | None = None
     stage: str | None = None
     cell_identity: str | None = None
+    scenario_id: str | None = None
     prefix_hash: str | None = None
     raw_response: str | None = None
     observed_model: str | None = None
@@ -132,6 +133,7 @@ class ReconstructedRun:
                     block_id=event.block_id,
                     stage=event.stage,
                     cell_identity=event.cell_identity,
+                    scenario_id=event.scenario_id,
                     prefix_hash=event.prefix_hash,
                     **evidence,
                 )

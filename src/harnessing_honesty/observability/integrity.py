@@ -45,6 +45,7 @@ class Integrity(StrEnum):
     REQUEST_HASH = "request_hash"
     ENVELOPE_HASH = "envelope_hash"
     BROKEN_LINEAGE = "broken_lineage"
+    MIXED_BLOCK = "mixed_block"
     UNREFERENCED_FILE = "unreferenced_file"
 
 
@@ -85,6 +86,7 @@ def check_integrity(run_dir: Path) -> tuple[IntegrityIssue, ...]:
         *_attempt_issues(events),
         *_file_issues(run_dir, events),
         *_lineage_issues(run_dir, events),
+        *_block_issues(events),
     )
 
 
@@ -238,6 +240,18 @@ def _parent_issues(
     if digest != request.prefix_hash or not extends:
         detail = f"does not extend {request.parent_call_id}"
         yield _issue(Integrity.BROKEN_LINEAGE, where, detail)
+
+
+def _block_issues(events: list[DomainEvent]) -> Iterator[IntegrityIssue]:
+    """One block is one item; a block naming two items would misattribute rows."""
+    items: dict[str, set[str | None]] = {}
+    for event in events:
+        if isinstance(event, RequestSent) and event.block_id is not None:
+            items.setdefault(event.block_id, set()).add(event.scenario_id)
+    for block_id, found in items.items():
+        if len(found) > 1:
+            detail = f"names items {sorted(map(str, found))}"
+            yield _issue(Integrity.MIXED_BLOCK, block_id, detail)
 
 
 def _messages(run_dir: Path, digest: str | None) -> tuple[Message, ...] | None:
