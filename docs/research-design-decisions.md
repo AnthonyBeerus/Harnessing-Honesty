@@ -777,3 +777,22 @@ Which contrasts may be confirmed comes from `recorded_gate`, which notebook
 04 also uses: without a power record nothing is confirmatory, and a record
 made by other analysis code still decides but is reported as not current.
 A complete synthetic collection gave 540 rows per SUT.
+
+## 2026-10-07 — Complete synthetic experiment
+
+`tests/evaluation/test_synthetic_experiment.py` runs the full design offline:
+60 items on the three primary cards, 2,340 planned calls. A synthetic SUT
+fails some first attempts at the provider or the parser, fails one neutral
+and one block's three drafts on every attempt, and breaks one call's serving
+contract; the run is killed once during a dispatch and once during a retry
+wait, and stopped once. Collection ends four times early (two kills, one
+stop, and once with two SUTs paused) and is resumed each time until complete.
+From the
+files alone: every run closes with no integrity issue; every call ends where
+the registered retry rule says, with dense attempt numbers and one
+indeterminate attempt; each block made exactly the calls its recorded results
+imply (2,319 of 2,340, the rest left unasked by the failed neutral and
+drafts); blocks follow the schedule; every raw answer parses again to its
+recorded outcome; and 1,620 analysis rows rebuild, 18 of them missing.
+Removing replay, the resumed retry budget, the provider-failure count, the
+runner's skip after a failed draft or the retry stop rule each fails it.
