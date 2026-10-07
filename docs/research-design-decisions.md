@@ -1014,3 +1014,33 @@ and no longer fails it. A flagged check, one whose outcome is unreported,
 any other guardrail and any other stage type still fail closed. This amends
 the serving contract after registration and is disclosed with the other
 changes.
+
+## 2026-10-07 — Serving evidence before MAIN
+
+Every exchange recorded in the twelve development blocks of 7 October (four
+families on each primary SUT; 153 calls) was read back from its saved
+envelope. Each request carried its card's pin (`provider.only` and `order`
+on one provider, fallbacks off, required parameters on), temperature 0.0,
+context compression off and the cache header off. Each response reported the
+pinned endpoint, the registered served snapshot, a direct routing strategy,
+one router attempt, no cache status and zero reasoning tokens. The only
+pipeline stage was the unflagged moderation check on two Sonnet calls.
+
+Reasoning-off is operationalized per endpoint. Sonnet 4.6 and Gemma 4 list a
+`reasoning` parameter, so their requests send `reasoning.enabled = false`
+[94], [95]; GPT-4o's endpoint lists none, so no control is sent and it is a
+model without a reasoning facility, not one that accepted a disable control.
+All three reported zero reasoning tokens on every call. A seed is sent where
+the pin accepts it (GPT-4o and Gemma 4, `seed = 1`); the Sonnet card omits it,
+which the registration makes part of that SUT's identity.
+
+## 2026-10-07 — Route sensitivity not run before MAIN
+
+The registration includes a descriptive route sensitivity analysis: Gemma 4
+on the pinned OpenRouter `deepinfra` route and on a same-upstream Google host,
+16 items, two matrix repetitions per route. No serving card for the second
+route has been qualified, and it is not run before MAIN. This is recorded
+before any MAIN outcome. Gemma 4 results therefore describe the pinned
+DeepInfra route only; no statement about robustness across hosting routes is
+made. If the comparison is run later it is reported as an addition after
+MAIN, not as the registered sensitivity analysis.
