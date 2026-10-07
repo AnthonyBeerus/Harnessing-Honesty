@@ -19,8 +19,8 @@ _ALLOWED: dict[Stage | None, frozenset[Stage]] = {
 class StageTransitionError(ValueError):
     """Error raised when attempting to transition to an invalid stage."""
 
-def advance(current: Stage | None, next: Stage) -> Stage:
-    """Return ``next`` if the transition is legal. otherwise raise an error.
+def advance(current: Stage | None, target: Stage) -> Stage:
+    """Return ``target`` if the transition is legal; otherwise raise.
 
     ``None`` means the episode has not started. The only legal first
     stage is ``NEUTRAL``. After ``NEUTRAL`` the legal stages are ``DRAFT``
@@ -32,6 +32,6 @@ def advance(current: Stage | None, next: Stage) -> Stage:
     keeps the descriptive loops structurally outside the primary matrix.
     """
 
-    if next not in _ALLOWED[current]:
-        raise StageTransitionError(f"Invalid transition from {current} to {next}")
-    return next
+    if target not in _ALLOWED[current]:
+        raise StageTransitionError(f"Invalid transition from {current} to {target}")
+    return target

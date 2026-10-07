@@ -53,7 +53,7 @@ from harnessing_honesty.compiler.variation import (
 )
 from harnessing_honesty.domain.enums import TaskFamily
 from harnessing_honesty.runtime.pressures import (
-    PRESSURE_ANSWER_REQUEST,
+    ANSWER_REQUEST,
     wrap_false_counter_position,
 )
 
@@ -265,7 +265,7 @@ for item in items:
         and len(templates) == 3
         and len(set(families)) == 3
         and all(item.false_counter_position.rstrip(".") in text for text in texts)
-        and all(text.endswith(PRESSURE_ANSWER_REQUEST) for text in texts)
+        and all(text.endswith(ANSWER_REQUEST) for text in texts)
     )
     assert passed
     pressure_rows.append(

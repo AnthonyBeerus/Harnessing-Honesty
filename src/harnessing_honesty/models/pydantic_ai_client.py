@@ -39,8 +39,8 @@ from harnessing_honesty.models.routing import classify_envelope, classify_eviden
 from harnessing_honesty.models.transport import CapturingTransport, call_evidence
 
 
-class DevelopmentModelConfigurationError(RuntimeError):
-    """Raised when the serving manifest or API key is missing."""
+class ServingConfigurationError(RuntimeError):
+    """A serving card that cannot dispatch, or a missing API key."""
 
 
 class PydanticAIModelClient:
@@ -55,14 +55,6 @@ class PydanticAIModelClient:
         self._capture = capture
         self.last_envelope: dict[str, object] | None = None
         self.last_evidence: CallEvidence | None = None
-        self.envelopes: list[dict[str, object]] = []
-
-    @classmethod
-    def from_environment(cls) -> "PydanticAIModelClient":
-        """Closed. A key plus a slug is not a served-system identity."""
-        raise DevelopmentModelConfigurationError(
-            "from_environment is closed: use from_manifest with a routing card"
-        )
 
     @classmethod
     def from_manifest(
@@ -76,11 +68,11 @@ class PydanticAIModelClient:
         ``transport`` replaces the network in offline tests.
         """
         if manifest.decoding.reasoning_control == "unresolved":
-            raise DevelopmentModelConfigurationError(
+            raise ServingConfigurationError(
                 "reasoning state is unresolved for this card; it cannot dispatch"
             )
         if manifest.served_snapshot is None:
-            raise DevelopmentModelConfigurationError(
+            raise ServingConfigurationError(
                 "served snapshot is not established for this card; it cannot dispatch"
             )
         # Provider selection and fallback controls follow OpenRouter's documented
@@ -161,8 +153,7 @@ class PydanticAIModelClient:
                 return ProtocolFailure(detail="envelope has no provider identity")
         else:
             self.last_envelope = envelope
-            self.envelopes.append(envelope)
-            failure = self.inspect_envelope(envelope)
+            failure = self._inspect_envelope(envelope)
             if failure is not None:
                 return failure
 
@@ -185,7 +176,7 @@ class PydanticAIModelClient:
             ),
         )
 
-    def inspect_envelope(self, envelope: dict[str, object]) -> ProtocolFailure | None:
+    def _inspect_envelope(self, envelope: dict[str, object]) -> ProtocolFailure | None:
         """Classify a captured envelope. Called before the parse is accepted."""
         self.last_envelope = envelope
         if envelope.get("finish_reason") == "tool_calls":
@@ -240,7 +231,7 @@ def openrouter_text_agent(
     load_dotenv()
     key = api_key or os.getenv("OPENROUTER_API_KEY")
     if not key:
-        raise DevelopmentModelConfigurationError(
+        raise ServingConfigurationError(
             "Missing development model configuration: OPENROUTER_API_KEY"
         )
     provider = OpenRouterProvider(api_key=key)

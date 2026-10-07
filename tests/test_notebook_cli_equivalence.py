@@ -39,7 +39,7 @@ POOL_LINE = "ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())"
 
 def _notebook(runs_root: Path, collection_id: str, *, launch: bool, items: int = 2):
     replacements = {
-        "runs_root = root / RUNS_ROOT": f"runs_root = Path({str(runs_root)!r})",
+        "runs_root = RUNS_ROOT": f"runs_root = Path({str(runs_root)!r})",
         'COLLECTION_ID = "synthetic-control"': f"COLLECTION_ID = {collection_id!r}",
         POOL_LINE: f"{POOL_LINE}[:{items}]",
     }

@@ -32,7 +32,7 @@ from harnessing_honesty.evaluation import collection, specification, workload
 from harnessing_honesty.evaluation.live import RUNS_ROOT
 
 root = REPO_ROOT
-runs_root = root / RUNS_ROOT
+runs_root = RUNS_ROOT
 
 # %% [markdown]
 # ## Configuration

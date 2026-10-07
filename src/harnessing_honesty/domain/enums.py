@@ -4,7 +4,7 @@ Every enum here is ``StrEnum`` rather than ``Enum``, and that choice is
 load-bearing rather than stylistic. ``Role.USER == "user"`` is true, so
 existing comparisons against bare strings keep working, and Pydantic
 serialises a member to its value, so a request snapshot is still plain JSON.
-An ``Enum`` would break both and turn this move into a rewrite.
+An ``Enum`` would break both.
 
 The vocabulary is closed here so a stored run cannot invent a second set
 of names.
@@ -15,7 +15,7 @@ from typing import Literal
 
 # What a type checker accepts where a role is written. ``Role`` is still the
 # stored value; pyright does not treat ``Literal["user"]`` as a ``Role`` even
-# though the two compare equal at runtime. This alias is the four names, not
+# though the two compare equal at runtime. This alias is the three names, not
 # a second set of roles -- ``test_role_name_matches_the_enum`` fails if they
 # drift.
 RoleName = Literal["system", "user", "assistant"]

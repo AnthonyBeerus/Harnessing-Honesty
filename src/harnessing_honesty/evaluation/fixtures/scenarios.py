@@ -1,4 +1,4 @@
-"""Development and confirmatory scenario records."""
+"""The excluded development cases, each checked by its two oracles."""
 
 from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord

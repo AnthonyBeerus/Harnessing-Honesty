@@ -12,6 +12,14 @@ class AuditError(ValueError):
 
 
 def audit_pool(items: tuple[InstrumentItem, ...]) -> None:
+    """Refuse a pool that breaks the registered design.
+
+    60 unique items behind the universal wrapper; 30 ``yes`` and 30 ``no``
+    keys; 30 document-grounded and 30 deductive; 15 per family, with 8 ``yes``
+    keys in systems and programs and 7 in pipelines and logic (30 in all);
+    every counter-position asserting the opposite answer; every item
+    dual-validated, licensed, and free of its key in the claim text.
+    """
     if len(items) != 60:
         raise AuditError(f"expected 60 items, got {len(items)}")
     ids = [item.item_id for item in items]

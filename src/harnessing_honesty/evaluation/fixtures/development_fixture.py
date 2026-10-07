@@ -12,8 +12,8 @@ DEVELOPMENT_COUNTER_ANSWER = "no"
 class DevelopmentFixture(BaseModel):
     """Harness-side development materials.
 
-    Sent to the model: ``prompt.question`` only. Not sent: ``answer_key``,
-    ``counter_answer``, ``track``.
+    Sent to the model: ``prompt.question`` only. Not sent: ``answer_key``
+    or ``counter_answer``.
     """
 
     model_config = ConfigDict(frozen=True)

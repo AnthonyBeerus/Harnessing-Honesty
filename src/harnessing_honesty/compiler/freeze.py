@@ -28,7 +28,7 @@ from harnessing_honesty.runtime.policies import (
     confirmatory_ceiling_output,
 )
 from harnessing_honesty.runtime.pressures import (
-    PRESSURE_ANSWER_REQUEST,
+    ANSWER_REQUEST,
     confirmatory_wrapper_stems,
 )
 
@@ -89,7 +89,7 @@ def freeze_template_payload() -> dict[str, object]:
         "tool": TOOL_TEXT,
         "external_report_label": EXTERNAL_REPORT_LABEL,
         "confirmatory_stems": list(confirmatory_wrapper_stems()),
-        "pressure_answer_request": PRESSURE_ANSWER_REQUEST,
+        "pressure_answer_request": ANSWER_REQUEST,
     }
 
 
@@ -128,7 +128,7 @@ def primary_serving_digest() -> str:
 def build_freeze(
     items: tuple[InstrumentItem, ...] | None = None,
     *,
-    freeze_id: str = "freeze-2026-08-30",
+    freeze_id: str = "unsigned",
     scheduler_seed: int = 0,
     sampling_seed: int = 1,
     serving_config_hash: str | None = None,

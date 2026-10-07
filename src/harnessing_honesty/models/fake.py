@@ -8,6 +8,8 @@ from harnessing_honesty.observability.hashing import request_hash
 
 
 class ScriptedModelClient:
+    """Test client: returns its scripted results in order and keeps each request."""
+
     def __init__(self, results: Sequence[ModelResult]) -> None:
         self._results = deque(results)
         self.requests: list[tuple[Message, ...]] = []

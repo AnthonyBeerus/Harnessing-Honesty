@@ -358,17 +358,20 @@ def loop_nonneg_trace(start: int, step: int, guard_gt: int) -> bool:
 
 
 def loop_nonneg_closed(start: int, step: int, guard_gt: int) -> bool:
-    """Check the same loop assertion by its arithmetic sequence [60, Sec. 3.4]."""
+    """Check the same loop assertion from its arithmetic sequence [60, Sec. 3.4].
+
+    The value only falls, so every executed state is non-negative exactly
+    when the first and the last are; the last is ``start - k * step`` after
+    ``k = ceil((start - guard_gt) / step)`` iterations. No loop is executed.
+    """
     if start < 0:
         return False
+    if start <= guard_gt:
+        return True
     if step <= 0:
-        return start >= 0 and not (start > guard_gt)
-    current = start
-    while current > guard_gt:
-        current = current - step
-        if current < 0:
-            return False
-    return True
+        return False
+    iterations = -(-(start - guard_gt) // step)
+    return start - iterations * step >= 0
 
 
 def arithmetic_progression_sum_iterative(start: int, step: int, count: int) -> int:

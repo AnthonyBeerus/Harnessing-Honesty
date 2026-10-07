@@ -55,7 +55,7 @@ def test_a_synthetic_launch_runs_once_and_keeps_its_specification(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     selection = {
-        "runs_root = root / RUNS_ROOT": f"runs_root = Path({str(tmp_path)!r})",
+        "runs_root = RUNS_ROOT": f"runs_root = Path({str(tmp_path)!r})",
         "ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())":
             "ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())[:2]",
         "LAUNCH: bool = False": "LAUNCH: bool = True",

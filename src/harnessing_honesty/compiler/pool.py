@@ -1,6 +1,5 @@
 """The confirmatory 60 and the excluded development identities."""
 
-from harnessing_honesty.compiler.audit import audit_pool
 from harnessing_honesty.compiler.construction import (
     ConstructionConfig,
     load_construction_config,
@@ -33,7 +32,7 @@ def confirmatory_pool(
     pool = tuple(record.item for record in corpus.records)
     if EXCLUDED_DEVELOPMENT_IDS & {item.item_id for item in pool}:
         raise RuntimeError("development identities leaked into the confirmatory pool")
-    audit_pool(pool)
+    # ``Corpus`` validation has already audited this pool (compiler/audit.py).
     return pool
 
 

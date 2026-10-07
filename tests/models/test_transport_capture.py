@@ -18,7 +18,7 @@ from harnessing_honesty.domain.results import (
 )
 from harnessing_honesty.models.config import DecodingCard, RoutingCard, ServingManifest
 from harnessing_honesty.models.pydantic_ai_client import (
-    DevelopmentModelConfigurationError,
+    ServingConfigurationError,
     PydanticAIModelClient,
 )
 from harnessing_honesty.models.retries import RetryingClient
@@ -277,7 +277,7 @@ def test_an_endpoint_without_reasoning_gets_no_reasoning_field() -> None:
 
 
 def test_an_unresolved_reasoning_state_cannot_dispatch() -> None:
-    with pytest.raises(DevelopmentModelConfigurationError, match="reasoning"):
+    with pytest.raises(ServingConfigurationError, match="reasoning"):
         PydanticAIModelClient.from_manifest(
             _with_control("unresolved"), api_key="sk-or-v1-offline"
         )
@@ -447,5 +447,5 @@ def test_a_cache_hit_is_a_protocol_failure() -> None:
 def test_a_card_without_a_served_snapshot_cannot_dispatch() -> None:
     unpinned = MANIFEST.model_copy(update={"served_snapshot": None})
 
-    with pytest.raises(DevelopmentModelConfigurationError, match="snapshot"):
+    with pytest.raises(ServingConfigurationError, match="snapshot"):
         PydanticAIModelClient.from_manifest(unpinned, api_key="sk-or-v1-offline")
