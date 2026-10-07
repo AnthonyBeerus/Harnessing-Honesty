@@ -75,6 +75,13 @@ class FilesystemRecordStore:
         _write_atomic(path, payload)
 
 
+def write_new(path: Path, payload: str) -> None:
+    """Write a file that must not exist yet; an accepted record is never replaced."""
+    if path.exists():
+        raise FileExistsError(f"already written: {path}")
+    _write_atomic(path, payload)
+
+
 def _write_atomic(path: Path, payload: str) -> None:
     """Readers see the old file or the whole new one, never a partial write."""
     tmp = path.with_name(path.name + ".tmp")

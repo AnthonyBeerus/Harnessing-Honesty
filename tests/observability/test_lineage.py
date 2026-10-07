@@ -16,7 +16,7 @@ from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.hashing import digest_text, request_hash
 from harnessing_honesty.observability.reconstruct import reconstruct_run
 from harnessing_honesty.observability.recording import RunSession
-from harnessing_honesty.observability.store import FilesystemRecordStore
+from harnessing_honesty.observability.store import FilesystemRecordStore, write_new
 from harnessing_honesty.runtime.episode import run_development_matrix
 
 REQUEST = (Message(role="user", content="Does the claim follow?"),)
@@ -181,3 +181,13 @@ def test_envelopes_and_requests_are_written_once(tmp_path: Path) -> None:
     with pytest.raises(FileExistsError):
         store.write_request("run-1", "abc", "[1]")
     assert not list(store.run_dir("run-1").rglob("*.tmp"))
+
+
+def test_an_accepted_record_is_never_replaced(tmp_path: Path) -> None:
+    path = tmp_path / "spec.json"
+
+    write_new(path, "{}")
+
+    with pytest.raises(FileExistsError):
+        write_new(path, "{\"changed\": true}")
+    assert path.read_text(encoding="utf-8") == "{}"

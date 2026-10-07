@@ -164,6 +164,9 @@ comparison of coverage, not the source of the design, and Inspect is not a
 dependency. Every matrix call also records its item id, so blocks are matched
 to items by identity rather than position; Inspect's retry reuse states the
 same requirement [31, Sec. "Eval Retries: Sample Preservation"].
+A collection is refused where its deepest evidence path would exceed the
+Windows path limit [104]; this is a portability constraint on the evidence,
+not a method.
 
 ## Software structure and citation practice
 

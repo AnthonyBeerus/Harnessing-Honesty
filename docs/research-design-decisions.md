@@ -646,3 +646,26 @@ freeze exists. `preview` renders the 13 requests of one block through the
 collection runner with a scripted client; no provider is contacted. The tool
 arm's report comes from `item_ceiling`, the function the freeze's report
 hash uses, so preview and freeze cannot disagree about the ceiling text.
+
+## 2026-10-07 — Block schedule and collection layout
+
+A block is one item on one SUT: one matrix of 13 calls. The schedule is a
+shuffle of every item-SUT pair by `random.Random(scheduler_seed)`, so SUTs
+interleave and no SUT's blocks cluster in time; each block's `order_seed`,
+which fixes its pressure and policy order, is drawn from the same generator
+after the shuffle. Only the specification enters the schedule: no response,
+score or eligibility decides which block runs or when, and a failed neutral
+or draft ends only its own block. `start_collection` writes `spec.json` and
+`schedule.json` once under `data/runs/{track}/{collection_id}/`; a repeated
+start, or an existing directory, is refused, and a schedule its
+specification does not imply is refused on load. Each SUT records into one
+run directory beneath it, `{collection_id}/{card stem}`, and each block into
+its own recorded block with retries outside the recorder. `execute` refuses
+to dispatch unless readiness is clean and the approved call count equals the
+plan. Windows limits a path to 260 characters including the terminating null
+unless long paths are enabled for the machine and the application [104]; the
+deepest evidence file is a request named by its 64-character hash, so a
+location where it would exceed 259 characters is refused before anything is
+written, on every system. A complete synthetic collection of 60 items on the
+three primary cards recorded 2,340 calls and rebuilt all 180 blocks from the
+files.

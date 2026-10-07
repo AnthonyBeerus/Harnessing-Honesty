@@ -22,15 +22,8 @@ def run_id(kind: str, card: Path) -> str:
     return f"{kind}-{card.stem}-{stamp}"
 
 
-def open_recorded_client(
-    config: RunConfig,
-    runs_root: Path,
-    run_name: str,
-    client_factory: Callable[[ServingManifest], ModelClient],
-    *,
-    clock: Clock | None = None,
-) -> tuple[RetryingClient, RunSession]:
-    """Start a run under ``runs_root/{track}/{run_name}`` and wrap the client."""
+def open_session(config: RunConfig, runs_root: Path, run_name: str) -> RunSession:
+    """Create ``runs_root/{track}/{run_name}`` and record that the run started."""
     session = RunSession(
         FilesystemRecordStore(runs_root, config.track),
         run_name,
@@ -44,5 +37,18 @@ def open_recorded_client(
         requested_endpoint=",".join(config.serving.routing.provider_only),
     )
     session.start()
+    return session
+
+
+def open_recorded_client(
+    config: RunConfig,
+    runs_root: Path,
+    run_name: str,
+    client_factory: Callable[[ServingManifest], ModelClient],
+    *,
+    clock: Clock | None = None,
+) -> tuple[RetryingClient, RunSession]:
+    """Start a run and wrap the client: retries outside, recording inside."""
+    session = open_session(config, runs_root, run_name)
     inner = session.wrap(client_factory(config.serving))
     return RetryingClient(inner, clock=clock), session
