@@ -302,6 +302,20 @@ EFFECT_CURVE = tuple(
 DEFAULT_ASSESSMENT = Path("data/power/assessment-v1.json")
 
 
+def recorded_gate(path: Path) -> tuple[frozenset[Contrast], bool | None]:
+    """Contrasts the recorded assessment keeps confirmatory, and whether it is current.
+
+    Without a record nothing is confirmatory and currency is ``None``. A
+    record made by other analysis code still decides, and is reported as not
+    current so it is re-recorded before the freeze.
+    """
+    if not path.is_file():
+        return frozenset(), None
+    assessment = PowerAssessment.model_validate_json(path.read_text(encoding="utf-8"))
+    kept = frozenset(c for c, keep in assessment.confirmatory.items() if keep)
+    return kept, assessment.analysis_code_hash == analysis_code_hash()
+
+
 def analysis_code_hash() -> str:
     """The freeze manifest's ``analysis_code_hash`` of this package's sources."""
     root = Path(__file__).resolve().parent

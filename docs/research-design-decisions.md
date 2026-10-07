@@ -760,3 +760,19 @@ indeterminate. On resume the segment's bytes are moved to
 `events-unfinished-{sequence}.txt` beside the events file before the file is
 shortened, so no byte is lost and earlier lines are untouched, and the
 `run_resumed` event names that file.
+
+## 2026-10-07 — Collected rows and per-SUT reports
+
+`rows_from_run` turns a closed collection run into analysis rows. It checks
+the run's integrity once, rebuilds each recorded block with the matrix
+reconstruction, scores it with `score_matrix_episode` against the key of the
+item its calls name, and gives each row that item's stratum from the
+accepted corpus; a block without an item label or an incomplete run gives no
+rows. `analysis.collected` applies it to every SUT of a collection and runs
+`results_report` per SUT with each item's task family as the bootstrap
+stratum, so model results stay separate. Its entry point is
+`python -m harnessing_honesty.analysis.collected COLLECTION --output FILE`.
+Which contrasts may be confirmed comes from `recorded_gate`, which notebook
+04 also uses: without a power record nothing is confirmatory, and a record
+made by other analysis code still decides but is reported as not current.
+A complete synthetic collection gave 540 rows per SUT.

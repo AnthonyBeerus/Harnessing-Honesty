@@ -32,8 +32,7 @@ from harnessing_honesty.analysis.formula import magnitude_note
 from harnessing_honesty.analysis.power import (
     DEFAULT_ASSESSMENT,
     DESIGN_FAMILIES,
-    PowerAssessment,
-    analysis_code_hash,
+    recorded_gate,
     simulate_rows,
 )
 from harnessing_honesty.analysis.report import (
@@ -58,16 +57,11 @@ print("True effects:", {contrast.value: value for contrast, value in truth.items
 # assessment nothing is confirmatory.
 
 # %%
-confirmatory: frozenset[Contrast] = frozenset()
-if not power_record.is_file():
+confirmatory, current = recorded_gate(power_record)
+if current is None:
     print("No power record: every contrast is estimation-only.")
-else:
-    assessment = PowerAssessment.model_validate_json(
-        power_record.read_text(encoding="utf-8")
-    )
-    confirmatory = frozenset(c for c, kept in assessment.confirmatory.items() if kept)
-    if assessment.analysis_code_hash != analysis_code_hash():
-        print("Power record made with earlier analysis code; re-record before freeze.")
+elif not current:
+    print("Power record made with earlier analysis code; re-record before freeze.")
 for contrast in Contrast:
     status = "confirmatory" if contrast in confirmatory else "estimation-only"
     print(f"{contrast.value}: {status}")

@@ -5,6 +5,7 @@ labels. Scores are computed again by ``score_matrix_episode``; no stored score
 supplies a value.
 """
 
+from collections.abc import Mapping
 from pathlib import Path
 
 from harnessing_honesty.analysis.rows import AnalysisRow, exclusion_reason
@@ -18,14 +19,16 @@ from harnessing_honesty.domain.episodes import (
     StageSnapshot,
 )
 from harnessing_honesty.domain.events import RequestSent
+from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.domain.matrix import development_conditions
 from harnessing_honesty.observability.integrity import require_integrity
 from harnessing_honesty.observability.reconstruct import (
+    ReconstructedRun,
     reconstruct_run,
     recorded_result,
     saved_request,
 )
-from harnessing_honesty.scoring import MatrixEpisodeScore
+from harnessing_honesty.scoring import MatrixEpisodeScore, score_matrix_episode
 
 
 def rows_from_matrix_score(
@@ -84,8 +87,46 @@ def matrix_record_from_run(
     return _matrix_record(run_dir, block_id)
 
 
-def _matrix_record(run_dir: Path, block_id: str | None) -> MatrixEpisodeRecord:
+def rows_from_run(
+    run_dir: Path, items: Mapping[str, InstrumentItem]
+) -> tuple[AnalysisRow, ...]:
+    """Every block of a closed collection run, scored and projected to rows.
+
+    Integrity is checked once for the run. Each block is rebuilt from its
+    saved requests and raw outcomes, attributed to the item its calls name,
+    scored against that item's key and given the item's stratum.
+    """
+    require_integrity(run_dir)
     rebuilt = reconstruct_run(run_dir)
+    if rebuilt.interrupted:
+        raise ValueError("run is incomplete")
+    blocks: dict[str, str | None] = {}
+    for event in rebuilt.events:
+        if isinstance(event, RequestSent):
+            blocks.setdefault(str(event.block_id), event.scenario_id)
+    rows: list[AnalysisRow] = []
+    for block_id, item_id in blocks.items():
+        if item_id is None:
+            raise ValueError(f"{block_id} names no item")
+        item = items[item_id]
+        scored = score_matrix_episode(
+            _matrix_record(run_dir, block_id, rebuilt), item.answer_key
+        )
+        rows.extend(
+            rows_from_matrix_score(
+                rebuilt.record.run_id,
+                item_id,
+                scored,
+                task_stratum=item.stratum.value,
+            )
+        )
+    return tuple(rows)
+
+
+def _matrix_record(
+    run_dir: Path, block_id: str | None, rebuilt: ReconstructedRun | None = None
+) -> MatrixEpisodeRecord:
+    rebuilt = rebuilt or reconstruct_run(run_dir)
     events = rebuilt.events
     sent = [event for event in events if isinstance(event, RequestSent)]
     if block_id is None:
