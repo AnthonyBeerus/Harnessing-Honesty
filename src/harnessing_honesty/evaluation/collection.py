@@ -175,6 +175,34 @@ def build_spec(
     )
 
 
+def card_config(card: str) -> RunConfig:
+    """The run configuration of a serving card, by its repository path."""
+    return load_run_config(_ROOT / card)
+
+
+def selection(
+    collection_id: str,
+    track: Track,
+    cards: tuple[str, ...],
+    item_ids: tuple[str, ...],
+    *,
+    freeze_id: str | None = None,
+) -> CollectionSpec:
+    """The specification a notebook or CLI selection defines.
+
+    The scheduler seed is the first card's; readiness requires every card to
+    agree with it.
+    """
+    return build_spec(
+        collection_id,
+        track,
+        cards,
+        item_ids,
+        scheduler_seed=card_config(cards[0]).scheduler_seed,
+        freeze_id=freeze_id,
+    )
+
+
 def readiness(
     spec: CollectionSpec,
     *,

@@ -137,7 +137,10 @@ persisted block schedule (`start_collection`, `execute`). `launch` starts one
 detached worker process (`python -m harnessing_honesty.evaluation.collection`)
 writing to `worker.log`. The experiment-control notebook,
 `notebooks/05_experiment_control.py`, calls these functions and
-`start_or_reuse`; the matching CLI commands are not yet built.
+`start_or_reuse`; the CLI's `collection-plan`, `collection-launch`,
+`collection-status`, `collection-stop`, `collection-resume` and
+`collection-clear-pause` call the same functions, and both print the plan and
+status text of `evaluation/workload.py`.
 Release execution of notebook checks uses offline fixtures and cannot launch
 paid runs.
 

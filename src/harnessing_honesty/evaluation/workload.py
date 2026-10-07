@@ -18,7 +18,10 @@ from harnessing_honesty.evaluation.collection import (
     CALLS_PER_BLOCK,
     CollectionSpec,
     block_items,
+    card_config,
+    collection_status,
     preview,
+    readiness,
 )
 from harnessing_honesty.models.retries import PARSE_RETRIES, PROVIDER_RETRIES
 from harnessing_honesty.models.transport import call_evidence
@@ -164,3 +167,71 @@ def estimate_cost(
             "call's cost up to the retry ceiling.",
         ),
     )
+
+
+def plan_text(spec: CollectionSpec, runs_root: Path) -> str:
+    """What a collection would run, whether it may start, and its expected cost.
+
+    The notebook and the CLI print this same text.
+    """
+    lines = [
+        f"Collection {spec.collection_id} on track {spec.track.value}",
+        f"{len(spec.item_ids)} items x {len(spec.suts)} SUTs x {CALLS_PER_BLOCK} "
+        f"calls = {spec.planned_calls} planned calls",
+    ]
+    for sut in spec.suts:
+        serving = card_config(sut.card).serving
+        routes = ", ".join(serving.routing.provider_only)
+        lines.append(f"  {serving.requested_model} via {routes} ({sut.card})")
+    lines.append(f"Environment: {dict(spec.environment)}")
+    findings = readiness(spec)
+    lines.append("Ready." if not findings else "Not ready:")
+    lines.extend(f"- {finding}" for finding in findings)
+    calibration = calibration_run(runs_root)
+    priced = {
+        sut.card: recorded_runs(
+            runs_root, card_config(sut.card).serving.requested_model
+        )
+        for sut in spec.suts
+    }
+    if calibration is None or not all(priced.values()):
+        lines.append("No recorded runs to price from; the cost is not estimated.")
+        return "\n".join(lines)
+    estimate = estimate_cost(spec, priced, calibration)
+    for card, cost in estimate.per_card.items():
+        lines.append(f"  {card}: {cost:.4f} credits")
+    ceiling = estimate.total * estimate.retry_ceiling_factor
+    lines.append(
+        f"Expected {estimate.total:.4f} credits; at most {ceiling:.4f} with every retry"
+    )
+    lines.extend(f"- {assumption}" for assumption in estimate.assumptions)
+    return "\n".join(lines)
+
+
+def status_text(directory: Path) -> str:
+    """A collection's state from its files: owner, stop, progress, usage, log."""
+    if not (directory / "spec.json").is_file():
+        return "Not started."
+    status = collection_status(directory)
+    lines = [
+        f"Owner: {status.owner}; stop requested: {status.stop_requested}; "
+        f"complete: {status.complete}",
+        f"{'card':48} {'blocks':>9} {'attempts':>9} {'indet.':>7} closed paused",
+    ]
+    for sut in status.suts:
+        lines.append(
+            f"{sut.card:48} {sut.recorded_blocks:>4}/{sut.scheduled_blocks:<4} "
+            f"{sut.attempts:>9} {sut.indeterminate_attempts:>7} "
+            f"{str(sut.closed):6} {sut.paused or ''}"
+        )
+        run_dir = directory / Path(sut.card).stem
+        if run_dir.exists():
+            usage = run_usage(run_dir)
+            lines.append(
+                f"{'':48} {usage.input_tokens} in, {usage.output_tokens} out, "
+                f"{usage.cost:.6f} credits"
+            )
+    log = directory / "worker.log"
+    if log.is_file():
+        lines.append("Worker log: " + log.read_text(encoding="utf-8")[-500:])
+    return "\n".join(lines)

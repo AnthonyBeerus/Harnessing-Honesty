@@ -863,3 +863,16 @@ changed notebook variable cannot alter an accepted run. Status comes from
 the collection's files, so reopening the notebook reconnects by collection
 id and a lost kernel does not imply a stopped worker. The run-audit notebook
 now rebuilds every block of a collection run, not only single-block runs.
+
+## 2026-10-07 — CLI collection commands
+
+The CLI operates collection through the same functions as the
+experiment-control notebook: `collection.selection` turns either frontend's
+selection into the specification (the scheduler seed is the cards'), and
+both print `workload.plan_text` and `workload.status_text`, so neither holds
+its own procedure or presentation. `collection-plan` and `collection-status`
+dispatch nothing. `collection-launch` and `collection-resume` refuse unless
+`--confirm-calls` equals the planned call count, create or reuse the
+collection through `start_or_reuse`, and start one worker; `--client live`
+sends paid requests. `collection-stop` and `collection-clear-pause` act only
+on the collection's stop and pause files.
