@@ -27,7 +27,7 @@ from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.models.config import load_run_config
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.runtime.episode import run_confirmatory_matrix
-from harnessing_honesty.runtime.live import open_recorded_client
+from harnessing_honesty.evaluation.live import open_recorded_client
 from harnessing_honesty.runtime.policies import TOOL_TEXT, confirmatory_ceiling_output
 
 SNAPSHOT = "anthropic/claude-4.6-sonnet-20260217"

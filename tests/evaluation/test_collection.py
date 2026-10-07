@@ -9,13 +9,13 @@ from harnessing_honesty.compiler.freeze import (
 )
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Stage, Track
-from harnessing_honesty.evaluation.collection import (
-    STUDY_KINDS,
-    CollectionSpec,
+from harnessing_honesty.evaluation.specification import (
     block_items,
     build_spec,
+    CollectionSpec,
     preview,
     readiness,
+    STUDY_KINDS,
 )
 from harnessing_honesty.runtime.policies import policy_follow_ups
 

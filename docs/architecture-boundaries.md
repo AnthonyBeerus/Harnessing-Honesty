@@ -130,10 +130,12 @@ requires matching requests, schedule, retries and reconstructed outcomes on the
 same deterministic fixture, with identifiers and timestamps accounted for.
 The current synchronous client also requires execution outside Jupyter's active
 event loop (`Agent.run_sync`, versioned source [[43]](references.md#pydanticai11071)).
-Validate and Preview are implemented in `evaluation/collection.py`
-(`readiness`, `preview`); Launch, Status, Stop and Resume by `launch`,
-`collection_status`, `request_stop`/`clear_stop` and `clear_pause` over the
-persisted block schedule (`start_collection`, `execute`). `launch` starts one
+Validate and Preview are implemented in `evaluation/specification.py`
+(`readiness`, `preview`, `preview_loops`), which also defines the block
+schedule; Launch, Status, Stop and Resume are implemented in
+`evaluation/collection.py` by `launch`, `collection_status`,
+`request_stop`/`clear_stop` and `clear_pause` over the persisted schedule
+(`start_collection`, `execute`). `launch` starts one
 detached worker process (`python -m harnessing_honesty.evaluation.collection`)
 writing to its own `worker-{time}.log`. The experiment-control notebook,
 `notebooks/05_experiment_control.py`, calls these functions and

@@ -336,19 +336,18 @@ def run_development_block(
     from datetime import datetime, timezone
 
     from harnessing_honesty.domain.enums import Track
+    from harnessing_honesty.evaluation import collection
     from harnessing_honesty.evaluation.collection import (
-        build_spec,
         collection_status,
         launch,
-        readiness,
         start_collection,
     )
-    from harnessing_honesty.evaluation import collection
     from harnessing_honesty.evaluation.fixtures.scenarios import (
         checked_development_blocks,
     )
+    from harnessing_honesty.evaluation.live import RUNS_ROOT
+    from harnessing_honesty.evaluation.specification import build_spec, readiness
     from harnessing_honesty.models.config import load_run_config
-    from harnessing_honesty.runtime.live import RUNS_ROOT
 
     scenario = checked_development_blocks()[family][0]
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
@@ -393,7 +392,7 @@ def run_serving_smoke(
     """Send one excluded development request per SUT and record every attempt."""
     from harnessing_honesty.models.config import load_run_config
     from harnessing_honesty.models.retries import PARSE_RETRIES, PROVIDER_RETRIES
-    from harnessing_honesty.runtime.live import RUNS_ROOT, open_recorded_client, run_id
+    from harnessing_honesty.evaluation.live import RUNS_ROOT, open_recorded_client, run_id
 
     if confirmed_requests != len(config_paths):
         raise SystemExit(
@@ -437,8 +436,8 @@ def run_collection(
     """
     from harnessing_honesty.compiler.pool import confirmatory_pool
     from harnessing_honesty.domain.enums import Track
-    from harnessing_honesty.evaluation import collection, workload
-    from harnessing_honesty.runtime.live import RUNS_ROOT
+    from harnessing_honesty.evaluation import collection, specification, workload
+    from harnessing_honesty.evaluation.live import RUNS_ROOT
 
     root = runs_root or RUNS_ROOT
     track = Track(arguments.track)
@@ -446,13 +445,13 @@ def run_collection(
     action = arguments.action
     if action in ("plan", "launch"):
         pool = tuple(item.item_id for item in confirmatory_pool())
-        spec = collection.selection(
+        spec = specification.selection(
             arguments.id,
             track,
             tuple(arguments.card or PRIMARY_SERVING_CARDS),
             tuple(arguments.item or pool[: arguments.first]),
             freeze_id=arguments.freeze_id,
-            kinds=tuple(arguments.kind or collection.STUDY_KINDS),
+            kinds=tuple(arguments.kind or specification.STUDY_KINDS),
         )
         if action == "plan":
             print(workload.plan_text(spec, root))

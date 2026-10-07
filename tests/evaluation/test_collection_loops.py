@@ -11,11 +11,13 @@ from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.domain.events import RequestSent
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.results import ModelResult
-from harnessing_honesty.evaluation.collection import (
+from harnessing_honesty.evaluation.specification import (
     Block,
-    CollectionSpec,
     block_schedule,
     build_spec,
+    CollectionSpec,
+)
+from harnessing_honesty.evaluation.collection import (
     collection_status,
     execute,
     start_collection,

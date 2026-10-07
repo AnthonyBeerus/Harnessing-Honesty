@@ -10,10 +10,9 @@ from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.domain.enums import RecordStatus
 from harnessing_honesty.domain.events import RequestSent, RunResumed
 from harnessing_honesty.domain.results import ModelResult, ProviderFailure
-from harnessing_honesty.evaluation import collection
+from harnessing_honesty.evaluation import collection, specification
+from harnessing_honesty.evaluation.specification import CollectionSpec, block_schedule
 from harnessing_honesty.evaluation.collection import (
-    CollectionSpec,
-    block_schedule,
     collection_status,
     execute,
     start_collection,
@@ -190,8 +189,8 @@ def test_a_runner_that_no_longer_repeats_the_record_is_stopped(
 ) -> None:
     spec, directory = _interrupted(tmp_path)
     # A different tool-arm report changes the recorded final requests.
-    other = collection.item_ceiling(collection.confirmatory_pool()[-1])
-    monkeypatch.setattr(collection, "item_ceiling", lambda item: other)
+    other = specification.item_ceiling(specification.confirmatory_pool()[-1])
+    monkeypatch.setattr(specification, "item_ceiling", lambda item: other)
 
     with pytest.raises(ValueError, match="did not repeat"):
         _execute(directory, spec, [])

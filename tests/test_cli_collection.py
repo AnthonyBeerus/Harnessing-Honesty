@@ -8,8 +8,8 @@ import pytest
 from harnessing_honesty import cli
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Track
-from harnessing_honesty.evaluation import collection, workload
-from harnessing_honesty.runtime import live
+from harnessing_honesty.evaluation import collection, specification, workload
+from harnessing_honesty.evaluation import live
 
 GEMMA = "config/qualification.gemma4.deepinfra.yaml"
 POOL = tuple(item.item_id for item in confirmatory_pool())
@@ -33,7 +33,7 @@ def test_plan_prints_the_shared_plan_and_creates_nothing(
 ) -> None:
     cli.main(["collection-plan", "--id", "c1", "--first", "2", "--card", GEMMA])
 
-    spec = collection.selection("c1", Track.DEV, (GEMMA,), POOL[:2])
+    spec = specification.selection("c1", Track.DEV, (GEMMA,), POOL[:2])
     assert capsys.readouterr().out.strip() == workload.plan_text(spec, runs_root)
     assert list(runs_root.iterdir()) == []
 

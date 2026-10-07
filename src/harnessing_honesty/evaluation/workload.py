@@ -14,18 +14,17 @@ from pydantic import BaseModel, ConfigDict
 
 from harnessing_honesty.domain.evidence import CallEvidence
 from harnessing_honesty.domain.records import RunRecord
-from harnessing_honesty.evaluation.collection import (
+from harnessing_honesty.evaluation.specification import (
     BLOCK_CALLS,
-    CALLS_PER_BLOCK,
-    CollectionSpec,
     block_items,
+    CALLS_PER_BLOCK,
     card_config,
-    collection_status,
-    worker_logs,
+    CollectionSpec,
     preview,
     preview_loops,
     readiness,
 )
+from harnessing_honesty.evaluation.collection import collection_status, worker_logs
 from harnessing_honesty.models.retries import PARSE_RETRIES, PROVIDER_RETRIES
 from harnessing_honesty.models.transport import call_evidence
 from harnessing_honesty.observability.reconstruct import reconstruct_run, saved_request

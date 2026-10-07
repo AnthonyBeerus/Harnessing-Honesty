@@ -12,10 +12,12 @@ from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.domain.enums import RecordStatus, Track
 from harnessing_honesty.domain.events import RequestSent
 from harnessing_honesty.domain.results import ModelResult, ProviderFailure
-from harnessing_honesty.evaluation.collection import (
-    CollectionSpec,
+from harnessing_honesty.evaluation.specification import (
     block_schedule,
     build_spec,
+    CollectionSpec,
+)
+from harnessing_honesty.evaluation.collection import (
     execute,
     load_collection,
     start_collection,

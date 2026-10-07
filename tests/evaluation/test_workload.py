@@ -11,7 +11,7 @@ from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.domain.evidence import CallEvidence, TransportExchange
 from harnessing_honesty.domain.results import ModelResult
-from harnessing_honesty.evaluation.collection import (
+from harnessing_honesty.evaluation.specification import (
     block_items,
     build_spec,
     preview_loops,

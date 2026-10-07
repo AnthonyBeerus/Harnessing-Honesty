@@ -8,7 +8,7 @@ from harnessing_honesty.domain.results import ProviderFailure
 from harnessing_honesty.models.config import load_run_config
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.observability.clock import FakeClock
-from harnessing_honesty.runtime.live import open_recorded_client
+from harnessing_honesty.evaluation.live import open_recorded_client
 
 CARD = Path("config/qualification.sonnet.anthropic.yaml")
 YES = AnswerSuccess(

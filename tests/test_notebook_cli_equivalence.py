@@ -24,16 +24,16 @@ from harnessing_honesty.analysis.collected import (
 from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.domain.events import RequestSent
-from harnessing_honesty.evaluation import collection, workload
+from harnessing_honesty.evaluation import collection, specification, workload
 from harnessing_honesty.models import pydantic_ai_client
 from harnessing_honesty.observability.integrity import check_integrity
 from harnessing_honesty.observability.reconstruct import reconstruct_run
-from harnessing_honesty.runtime import live
+from harnessing_honesty.evaluation import live
 
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK = ROOT / "notebooks" / "05_experiment_control.py"
 # A matrix block and a loop block per item, the study default.
-CALLS = collection.CALLS_PER_BLOCK + collection.LOOP_CALLS
+CALLS = specification.CALLS_PER_BLOCK + specification.LOOP_CALLS
 POOL_LINE = "ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())"
 
 
@@ -111,7 +111,7 @@ def test_notebook_and_cli_record_the_same_collection(runs_root: Path) -> None:
         for name in names:
             assert (saved / name).read_bytes() == (other / name).read_bytes()
     strip = {"run_id"}
-    assert notebook_spec.kinds == collection.STUDY_KINDS
+    assert notebook_spec.kinds == specification.STUDY_KINDS
     for rows in (collection_rows, collection_loop_rows):
         notebook_rows, cli_rows = rows(notebook_dir), rows(cli_dir)
         for card in PRIMARY_SERVING_CARDS:
@@ -176,9 +176,9 @@ def _alive(pid: int) -> bool:
 
 
 def test_concurrent_launches_leave_one_owner_and_one_record(runs_root: Path) -> None:
-    spec = collection.selection(
+    spec = specification.selection(
         "twice", Track.DEV, PRIMARY_SERVING_CARDS,
-        tuple(collection.block_items(Track.DEV))[:2],
+        tuple(specification.block_items(Track.DEV))[:2],
     )
     directory = collection.start_collection(runs_root, spec)
 
@@ -213,9 +213,9 @@ def test_concurrent_launches_leave_one_owner_and_one_record(runs_root: Path) -> 
 
 
 def test_a_launch_under_a_stop_request_dispatches_nothing(runs_root: Path) -> None:
-    spec = collection.selection(
+    spec = specification.selection(
         "held", Track.DEV, PRIMARY_SERVING_CARDS,
-        tuple(collection.block_items(Track.DEV))[:1],
+        tuple(specification.block_items(Track.DEV))[:1],
     )
     directory = collection.start_collection(runs_root, spec)
     _cli("collection-stop", "--id", "held")

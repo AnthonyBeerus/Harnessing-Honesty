@@ -18,10 +18,12 @@ from harnessing_honesty.analysis.reconstruct import (
 )
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import PolicyFamily, ResponseState, Track
-from harnessing_honesty.evaluation.collection import (
+from harnessing_honesty.evaluation.specification import (
     block_items,
     block_schedule,
     build_spec,
+)
+from harnessing_honesty.evaluation.collection import (
     execute,
     start_collection,
     sut_run_id,

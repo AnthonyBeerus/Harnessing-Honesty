@@ -28,8 +28,8 @@ from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Track
-from harnessing_honesty.evaluation import collection, workload
-from harnessing_honesty.runtime.live import RUNS_ROOT
+from harnessing_honesty.evaluation import collection, specification, workload
+from harnessing_honesty.evaluation.live import RUNS_ROOT
 
 root = REPO_ROOT
 runs_root = root / RUNS_ROOT
@@ -50,7 +50,7 @@ CARDS = PRIMARY_SERVING_CARDS
 ITEM_IDS = tuple(item.item_id for item in confirmatory_pool())
 FREEZE_ID: str | None = None
 
-spec = collection.selection(COLLECTION_ID, TRACK, CARDS, ITEM_IDS, freeze_id=FREEZE_ID)
+spec = specification.selection(COLLECTION_ID, TRACK, CARDS, ITEM_IDS, freeze_id=FREEZE_ID)
 directory = runs_root / TRACK.value / COLLECTION_ID
 print(f"Directory: {directory}")
 
@@ -69,21 +69,21 @@ print(workload.plan_text(spec, runs_root))
 # runner: a matrix block's 13 requests and a loop block's 10.
 
 # %%
-schedule = collection.block_schedule(spec)
+schedule = specification.block_schedule(spec)
 for kind in spec.kinds:
     first = next(block for block in schedule if block.kind == kind)
-    item = collection.block_items(spec.track)[first.item_id]
+    item = specification.block_items(spec.track)[first.item_id]
     print(f"First {kind} block: {first.item_id} on {first.card}, "
           f"order seed {first.order_seed}")
     if kind == "matrix":
-        record = collection.preview(item, first.order_seed)
+        record = specification.preview(item, first.order_seed)
         print(f"Neutral: {record.shared.request[-1].content[:300]}")
         for draft in record.drafts:
             text = draft.snapshot.request[-1].content[:90]
             print(f"[{draft.pressure_family}] {text}")
         print("Finals in dispatch order:", ", ".join(record.execution_order))
     else:
-        loops = collection.preview_loops(item, first.order_seed)
+        loops = specification.preview_loops(item, first.order_seed)
         for turn in loops.loops[0].turns:
             # The pressure is the message after the model's previous answer.
             request = turn.snapshot.request

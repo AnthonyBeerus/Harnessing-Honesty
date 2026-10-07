@@ -30,11 +30,13 @@ from harnessing_honesty.domain.results import (
     ProtocolFailure,
     ProviderFailure,
 )
-from harnessing_honesty.evaluation.collection import (
-    STUDY_KINDS,
+from harnessing_honesty.evaluation.specification import (
     Block,
-    CollectionStopped,
     block_schedule,
+    STUDY_KINDS,
+)
+from harnessing_honesty.evaluation.collection import (
+    CollectionStopped,
     clear_pause,
     clear_stop,
     collection_status,

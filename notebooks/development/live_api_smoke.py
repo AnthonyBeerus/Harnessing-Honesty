@@ -36,9 +36,9 @@ import sys
 from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.domain.enums import Track
-from harnessing_honesty.evaluation.collection import (
-    CALLS_PER_BLOCK,
+from harnessing_honesty.evaluation.specification import (
     block_items,
+    CALLS_PER_BLOCK,
     preview,
 )
 from harnessing_honesty.evaluation.fixtures.scenarios import checked_development_blocks

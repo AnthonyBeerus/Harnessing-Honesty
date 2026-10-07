@@ -9,12 +9,8 @@ from harnessing_honesty.analysis.loops import loop_summary
 from harnessing_honesty.analysis.power import assess_power
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Track
-from harnessing_honesty.evaluation.collection import (
-    STUDY_KINDS,
-    build_spec,
-    execute,
-    start_collection,
-)
+from harnessing_honesty.evaluation.specification import build_spec, STUDY_KINDS
+from harnessing_honesty.evaluation.collection import execute, start_collection
 from harnessing_honesty.models.fake import HashedAnswerClient
 from harnessing_honesty.observability.clock import FakeClock
 
