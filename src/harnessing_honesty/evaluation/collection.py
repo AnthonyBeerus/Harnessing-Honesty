@@ -618,9 +618,11 @@ def clear_pause(directory: Path, card: str) -> None:
 def _owned(directory: Path) -> Iterator[None]:
     """Hold ``owner.json`` for the duration; a second owner is refused.
 
-    The file is created exclusively, so two processes cannot both own a
-    collection. It is removed when the owner ends normally or by exception.
-    A process killed outright leaves it; ``release_owner`` clears it.
+    The complete record is written to a private file and then linked into
+    place: the link fails if the owner file exists, so two processes cannot
+    both own a collection, and a reader never sees a half-written owner. It is
+    removed when the owner ends normally or by exception. A process killed
+    outright leaves it; ``release_owner`` clears it.
     """
     path = directory / "owner.json"
     record = {
@@ -628,15 +630,18 @@ def _owned(directory: Path) -> Iterator[None]:
         "host": socket.gethostname(),
         "started_at": datetime.now(timezone.utc).isoformat(),
     }
-    try:
-        handle = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-    except FileExistsError as exc:
-        owner = path.read_text(encoding="utf-8")
-        raise RuntimeError(f"collection is owned: {owner}") from exc
-    with os.fdopen(handle, "w", encoding="utf-8") as stream:
+    draft = directory / f"owner-{os.getpid()}.tmp"
+    with draft.open("w", encoding="utf-8") as stream:
         stream.write(json.dumps(record))
         stream.flush()
         os.fsync(stream.fileno())
+    try:
+        os.link(draft, path)
+    except FileExistsError as exc:
+        owner = path.read_text(encoding="utf-8")
+        raise RuntimeError(f"collection is owned: {owner}") from exc
+    finally:
+        draft.unlink()
     try:
         yield
     finally:
