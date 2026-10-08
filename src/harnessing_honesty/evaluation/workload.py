@@ -76,7 +76,7 @@ def run_usage(run_dir: Path) -> RunUsage:
 
 
 def recorded_runs(runs_root: Path, requested_model: str) -> list[Path]:
-    """Recorded runs of ``requested_model`` with response envelopes, oldest first.
+    """Recorded runs of ``requested_model`` that report tokens, in path order.
 
     Runs are found by the model their summary names, at any depth below
     ``runs_root``; collection runs sit one level deeper than single runs.
@@ -85,15 +85,16 @@ def recorded_runs(runs_root: Path, requested_model: str) -> list[Path]:
     for summary in sorted(runs_root.rglob("summary.json")):
         run_dir = summary.parent
         record = RunRecord.model_validate_json(summary.read_text(encoding="utf-8"))
-        if record.requested_model == requested_model and any(
-            (run_dir / "envelopes").glob("*.json")
-        ):
+        if record.requested_model != requested_model:
+            continue
+        usage = run_usage(run_dir)
+        if usage.input_tokens + usage.output_tokens > 0:
             found.append(run_dir)
     return found
 
 
 def calibration_run(runs_root: Path) -> Path | None:
-    """The latest closed run of exactly one block with all 13 calls answered."""
+    """The last closed run, by path, of exactly one block with all 13 calls answered."""
     for summary in sorted(runs_root.rglob("summary.json"), reverse=True):
         rebuilt = reconstruct_run(summary.parent)
         attempts = rebuilt.attempts

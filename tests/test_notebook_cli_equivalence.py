@@ -225,11 +225,10 @@ def test_a_launch_under_a_stop_request_dispatches_nothing(runs_root: Path) -> No
         assert time.monotonic() < deadline, (log, sorted(directory.rglob("*")))
         time.sleep(0.2)
 
+    # The stop is read before any run is opened: nothing is written, not even
+    # a run-started event.
     for card in PRIMARY_SERVING_CARDS:
-        run_dir = directory / Path(card).stem
-        events = reconstruct_run(run_dir).events
-        sent = [e for e in events if isinstance(e, RequestSent)]
-        assert sent == []
+        assert not (directory / Path(card).stem).exists()
 
 
 def _log(directory: Path) -> str:

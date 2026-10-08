@@ -3,6 +3,7 @@ from pydantic_core import ValidationError
 
 from harnessing_honesty.domain.enums import PolicyFamily
 from harnessing_honesty.runtime.policies import (
+    DEVELOPMENT_VERIFIER_OUTPUT,
     INTRINSIC_TEXT,
     NONE_TEXT,
     TOOL_TEXT,
@@ -53,7 +54,7 @@ def test_family_labels_are_not_in_the_text() -> None:
 
 
 def test_follow_ups_use_family_ids_and_policy_text() -> None:
-    follow_ups = policy_follow_ups()
+    follow_ups = policy_follow_ups(DEVELOPMENT_VERIFIER_OUTPUT)
     templates = development_policy_templates()
     assert follow_ups[0].external_report is None
     assert follow_ups[1].external_report is None

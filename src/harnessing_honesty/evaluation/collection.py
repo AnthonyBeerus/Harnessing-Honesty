@@ -149,6 +149,9 @@ def execute(
         raise ValueError("collection is not ready: " + "; ".join(findings))
     if approved_calls != spec.planned_calls:
         raise ValueError(f"approve exactly {spec.planned_calls} calls")
+    reason = stop_reason(directory)
+    if reason is not None:
+        raise CollectionStopped(reason)
     with _owned(directory):
         _run(directory, spec, schedule, items, client_factory, clock)
 
@@ -167,6 +170,8 @@ def _run(
     clients: dict[str, ModelClient] = {}
     recorded: dict[str, tuple[tuple[DomainEvent, ...], list[_Block]]] = {}
     guards: dict[str, _PauseGuard] = {}
+    # A paused SUT opens no session, so relaunching writes nothing for it.
+    waiting = [sut.card for sut in spec.suts if stop_reason(directory, sut.card)]
     for sut in spec.suts:
         card = load_run_config(REPO_ROOT / sut.card).model_dump()
         config = RunConfig.model_validate(
@@ -177,12 +182,16 @@ def _run(
         resume = run_dir.exists()
         if resume and not reconstruct_run(run_dir).interrupted:
             continue  # this SUT finished in an earlier execution
+        if sut.card in waiting:
+            continue
         session = open_session(config, runs_root, run_id, resume=resume)
         sessions[sut.card] = session
         clients[sut.card] = client_factory(config.serving)
         events, blocks, streak = _recorded_blocks(session.run_dir)
         recorded[sut.card] = (events, blocks)
         guards[sut.card] = _PauseGuard(_pause_path(directory, sut.card), streak)
+    if not sessions and waiting:
+        raise CollectionStopped(f"paused: {', '.join(waiting)}")
     if not sessions:
         raise ValueError("collection is complete")
     started = dict.fromkeys(sessions, 0)
@@ -221,7 +230,7 @@ def _run(
             raise ValueError(
                 f"{recorder.block_id} recorded calls the runner did not repeat"
             )
-    paused = [card for card in sessions if stop_reason(directory, card)]
+    paused = [sut.card for sut in spec.suts if stop_reason(directory, sut.card)]
     for card, session in sessions.items():
         if card not in paused:
             session.close()
@@ -575,6 +584,19 @@ def launch(directory: Path, *, approved_calls: int, client: str) -> CollectionSt
             creationflags=flags, start_new_session=os.name != "nt",
         )
     return status
+
+
+def resume(directory: Path, *, approved_calls: int, client: str) -> CollectionStatus:
+    """Withdraw a stop request and launch again.
+
+    Refused while a worker still owns the collection: clearing the stop first
+    would let a worker that is finishing its current block run on to the end.
+    """
+    owner = collection_status(directory).owner
+    if owner is not None:
+        raise RuntimeError(f"collection is still owned by {owner}; wait until it stops")
+    clear_stop(directory)
+    return launch(directory, approved_calls=approved_calls, client=client)
 
 
 def worker_logs(directory: Path) -> list[Path]:

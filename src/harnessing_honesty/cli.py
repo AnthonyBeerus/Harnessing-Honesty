@@ -1,4 +1,5 @@
-"""Command line for collections: plan, launch, status, stop, resume, clear a pause.
+"""Command line for collections: plan, launch, status, stop, resume, clear a pause,
+release a dead worker's ownership.
 
 Each command calls the same ``evaluation`` functions as the experiment-control
 notebook; neither holds its own procedure. A development case runs the same
@@ -57,20 +58,22 @@ def run_collection(
             raise SystemExit(
                 f"refusing resume: pass --confirm-calls {spec.planned_calls}"
             )
-        collection.clear_stop(directory)
-        collection.launch(
+        collection.resume(
             directory, approved_calls=spec.planned_calls, client=arguments.client
         )
     elif action == "stop":
         collection.request_stop(directory)
     elif action == "clear-pause":
         collection.clear_pause(directory, arguments.card[0])
+    elif action == "release":
+        collection.release_owner(directory, arguments.pid)
     print(workload.status_text(directory))
 
 
 def _collection_parsers(subcommands: argparse._SubParsersAction) -> None:
-    """Subcommands ``collection-{plan,launch,status,stop,resume,clear-pause}``."""
-    for action in ("plan", "launch", "status", "stop", "resume", "clear-pause"):
+    """Subcommands ``collection-{plan,launch,status,stop,resume,clear-pause,release}``."""
+    actions = ("plan", "launch", "status", "stop", "resume", "clear-pause", "release")
+    for action in actions:
         command = subcommands.add_parser(f"collection-{action}")
         command.set_defaults(command=run_collection, action=action)
         command.add_argument("--id", required=True, help="collection id")
@@ -87,6 +90,11 @@ def _collection_parsers(subcommands: argparse._SubParsersAction) -> None:
             command.add_argument(
                 "--kind", action="append", choices=("matrix", "loop"),
                 help="block kind; repeatable (default: matrix and loop)",
+            )
+        if action == "release":
+            command.add_argument(
+                "--pid", type=int, required=True,
+                help="the owner's process id, confirmed to have ended",
             )
         if action in ("launch", "resume"):
             command.add_argument(

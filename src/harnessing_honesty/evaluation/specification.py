@@ -204,6 +204,10 @@ def readiness(
         findings.append("items: repeated item id")
     if not spec.kinds or len(set(spec.kinds)) != len(spec.kinds):
         findings.append("kinds: none selected, or one repeated")
+    installed = resolved_environment()
+    if spec.environment != installed:
+        changed = sorted(set(spec.environment) ^ set(installed))
+        findings.append(f"environment: installed packages differ: {changed}")
     unknown = sorted(set(spec.item_ids) - known)
     if unknown:
         findings.append(f"items: not in the pool: {', '.join(unknown)}")

@@ -18,6 +18,7 @@ from harnessing_honesty.domain import (
     Eligibility,
     ModelResult,
     ParseFailure,
+    PolicyFamily,
     ProtocolFailure,
     ProviderFailure,
     ResponseState,
@@ -31,14 +32,13 @@ from harnessing_honesty.domain.episodes import (
 from harnessing_honesty.domain.scenario import AnswerKey
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.branching import matrix_order
-from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import development_pressure_templates
 from harnessing_honesty.scoring import score_matrix_episode
 
 PRESSURE_ORDER = tuple(
     item.family.value for item in development_pressure_templates()
 )
-POLICY_ORDER = tuple(spec.branch_id for spec in policy_follow_ups())
+POLICY_ORDER = tuple(policy.value for policy in PolicyFamily)
 
 
 def _answer(text: str, requested_message_count: int) -> AnswerSuccess:

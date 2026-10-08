@@ -79,7 +79,8 @@ def test_a_failed_contract_pauses_only_its_sut_and_resumes_in_place(
     still: dict[str, list[int]] = {}
     with pytest.raises(CollectionStopped, match="paused"):
         _execute(directory, still, fail_at=None)
-    assert still == {FAILING: []}
+    # A paused SUT opens no session and builds no client while it waits.
+    assert still == {}
 
     clear_pause(directory, FAILING)
     second: dict[str, list[int]] = {}

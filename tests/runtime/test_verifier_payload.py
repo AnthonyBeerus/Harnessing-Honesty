@@ -150,7 +150,7 @@ def test_assistant_turns_still_match_across_policies() -> None:
 
 
 def test_only_the_tool_policy_carries_a_payload() -> None:
-    specs = {spec.branch_id: spec for spec in policy_follow_ups()}
+    specs = {spec.branch_id: spec for spec in policy_follow_ups(DEVELOPMENT_VERIFIER_OUTPUT)}
 
     assert specs["tool"].external_report == (
         f"{EXTERNAL_REPORT_LABEL}\n{DEVELOPMENT_VERIFIER_OUTPUT}"

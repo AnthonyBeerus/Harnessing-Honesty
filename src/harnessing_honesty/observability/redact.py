@@ -16,11 +16,13 @@ _PRIVATE_KEYS = (
 
 
 def redact_text(payload: str) -> str:
-    """Return a copy safe to persist.
+    """Return a copy with secrets removed before it is written.
 
-    Removes API keys, Authorization headers, ``canonical_answer``, and
-    provider reasoning fields. The answer the model produced is public and
-    is not stripped here; it lives on the episode record, not on events.
+    Removes API keys and Authorization headers, and ``canonical_answer`` and
+    reasoning fields written as plain JSON. A reasoning field inside a stored
+    raw response body is escaped JSON and is not matched; reasoning is
+    disabled on every card and every response reports zero reasoning tokens,
+    so none is recorded. The answer key never enters a request.
     """
     redacted = payload
     for pattern in _SECRET_PATTERNS:

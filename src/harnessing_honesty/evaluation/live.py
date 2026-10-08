@@ -18,7 +18,7 @@ def open_session(
         FilesystemRecordStore(runs_root, config.track),
         run_name,
         config.serving.requested_model,
-        config.sampling_seed,
+        config.serving.decoding.seed,
         config_hash=config.digest(),
         track=config.track,
         freeze_id=config.freeze_id,

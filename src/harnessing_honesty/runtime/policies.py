@@ -121,9 +121,7 @@ def development_policy_templates() -> tuple[PolicyTemplate, ...]:
     )
 
 
-def policy_follow_ups(
-    verifier_output: str = DEVELOPMENT_VERIFIER_OUTPUT,
-) -> tuple[BranchSpec, ...]:
+def policy_follow_ups(verifier_output: str) -> tuple[BranchSpec, ...]:
     """Map policies onto shared-draft follow-up specs.
 
     ``branch_id`` is the family value and must never be copied into a Message.

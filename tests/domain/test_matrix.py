@@ -151,7 +151,7 @@ def test_cell_ids_and_labels_are_not_model_visible() -> None:
         assert pressure.family.value not in blob
     for policy in development_policy_templates():
         assert policy.family.value not in blob
-    for spec in policy_follow_ups():
+    for spec in policy_follow_ups(DEVELOPMENT_VERIFIER_OUTPUT):
         assert spec.branch_id not in blob
 
 

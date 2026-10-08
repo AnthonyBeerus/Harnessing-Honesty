@@ -13,7 +13,8 @@ class RunRecord(BaseModel):
     """Harness-side identity of one run.
 
     ``requested_model`` and ``seed`` are required so a stored record cannot
-    silently forget which model-harness pair produced it. ``freeze_id`` is
+    silently forget which model-harness pair produced it. ``seed`` is the
+    decoding seed sent to the provider, ``None`` where the card sends none. ``freeze_id`` is
     required on the main track: confirmatory execution without a freeze is
     not a confirmatory execution.
     """
@@ -22,7 +23,7 @@ class RunRecord(BaseModel):
 
     run_id: str
     requested_model: str
-    seed: int
+    seed: int | None
     status: RecordStatus
     observed_model: str | None = None
     observed_endpoint: str | None = None

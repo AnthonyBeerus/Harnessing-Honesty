@@ -9,7 +9,7 @@ from harnessing_honesty.analysis.reconstruct import require_closed_matrix
 from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
-from harnessing_honesty.domain.enums import RecordStatus, Track
+from harnessing_honesty.domain.enums import PolicyFamily, RecordStatus, Track
 from harnessing_honesty.domain.events import RequestSent
 from harnessing_honesty.domain.results import ModelResult, ProviderFailure
 from harnessing_honesty.evaluation.specification import (
@@ -28,14 +28,13 @@ from harnessing_honesty.models.config import ServingManifest, load_run_config
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.reconstruct import reconstruct_run
 from harnessing_honesty.runtime.branching import matrix_order
-from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import wrap_false_counter_position
 
 ITEMS = confirmatory_pool()
 QUESTIONS = {item.prompt.question: item.item_id for item in ITEMS}
 ROOT = Path(__file__).resolve().parents[2]
 PRESSURES = tuple(t.family.value for t in wrap_false_counter_position("p"))
-POLICIES = tuple(spec.branch_id for spec in policy_follow_ups())
+POLICIES = tuple(policy.value for policy in PolicyFamily)
 MODELS = {
     load_run_config(ROOT / card).serving.requested_model: card
     for card in PRIMARY_SERVING_CARDS

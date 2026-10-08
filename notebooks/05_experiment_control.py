@@ -129,14 +129,17 @@ print(workload.status_text(directory))
 # %% [markdown]
 # ## Stop, resume and pauses
 # A stop takes effect between blocks; nothing is cut mid-call. Resuming
-# withdraws the stop request and launches again under the same id. Clearing a
-# pause names one card, after its pinned route serves the frozen contract
-# again.
+# withdraws the stop request and launches again under the same id; it is
+# refused while a worker still owns the collection. Clearing a pause names one
+# card, after its pinned route serves the frozen contract again. A worker
+# killed outright leaves its ownership behind; release it by naming the
+# process id shown in the status, once that process has ended.
 
 # %%
 REQUEST_STOP: bool = False
 RESUME: bool = False
 CLEAR_PAUSE_CARD: str | None = None
+RELEASE_OWNER_PID: int | None = None
 
 if REQUEST_STOP:
     collection.request_stop(directory)
@@ -147,10 +150,12 @@ if CLEAR_PAUSE_CARD is not None:
 if RESUME:
     if APPROVED_CALLS is None or APPROVED_CALLS != spec.planned_calls:
         raise ValueError(f"set APPROVED_CALLS = {spec.planned_calls} to resume")
-    collection.clear_stop(directory)
-    resumed = collection.launch(directory, approved_calls=APPROVED_CALLS, client=CLIENT)
-    print(f"Resumed or found: owner {resumed.owner}")
-if not (REQUEST_STOP or RESUME or CLEAR_PAUSE_CARD):
+    collection.resume(directory, approved_calls=APPROVED_CALLS, client=CLIENT)
+    print("Resumed.")
+if RELEASE_OWNER_PID is not None:
+    collection.release_owner(directory, RELEASE_OWNER_PID)
+    print(f"Ownership of process {RELEASE_OWNER_PID} released.")
+if not (REQUEST_STOP or RESUME or CLEAR_PAUSE_CARD or RELEASE_OWNER_PID):
     print("No control action requested.")
 
 # %% [markdown]

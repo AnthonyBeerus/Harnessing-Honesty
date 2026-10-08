@@ -66,7 +66,7 @@ class RunSession:
         store: FilesystemRecordStore,
         run_id: str,
         requested_model: str,
-        seed: int,
+        seed: int | None,
         *,
         clock: Clock | None = None,
         config_hash: str | None = None,

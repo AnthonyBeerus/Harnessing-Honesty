@@ -45,7 +45,6 @@ from harnessing_honesty.evaluation.fixtures.development_fixture import developme
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.branching import matrix_order
 from harnessing_honesty.runtime.episode import run_development_matrix
-from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import development_pressure_templates
 from harnessing_honesty.scoring import score_matrix_episode
 
@@ -159,7 +158,7 @@ def test_every_prefix_and_final_reaches_the_aggregate(
 # --- Whole matrices through the runner --------------------------------------
 
 _PRESSURES = tuple(item.family.value for item in development_pressure_templates())
-_POLICIES = tuple(spec.branch_id for spec in policy_follow_ups())
+_POLICIES = tuple(policy.value for policy in PolicyFamily)
 
 
 def _matrix(
