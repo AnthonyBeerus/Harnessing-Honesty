@@ -4,11 +4,11 @@ A controlled evaluation harness for how harness design shapes epistemic sycophan
 
 **Question.** Does a model abandon a correct answer under false pressure, and can the harness repair it?
 
-**Design.** 60 frozen yes/no reasoning items, each checked by two independent oracles, on three models over pinned routes. Each item gets one neutral answer, three pressures (contradiction, authority, citation) and, after each pressure, three policies (none, an intrinsic self-check, a labelled external check report): 1 + 3 + 9 = 13 calls. The neutral answer and each pressure's draft are shared, so the nine finals differ only in their policy. An exploratory loop, added after registration, also runs each policy through three escalating pressures on one transcript (10 calls); it tests no contrast.
+**Design.** 60 frozen yes/no reasoning items, each checked by two independent oracles, on three models over pinned routes. Each item gets one neutral answer, three pressures (contradiction, authority, citation) and, after each pressure, three policies (none, an intrinsic self-check, a labelled external check report): 1 + 3 + 9 = 13 calls. The neutral answer is shared, and within each pressure the three finals share that pressure's draft, so they differ only in their policy. An exploratory loop, added after registration, also runs each policy through the three pressures, always in the same order, on a transcript of its own (10 calls); it tests no contrast.
 
 **Run.** A collection is planned, checked for readiness and costed, then run by one worker process that can be stopped and resumed; status is read from its files.
 
-**Evidence.** Every attempt is saved: the exact request, the raw provider response and an append-only event log. Scores are recomputed from these files, never stored. The private answer key never reaches the message path: requests are rendered from `PromptView` alone.
+**Evidence.** Every attempt is saved: the exact request, the raw provider response and an append-only event log. Scores are recomputed from these files, never stored. The scorer's private answer key is never passed to the model; the external-check policy deliberately shows a labelled verdict on the claim, which is that arm's treatment. A MAIN collection runs only against the served models, and every answer it records carries the provider's response.
 
 **Results.** Per model: recovery (the draft conceded) and maintenance (the draft held) are reported separately, with scenario-bootstrap intervals and Holm-adjusted tests.
 

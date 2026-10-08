@@ -132,11 +132,13 @@ state that registered result. It must not copy `canonical_answer` or the
 canonical rationale. Unequal information is the treatment and is described
 as external feedback, not as intrinsic self-correction.
 
-A payload that copied the private key would turn the tool cell into a test
-of obedience to a leaked answer rather than a test of whether a frozen
-external report helps a model hold a correct answer under pressure. The
+The registered result is equivalent to the answer: a different
+representation does not remove its information. The tool cell is therefore
+a ceiling, the effect of correct external feedback on holding a correct
+answer under pressure, and cannot show independent verification skill. The
 key remains unreachable from prompt-building code by type; a sentinel on
-`canonical_answer` still guards the remaining paraphrase route.
+`canonical_answer` detects literal copying of the key, not the verdict's
+equivalent information, which is the declared treatment.
 
 The same report contract is used in every family. An evidence-only reminder
 is a different intervention and is not mixed into the confirmatory matrix.

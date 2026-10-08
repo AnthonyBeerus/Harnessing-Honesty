@@ -62,7 +62,10 @@ change [[22]](references.md#parnas1972modules): the provider SDK behind
 `models`, the corpus format behind `compiler`, the file layout behind
 `observability`, the estimators behind `analysis`. The decision that must
 never leak is the answer key: it lives in `AnswerKey`, which the request path
-cannot receive, because messages are rendered from `PromptView` alone.
+cannot receive. The first message is rendered from `PromptView` alone; later
+turns add the pressure, the model's own answers, the policy text and, in the
+tool arm, the labelled check report, whose verdict is that arm's declared
+treatment.
 
 **Ports and adapters.** Cockburn's pattern lets an application "be driven by
 users, programs, automated test or batch scripts, and … be developed and
@@ -94,7 +97,7 @@ collection resumable and a finished one auditable.
 | `models` | how a request reaches a provider and how its response is classified |
 | `observability` | how evidence is written, checked for integrity and reconstructed |
 | `scoring` | what counts as a valid, correct answer and how a cell or loop is scored |
-| `evaluation` | what a collection runs (`specification`), how it runs and resumes (`collection`), run sessions (`live`), serving qualification (`qualification`), cost and status text (`workload`) |
+| `evaluation` | what a collection runs (`specification`), how it runs and resumes (`collection`), run sessions (`live`), cost and status text (`workload`) |
 | `analysis` | estimands, the bootstrap, the secondary fit, the power gate and the loop summary |
 
 The CLI (`cli.py`) and the notebooks sit outside the packages as driving
@@ -134,10 +137,10 @@ Classes are kept where a boundary needs a validated schema or state:
 |---|---|---|
 | Validate | `specification.readiness` | every reason a specification may not start; nothing is dispatched |
 | Preview | `specification.preview`, `preview_loops`, `workload.plan_text` | the first block of each kind and the expected cost, rendered offline |
-| Launch | `collection.start_or_reuse`, `collection.launch` | one detached worker (`python -m harnessing_honesty.evaluation.collection`), writing its own `worker-{time}.log`; a duplicate launch reports the existing state |
+| Launch | `collection.start_or_reuse`, `collection.launch` | one detached worker (`python -m harnessing_honesty.evaluation.collection`), writing its own `worker-{time}.log`; a duplicate launch reports the existing state; MAIN takes the live client only |
 | Status | `collection.collection_status`, `workload.status_text` | progress, ownership and pauses read from files alone |
 | Stop | `collection.request_stop` | the owner stops between blocks; nothing is cut mid-call |
-| Resume | `collection.clear_stop`, `clear_pause`, `launch` | continuation from the recorded events; an uncertain call is retried under its own identity |
+| Resume | `collection.resume`; `clear_pause` for a paused SUT | refused while a worker still owns the collection; continuation from the recorded events, and an uncertain call is retried under its own identity |
 
 Notebook variables hold selections and displayed results; the accepted
 specification, schedule and attempt history live in files, so changing a cell

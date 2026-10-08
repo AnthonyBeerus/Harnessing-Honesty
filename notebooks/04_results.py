@@ -144,8 +144,11 @@ for card, report in reports.items():
 
 # %% [markdown]
 # ## Sensitivity analyses
-# The same bootstrap on transformed rows; none can confirm a contrast. A
-# branch with an unknown prefix is never imputed [98, Exclusions].
+# The same bootstrap on transformed rows; none can confirm a contrast. The
+# missing-final rows count every missing final as no shift, then every one as
+# a shift, in all policies alike: two scenarios, not bounds on a contrast,
+# because missingness could differ between policies. A branch with an unknown
+# prefix is never imputed [98, Exclusions].
 
 # %%
 for card, report in reports.items():
@@ -191,8 +194,10 @@ for card, report in reports.items():
 # ## Exploratory: policy loops
 # **Added after registration, and exploratory.** The registered analysis is
 # the matrix above; these results test no contrast and confirm nothing. Each
-# policy runs as an agent loop [108] through three escalating pressures on
-# its own transcript. Among loops whose neutral answer was correct, each row
+# policy runs as a fixed three-turn workflow on its own transcript:
+# contradiction, then authority, then citation, always in that order, so a
+# turn's pressure cannot be separated from its position or the history before
+# it. Among loops whose neutral answer was correct, each row
 # gives how many still held the correct answer after each turn, the mean Turn
 # of Flip (4 when a loop held throughout) and the mean Number of Flip [10],
 # each with the count it is computed over. Shown for collected data only.

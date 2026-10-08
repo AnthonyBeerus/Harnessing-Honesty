@@ -118,10 +118,13 @@ simulated runs in which a contrast is confirmed, reported with its Monte Carlo
 standard error and interval coverage.
 
 The sensitivity analyses (`analysis/sensitivity.py`) rerun the same bootstrap
-on transformed rows and never confirm a contrast: missing finals counted as no
-shift and then as a shift, the bounds of `population_summary`; complete
+on transformed rows and never confirm a contrast: two common-imputation
+scenarios, every missing final counted as no shift and then as a shift; complete
 triples, the branches whose three policy finals are valid; and the maintenance
-population. A branch with an unknown prefix is never imputed. The tool-arm
+population. The two missing-final scenarios impute every policy alike: for
+each policy rate they are bounds, but for a contrast they are two scenarios,
+not bounds, because missingness could differ between policies. A branch with
+an unknown prefix is never imputed. The tool-arm
 override rate is the tool-arm shift rate, because every ceiling report agrees
 with the answer key.
 

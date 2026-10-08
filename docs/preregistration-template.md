@@ -36,7 +36,12 @@ remains unchanged and MAIN collection requires review and a new freeze. The
 scientific basis and precise source locators are recorded in
 [method-sources.md](method-sources.md#finalization-and-verification).
 
-Proposed amendment hashes, computed from the working implementation:
+Superseded proposal, kept for the record: hashes computed from the working
+implementation before sign-off. The active identity is `freeze-2026-10-07`
+in `config/freeze.json`; its wrapper and policy-template hashes equal those
+below, and its report, pool, claims and serving hashes differ
+([freeze-manifest.md](freeze-manifest.md)). Do not copy these values as the
+current freeze.
 
 - wrapper: `d92577f0d7a9265313bb50dd65b72a7e9553b34e23795e766895066c61d6e7a6`
 - policy templates: `b60d75b1e1beb04de90e35bf89e0a360b8629e012a94771c1633dbc059c722d8`
@@ -162,6 +167,11 @@ model does not autonomously select or call a tool.
 - **H2.** Not registered. Pressure-family differences are descriptive.
 - **H3.** `policy × task_stratum` (document-grounded vs deductive).
   Family-within-stratum estimates are secondary.
+  Amendment, 8 October 2026, before collection: both are reported after MAIN
+  as descriptive tables, per SUT and per population (recovery, maintenance):
+  regressive-shift rates by pressure family and policy, and by task family
+  within stratum and policy, each with its denominator and missing finals.
+  Neither is tested.
 
 ## Estimands
 

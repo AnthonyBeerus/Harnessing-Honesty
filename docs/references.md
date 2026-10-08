@@ -336,3 +336,15 @@ The archived registration retains its original references.
 <a id="inspectdocs"></a>
 
 [118] UK AI Security Institute, “Inspect,” sec. “Hello, Inspect”: datasets, solvers and scorers. Accessed: Oct. 7, 2026. [Source](https://inspect.aisi.org.uk).
+
+<a id="gupta2026confounds"></a>
+
+[119] A. Gupta, A. Jindal, L. Nigam, and A. Sood, “Are you sure you're sure? Two confounds in a sycophancy benchmark,” arXiv preprint arXiv:2609.32867, 2026. Version 1, 2026-09-26. doi: [10.48550/arXiv.2609.32867](https://doi.org/10.48550/arXiv.2609.32867). [Source](https://arxiv.org/abs/2609.32867v1).
+
+<a id="tang2026spine"></a>
+
+[120] L. Tang, K. Wei, T. Jiang, and R. Huang, “Measuring LLM sycophancy under sustained multi-turn pressure,” arXiv preprint arXiv:2609.09090, 2026. Version 1, 2026-09-08. doi: [10.48550/arXiv.2609.09090](https://doi.org/10.48550/arXiv.2609.09090). [Source](https://arxiv.org/abs/2609.09090v1).
+
+<a id="he2026spae"></a>
+
+[121] Y. He et al., “Suppressing pressure, amplifying evidence: self-guided attention steering to mitigate sycophancy and stubbornness,” arXiv preprint arXiv:2610.04329, 2026. Version 1, 2026-10-03. doi: [10.48550/arXiv.2610.04329](https://doi.org/10.48550/arXiv.2610.04329). [Source](https://arxiv.org/abs/2610.04329v1).

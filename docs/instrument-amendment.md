@@ -4,6 +4,9 @@ Prepared 3 October 2026. This is a working instrument amendment,
 not a published registration or freeze approval. The original proposal,
 registered attachments remain unchanged; the registered manifest is archived as
 `config/freeze-2026-09-02.json` and replaced by `freeze-2026-10-07`.
+Statements below are as of their writing: where one says a freeze or a check
+is pending, [research-design-decisions.md](research-design-decisions.md)
+records its later state, and the current hashes are in `config/freeze.json`.
 
 ## Scope and family mapping
 

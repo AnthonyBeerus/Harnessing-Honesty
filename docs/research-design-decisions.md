@@ -1078,3 +1078,61 @@ resamples is slightly noisier, not biased.
 A matrix cell is now a pressure and a policy only. Its track was always the
 development default in runner records and was never read by an estimator; the
 run record carries the track.
+
+## 2026-10-08 — MAIN answers only from served models; the whole environment recorded
+
+A signed MAIN specification did not show that a served model produced its
+answers: `execute`, `launch` and `resume` accepted the offline client on any
+track, and an answer without provider evidence passed the integrity checks.
+`execute`, the entry every launcher reaches, now refuses MAIN with any client
+but the live one; `launch` and `resume` refuse it before starting a worker or
+clearing a stop. The integrity checks name an answer in a MAIN run with no
+provider envelope (`unserved_answer`); the live client captures every
+exchange and refuses a response without provider identity, so such an answer
+came from no served model. DEV still takes any client, so a whole collection
+runs offline.
+
+The freeze and each specification recorded five request-path versions.
+They now record every declared dependency and the distributions beneath the
+request path that a declared range does not fix (`pydantic-ai-slim`,
+`httpcore`), including the numerical packages the analysis uses; an absent
+package is recorded as absent. `freeze-2026-10-07` was re-signed: only its
+`source_hash` and `environment` changed. The analysis code is unchanged, so
+the power assessment stays current.
+
+## 2026-10-08 — What the loop and the sensitivity scenarios are
+
+The 7 October entry called the policy loop an agent loop [108, "Agents"]. It
+is a fixed workflow: each turn's pressure, policy text and report are set in
+advance, and the model's answer is appended to the history without choosing
+any action [108, "What are agents?"]. Its pressures always run contradiction,
+authority, citation, so a turn's pressure cannot be separated from its
+position or the transcript before it, and a later flip identifies no effect
+of pressure strength. SYCON-Bench [10] supplies the multi-turn measures, not
+a validation of that order. Turn of Flip, Number of Flip and the retention
+counts stay as defined; the retention count is survival without a first flip
+among loops whose first flip is known, not accuracy after a flip and a
+recovery.
+
+The two missing-final sensitivity scenarios count every missing final as no
+shift, then every one as a shift, in all policies alike. For one policy's rate
+these are bounds; for a contrast they are two scenarios, not bounds, since
+missingness could differ between policies. The documents now say so; the
+analysis docstring that calls them bounds is corrected with the descriptive
+tables below, after collection, because any `analysis/` change requires the
+power assessment to be recorded again.
+
+The family-within-stratum estimates (H3) and the pressure-family differences
+(H2) had no standard output. They are declared now, before collection, as
+descriptive tables per SUT and population, each with its denominator and
+missing finals, and are produced after MAIN; neither is tested.
+
+Recent work bounds what these results can claim. Naming the target answer
+and moving the output instruction change follow rates in a single-turn
+benchmark [119]; every wrapper here names the same opposite answer and keeps
+the answer instruction at each scored turn, so absolute rates belong to these
+templates. Collapse under sustained, adaptive pressure rises with
+conversation length [120]; three scripted turns describe a short horizon,
+not durability. Distinguishing pressure-following from warranted updating
+needs conditions where the user is right [121]; every pressure here is false,
+so the study measures yielding, not overcorrection.
