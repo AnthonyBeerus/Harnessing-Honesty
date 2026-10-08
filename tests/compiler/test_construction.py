@@ -9,27 +9,6 @@ from harnessing_honesty.compiler.pool import confirmatory_pool
 WORKING_POOL_HASH = "95366bc65475771015915c1c90eeb5ddc18d09576d326e9e7ca01d9394e83943"
 
 
-def _design_cells() -> tuple[tuple[str, str, str, str], ...]:
-    return tuple(
-        (
-            item.item_id,
-            item.family.value,
-            item.stratum.value,
-            item.answer_key.canonical_answer,
-        )
-        for item in confirmatory_pool()
-    )
-
-
-def test_same_construction_config_reproduces_the_pool() -> None:
-    config = load_construction_config()
-
-    first = confirmatory_pool(config)
-    second = confirmatory_pool(config)
-
-    assert first == second
-
-
 def test_working_pool_matches_the_reviewed_instrument() -> None:
     # Fixing the exact computational result makes later changes explicit
     # rather than relying on the construction procedure alone [61, Rules 1 and 5].

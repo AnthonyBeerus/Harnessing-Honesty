@@ -1,13 +1,11 @@
-"""Ownership, stop requests, status and the detached worker process."""
+"""Ownership, stop requests and status, in one process; the detached worker is
+tested end to end in tests/test_notebook_cli_equivalence.py."""
 
-import time
 from pathlib import Path
 
 import pytest
 
-from harnessing_honesty.analysis.reconstruct import require_closed_matrix
 from harnessing_honesty.domain import Message
-from harnessing_honesty.domain.events import RequestSent
 from harnessing_honesty.domain.results import ModelResult
 from harnessing_honesty.evaluation import collection
 from harnessing_honesty.evaluation.collection import (
@@ -19,13 +17,11 @@ from harnessing_honesty.evaluation.collection import (
     release_owner,
     request_stop,
     start_collection,
-    sut_run_id,
     worker_logs,
 )
 from harnessing_honesty.models.config import ServingManifest
 from harnessing_honesty.models.fake import HashedAnswerClient
 from harnessing_honesty.observability.clock import FakeClock
-from harnessing_honesty.observability.reconstruct import reconstruct_run
 
 from tests.evaluation.test_collection_run import _spec
 
@@ -97,31 +93,3 @@ def test_an_owner_left_by_a_killed_process_is_released_by_pid(tmp_path: Path) ->
     release_owner(directory, 4242)
 
     assert collection_status(directory).owner is None
-
-
-def test_the_worker_runs_detached_and_a_repeated_launch_reports(tmp_path: Path) -> None:
-    spec = _spec(2)
-    directory = start_collection(tmp_path, spec)
-
-    launch(directory, approved_calls=spec.planned_calls, client="synthetic")
-    # Generous: process start can stall while the machine is busy.
-    deadline = time.monotonic() + 300
-    while not collection_status(directory).complete:
-        assert time.monotonic() < deadline, worker_logs(directory)
-        time.sleep(0.2)
-
-    logs = worker_logs(directory)
-    log = logs[-1].read_text(encoding="utf-8")
-    assert log.strip().endswith("complete")
-    again = launch(directory, approved_calls=spec.planned_calls, client="synthetic")
-    assert again.complete
-    assert worker_logs(directory) == logs
-    answers = set()
-    for sut in spec.suts:
-        run_dir = tmp_path / "dev" / sut_run_id(spec, sut.card)
-        rebuilt = reconstruct_run(run_dir)
-        answers |= {attempt.raw_response for attempt in rebuilt.attempts}
-        sent = [e for e in rebuilt.events if isinstance(e, RequestSent)]
-        for block_id in {event.block_id for event in sent}:
-            assert len(require_closed_matrix(run_dir, block_id).branches) == 9
-    assert answers == {"yes", "no"}

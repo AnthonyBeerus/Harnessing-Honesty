@@ -8,7 +8,6 @@ from harnessing_honesty.analysis.reconstruct import (
     rows_from_matrix_score,
 )
 from harnessing_honesty.models.config import DecodingCard, RoutingCard, ServingManifest
-from harnessing_honesty.domain import AnswerResponse, AnswerSuccess
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.routing import classify_envelope
 from harnessing_honesty.observability.clock import FakeClock
@@ -16,22 +15,14 @@ from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore
 from harnessing_honesty.scoring import score_matrix_episode
 
-from tests.development import development_fixture, run_development_matrix
-
-
-def _success(answer: str, count: int) -> AnswerSuccess:
-    return AnswerSuccess(
-        response=AnswerResponse(answer=answer),
-        raw_response=answer,
-        requested_message_count=count,
-    )
+from tests.development import answered, development_fixture, run_development_matrix
 
 
 def test_fake_matrix_reconstructs_nine_rows(tmp_path: Path) -> None:
     fixture = development_fixture()
     counts = (1,) + (3,) * 3 + (5,) * 9
     client = ScriptedModelClient(
-        [_success(fixture.correct_answer, count) for count in counts]
+        [answered(fixture.correct_answer, count) for count in counts]
     )
     store = FilesystemRecordStore(tmp_path)
     session = RunSession(

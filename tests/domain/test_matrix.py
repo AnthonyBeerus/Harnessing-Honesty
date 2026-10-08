@@ -1,10 +1,5 @@
 from harnessing_honesty.domain.matrix import development_conditions
-from harnessing_honesty.domain import (
-    AnswerResponse,
-    AnswerSuccess,
-    Message,
-    ParseFailure,
-)
+from harnessing_honesty.domain import AnswerSuccess, Message, ParseFailure
 from harnessing_honesty.domain.enums import Stage
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.policies import (
@@ -12,7 +7,7 @@ from harnessing_honesty.runtime.policies import (
     policy_follow_ups,
 )
 
-from tests.development import development_fixture, pressure_templates, run_development_matrix
+from tests.development import answered, development_fixture, pressure_templates, run_development_matrix
 
 FORBIDDEN = (
     "experiment",
@@ -27,18 +22,10 @@ FORBIDDEN = (
 )
 
 
-def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
-    return AnswerSuccess(
-        response=AnswerResponse(answer=answer),
-        raw_response=answer,
-        requested_message_count=requested_message_count,
-    )
-
-
 def _happy_script() -> list[AnswerSuccess]:
-    yes = _success(development_fixture().correct_answer, 1)
-    return [yes] + [_success(development_fixture().correct_answer, 3)] * 3 + [
-        _success(development_fixture().correct_answer, 5)
+    yes = answered(development_fixture().correct_answer, 1)
+    return [yes] + [answered(development_fixture().correct_answer, 3)] * 3 + [
+        answered(development_fixture().correct_answer, 5)
     ] * 9
 
 

@@ -5,13 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from harnessing_honesty.domain import (
-    AnswerResponse,
-    AnswerSuccess,
-    Failure,
-    ProtocolFailure,
-    RequestSent,
-)
+from harnessing_honesty.domain import ProtocolFailure, RequestSent
 from harnessing_honesty.domain.enums import RecordStatus
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.observability.clock import FakeClock
@@ -24,27 +18,14 @@ from harnessing_honesty.observability.store import (
 )
 from harnessing_honesty.scoring import score_pair
 
-from tests.development import development_fixture, run_development_matrix
-
-
-def _success(answer: str, count: int) -> AnswerSuccess:
-    return AnswerSuccess(
-        response=AnswerResponse(answer=answer),
-        raw_response=answer,
-        requested_message_count=count,
-    )
-
-
-def _matrix_script(answer: str) -> list:
-    counts = (1,) + (3,) * 3 + (5,) * 9
-    return [_success(answer, count) for count in counts]
+from tests.development import answered, answered_matrix, development_fixture, run_development_matrix
 
 
 def test_a_protocol_failure_is_not_a_regressive_shift() -> None:
     from harnessing_honesty.domain.scenario import AnswerKey
 
     key = AnswerKey(canonical_answer="yes")
-    initial = _success("yes", 1)
+    initial = answered("yes", 1)
     final = ProtocolFailure(detail="cache HIT on pinned route")
 
     score = score_pair(initial, final, key)
@@ -117,7 +98,7 @@ def test_reconstruct_a_fake_matrix_from_files(tmp_path: Path) -> None:
         clock=FakeClock(),
     )
     session.start()
-    client = ScriptedModelClient(_matrix_script(fixture.correct_answer))
+    client = ScriptedModelClient(answered_matrix(fixture.correct_answer))
     record = run_development_matrix(fixture.prompt, client, 0, session=session)
     session.close()
 

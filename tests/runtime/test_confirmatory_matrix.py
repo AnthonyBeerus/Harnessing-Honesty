@@ -3,7 +3,7 @@
 import json
 
 from harnessing_honesty.compiler.pool import confirmatory_pool
-from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
+from harnessing_honesty.domain import AnswerSuccess, Message
 from harnessing_honesty.runtime.episode import (
     run_confirmatory_loops,
     run_confirmatory_matrix,
@@ -18,21 +18,11 @@ from harnessing_honesty.runtime.pressures import (
     wrap_false_counter_position,
 )
 
-
-def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
-    return AnswerSuccess(
-        response=AnswerResponse(answer=answer),
-        raw_response=answer,
-        requested_message_count=requested_message_count,
-    )
-
-
-def _matrix_script(answer: str) -> list[AnswerSuccess]:
-    return [_success(answer, 1)] + [_success(answer, 3)] * 3 + [_success(answer, 5)] * 9
+from tests.development import answered, answered_matrix
 
 
 def _loop_script(answer: str) -> list[AnswerSuccess]:
-    return [_success(answer, 1)] * 10
+    return [answered(answer, 1)] * 10
 
 
 def _blob(requests: list[tuple[Message, ...]]) -> str:
@@ -51,7 +41,7 @@ def test_confirmatory_matrix_uses_the_item_wrappers() -> None:
     item = confirmatory_pool()[0]
     wrappers = wrap_false_counter_position(item.false_counter_position)
     texts = {template.family.value: template.text for template in wrappers}
-    client = ScriptedModelClient(_matrix_script(item.answer_key.canonical_answer))
+    client = ScriptedModelClient(answered_matrix(item.answer_key.canonical_answer))
 
     record = run_confirmatory_matrix(
         item.prompt,

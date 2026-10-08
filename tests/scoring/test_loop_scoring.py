@@ -2,7 +2,7 @@
 
 import pytest
 
-from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, ParseFailure
+from harnessing_honesty.domain import ParseFailure
 from harnessing_honesty.domain.enums import PolicyFamily, ResponseState, Stage
 from harnessing_honesty.domain.episodes import (
     LoopEpisodeRecord,
@@ -14,15 +14,9 @@ from harnessing_honesty.domain.results import ModelResult
 from harnessing_honesty.domain.scenario import AnswerKey
 from harnessing_honesty.scoring import LOOP_PRESSURES, score_loop_episode
 
+from tests.development import answered
+
 KEY = AnswerKey(canonical_answer="yes")
-
-
-def _answer(text: str) -> AnswerSuccess:
-    return AnswerSuccess(
-        response=AnswerResponse.model_validate({"answer": text}),
-        raw_response=text,
-        requested_message_count=1,
-    )
 
 
 def _snapshot(stage: Stage, result: ModelResult) -> StageSnapshot:
@@ -33,7 +27,7 @@ def _record(
     neutral: str, turns: dict[PolicyFamily, list[ModelResult]]
 ) -> LoopEpisodeRecord:
     return LoopEpisodeRecord(
-        shared=_snapshot(Stage.NEUTRAL, _answer(neutral)),
+        shared=_snapshot(Stage.NEUTRAL, answered(neutral)),
         loops=tuple(
             PolicyLoopRecord(
                 policy=policy,
@@ -64,7 +58,7 @@ def _record(
 def test_turn_of_flip_and_flips(
     answers: tuple[str, ...], turn_of_flip: int, flips: int
 ) -> None:
-    record = _record("yes", {PolicyFamily.NONE: [_answer(a) for a in answers]})
+    record = _record("yes", {PolicyFamily.NONE: [answered(a) for a in answers]})
 
     score = score_loop_episode(record, KEY)[0]
 
@@ -73,7 +67,7 @@ def test_turn_of_flip_and_flips(
 
 
 def test_a_missing_turn_before_any_flip_leaves_the_measures_unknown() -> None:
-    turns = [_answer("yes"), ParseFailure(detail="x")]
+    turns = [answered("yes"), ParseFailure(detail="x")]
     record = _record("yes", {PolicyFamily.TOOL: turns})
 
     scores = {score.policy: score for score in score_loop_episode(record, KEY)}
@@ -88,7 +82,7 @@ def test_a_missing_turn_before_any_flip_leaves_the_measures_unknown() -> None:
 
 
 def test_a_flip_before_a_missing_turn_is_still_a_flip() -> None:
-    turns = [_answer("no"), ParseFailure(detail="x")]
+    turns = [answered("no"), ParseFailure(detail="x")]
     record = _record("yes", {PolicyFamily.NONE: turns})
 
     score = score_loop_episode(record, KEY)[0]
@@ -97,7 +91,7 @@ def test_a_flip_before_a_missing_turn_is_still_a_flip() -> None:
 
 
 def test_measures_need_a_correct_neutral_answer() -> None:
-    record = _record("no", {PolicyFamily.NONE: [_answer("no")] * 3})
+    record = _record("no", {PolicyFamily.NONE: [answered("no")] * 3})
 
     score = score_loop_episode(record, KEY)[0]
 

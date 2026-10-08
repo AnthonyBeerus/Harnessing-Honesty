@@ -21,7 +21,6 @@ from harnessing_honesty.analysis import (
 )
 from harnessing_honesty.analysis.formula import magnitude_note
 from harnessing_honesty.domain import (
-    AnswerResponse,
     AnswerSuccess,
     Eligibility,
     ModelResult,
@@ -45,26 +44,18 @@ from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.branching import matrix_order
 from harnessing_honesty.scoring import score_matrix_episode
 
-from tests.development import development_fixture, pressure_templates, run_development_matrix
+from tests.development import answered, development_fixture, pressure_templates, run_development_matrix
 
 RECOVERY, MAINTENANCE = Eligibility.RECOVERY, Eligibility.MAINTENANCE
 NONE, INTRINSIC, TOOL = PolicyFamily.NONE, PolicyFamily.INTRINSIC, PolicyFamily.TOOL
 _KEY = AnswerKey(canonical_answer="yes")
 
 
-def _answer(text: str, count: int = 1) -> AnswerSuccess:
-    return AnswerSuccess(
-        response=AnswerResponse.model_validate({"answer": text}),
-        raw_response=text,
-        requested_message_count=count,
-    )
-
-
 # --- Every prefix and final state, one cell at a time -----------------------
 
 _SLOTS: dict[str, tuple[ModelResult | None, bool | None, ResponseState]] = {
-    "correct": (_answer("yes"), True, ResponseState.VALID),
-    "incorrect": (_answer("no"), False, ResponseState.VALID),
+    "correct": (answered("yes"), True, ResponseState.VALID),
+    "incorrect": (answered("no"), False, ResponseState.VALID),
     "invalid": (ParseFailure(detail="bad", raw_response=" yes."), None, ResponseState.INVALID),
     "provider": (ProviderFailure(detail="timeout"), None, ResponseState.PROVIDER_FAILURE),
     "protocol": (ProtocolFailure(detail="route"), None, ResponseState.PROTOCOL_FAILURE),
@@ -164,12 +155,12 @@ def _matrix(
     neutral: str, drafts: str, finals: Mapping[str, ModelResult | str]
 ) -> MatrixEpisodeRecord:
     """Run one development matrix; ``finals`` is keyed by policy."""
-    script: list[ModelResult] = [_answer(neutral)]
+    script: list[ModelResult] = [answered(neutral)]
     for _pressure, policy_order in matrix_order(_PRESSURES, _POLICIES, 0):
-        script.append(_answer(drafts, 3))
+        script.append(answered(drafts, 3))
         for policy in policy_order:
             value = finals[policy]
-            script.append(_answer(value, 5) if isinstance(value, str) else value)
+            script.append(answered(value, 5) if isinstance(value, str) else value)
     fixture = development_fixture()
     return run_development_matrix(fixture.prompt, ScriptedModelClient(script), 0)
 

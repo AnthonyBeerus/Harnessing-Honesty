@@ -9,7 +9,14 @@ helpers instead of a second instrument.
 from dataclasses import dataclass
 from functools import cache
 
-from harnessing_honesty.domain import AnswerKey, ModelClient, ModelResult, PromptView
+from harnessing_honesty.domain import (
+    AnswerKey,
+    AnswerResponse,
+    AnswerSuccess,
+    ModelClient,
+    ModelResult,
+    PromptView,
+)
 from harnessing_honesty.domain.episodes import LoopEpisodeRecord, MatrixEpisodeRecord
 from harnessing_honesty.evaluation.fixtures.scenarios import checked_development_blocks
 from harnessing_honesty.runtime.episode import (
@@ -89,3 +96,17 @@ def run_episode(
     """One neutral call, recorded through ``session`` when one is given."""
     wrap = getattr(session, "wrap", None)
     return (wrap(client) if wrap else client).complete(messages_for(prompt))
+
+
+def answered(text: str, count: int = 1) -> AnswerSuccess:
+    """A scripted valid answer to a request of ``count`` messages."""
+    return AnswerSuccess(
+        response=AnswerResponse(answer=text),
+        raw_response=text,
+        requested_message_count=count,
+    )
+
+
+def answered_matrix(text: str) -> list[ModelResult]:
+    """The 13 scripted answers of one matrix block: neutral, drafts, finals."""
+    return [answered(text, count) for count in (1, 3, 3, 3, *(5,) * 9)]

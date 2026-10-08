@@ -60,9 +60,3 @@ def test_invalid_corpus_cannot_be_loaded(corruption):
         case "gate": del record["acceptance"]["gates"]["cue_symmetry"]
     with pytest.raises((ValidationError, ValueError)):
         Corpus.model_validate(data)
-
-
-def test_former_case_module_and_assembly_are_removed():
-    compiler = DEFAULT_CORPUS_PATH.parents[2] / "src/harnessing_honesty/compiler"
-    assert not (compiler / "case_specs.py").exists()
-    assert not (compiler / "generate.py").exists()

@@ -11,8 +11,6 @@ from harnessing_honesty.domain.matrix import development_conditions
 import pytest
 
 from harnessing_honesty.domain import (
-    AnswerResponse,
-    AnswerSuccess,
     Eligibility,
     ModelResult,
     ParseFailure,
@@ -32,20 +30,12 @@ from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.branching import matrix_order
 from harnessing_honesty.scoring import score_matrix_episode
 
-from tests.development import development_fixture, pressure_templates, run_development_matrix
+from tests.development import answered, development_fixture, pressure_templates, run_development_matrix
 
 PRESSURE_ORDER = tuple(
     item.family.value for item in pressure_templates()
 )
 POLICY_ORDER = tuple(policy.value for policy in PolicyFamily)
-
-
-def _answer(text: str, requested_message_count: int) -> AnswerSuccess:
-    return AnswerSuccess(
-        response=AnswerResponse.model_validate({"answer": text}),
-        raw_response=text,
-        requested_message_count=requested_message_count,
-    )
 
 
 def _matrix_script(
@@ -60,11 +50,11 @@ def _matrix_script(
     order, so a positional script would silently mis-assign answers. Take
     the order from the runner's own ``matrix_order`` and key by identity.
     """
-    script: list[ModelResult] = [_answer(neutral, 1)]
+    script: list[ModelResult] = [answered(neutral, 1)]
     for pressure_id, policy_order in matrix_order(PRESSURE_ORDER, POLICY_ORDER, seed):
-        script.append(_answer(drafts[pressure_id], 3))
+        script.append(answered(drafts[pressure_id], 3))
         for policy_id in policy_order:
-            script.append(_answer(finals[f"{pressure_id}__{policy_id}"], 5))
+            script.append(answered(finals[f"{pressure_id}__{policy_id}"], 5))
     return script
 
 
@@ -260,8 +250,8 @@ def test_a_failed_draft_leaves_its_cells_unknown_and_missing() -> None:
 _KEY = AnswerKey(canonical_answer="yes")
 
 _SLOTS: dict[str, tuple[ModelResult | None, bool | None]] = {
-    "correct": (_answer("yes", 1), True),
-    "incorrect": (_answer("no", 1), False),
+    "correct": (answered("yes", 1), True),
+    "incorrect": (answered("no", 1), False),
     "invalid": (ParseFailure(detail="bad", raw_response="Yes!"), None),
     "provider": (ProviderFailure(detail="timeout"), None),
     "protocol": (ProtocolFailure(detail="route"), None),

@@ -8,7 +8,6 @@ from pydantic_core import ValidationError
 
 from harnessing_honesty.domain import (
     AnswerResponse,
-    AnswerSuccess,
     Message,
     ModelResult,
     ParseFailure,
@@ -27,17 +26,9 @@ from harnessing_honesty.scoring import (
     score_pair,
 )
 
-from tests.development import development_fixture, run_development_matrix, run_episode
+from tests.development import answered, development_fixture, run_development_matrix, run_episode
 
 SENTINEL_CANONICAL = "SENTINEL_ANSWER_KEY_CANONICAL_7f3a9c1e"
-
-
-def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
-    return AnswerSuccess(
-        response=AnswerResponse(answer=answer),
-        raw_response=answer,
-        requested_message_count=requested_message_count,
-    )
 
 
 def _serialized_requests(requests: list[tuple[Message, ...]]) -> str:
@@ -94,8 +85,8 @@ _KEY = AnswerKey(canonical_answer="yes")
 # Every response a slot can hold, with its expected correctness. Failures and
 # missing slots have unknown correctness, never ``False``.
 _RESPONSES: dict[str, tuple[ModelResult | None, ResponseState, bool | None]] = {
-    "correct": (_success("yes", 1), ResponseState.VALID, True),
-    "incorrect": (_success("no", 1), ResponseState.VALID, False),
+    "correct": (answered("yes", 1), ResponseState.VALID, True),
+    "incorrect": (answered("no", 1), ResponseState.VALID, False),
     "invalid": (
         ParseFailure(detail="bad", raw_response="yes."),
         ResponseState.INVALID,
@@ -142,7 +133,7 @@ def test_every_initial_and_final_state(initial_name: str, final_name: str) -> No
 def test_failures_never_count_as_regressions() -> None:
     for name in ("invalid", "provider", "protocol", "missing"):
         final = _RESPONSES[name][0]
-        assert score_pair(_success("yes", 1), final, _KEY).regressive_shift is None
+        assert score_pair(answered("yes", 1), final, _KEY).regressive_shift is None
 
 
 def test_exact_checker_does_not_normalize() -> None:
@@ -152,8 +143,8 @@ def test_exact_checker_does_not_normalize() -> None:
 
 def _matrix_script(neutral: str, final: str) -> list[ModelResult]:
     """One neutral, then each pressure's draft and its three finals."""
-    block = [_success(neutral, 3)] + [_success(final, 5)] * 3
-    return [_success(neutral, 1)] + block * 3
+    block = [answered(neutral, 3)] + [answered(final, 5)] * 3
+    return [answered(neutral, 1)] + block * 3
 
 
 def test_exact_deterministic_recomputation() -> None:
@@ -180,7 +171,7 @@ def test_sentinels_absent_from_fake_serialized_requests() -> None:
         prompt=prompt,
         answer_key=AnswerKey(canonical_answer=SENTINEL_CANONICAL),
     )
-    one_call = ScriptedModelClient([_success("yes", 1)])
+    one_call = ScriptedModelClient([answered("yes", 1)])
     run_episode(record.prompt, one_call)
     matrix = ScriptedModelClient(_matrix_script("yes", "no"))
     run_development_matrix(record.prompt, matrix, 0)
