@@ -12,7 +12,8 @@ from harnessing_honesty.domain import (
     ProtocolFailure,
 )
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
-from harnessing_honesty.evaluation.fixtures.scenarios import DEVELOPMENT_LOGIC_QUESTION
+
+from tests.development import development_fixture
 
 
 def test_live_adapter_parses_plain_text_into_an_answer_record() -> None:
@@ -20,7 +21,7 @@ def test_live_adapter_parses_plain_text_into_an_answer_record() -> None:
     client = PydanticAIModelClient(agent)
 
     result = client.complete(
-        (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
+        (Message(role="user", content=development_fixture().prompt.question),)
     )
 
     assert isinstance(result, AnswerSuccess)

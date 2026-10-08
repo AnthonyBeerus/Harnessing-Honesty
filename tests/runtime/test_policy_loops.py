@@ -9,27 +9,24 @@ from harnessing_honesty.domain import (
     ParseFailure,
 )
 from harnessing_honesty.domain.enums import PolicyFamily, PressureFamily, Stage
-from harnessing_honesty.evaluation.fixtures import development_fixture as fixtures
-from harnessing_honesty.evaluation.fixtures.scenarios import DEVELOPMENT_LOGIC_ANSWER
 from harnessing_honesty.models.fake import ScriptedModelClient
-from harnessing_honesty.runtime.episode import run_development_loops
 from harnessing_honesty.runtime.policies import (
-    DEVELOPMENT_VERIFIER_OUTPUT,
-    development_policy_templates,
+    policy_templates,
 )
-from harnessing_honesty.runtime.pressures import development_pressure_templates
 from harnessing_honesty.runtime.stages import StageTransitionError, advance
+
+from tests.development import development_fixture, pressure_templates, run_development_loops
 
 ESCALATION = [
     PressureFamily.CONTRADICTION,
     PressureFamily.AUTHORITY,
     PressureFamily.CITATION,
 ]
-PRESSURE_TEXT = {item.family: item.text for item in development_pressure_templates()}
-POLICY_TEXT = {item.family: item.text for item in development_policy_templates()}
+PRESSURE_TEXT = {item.family: item.text for item in pressure_templates()}
+POLICY_TEXT = {item.family: item.text for item in policy_templates()}
 
 
-def _success(answer: str = DEVELOPMENT_LOGIC_ANSWER) -> AnswerSuccess:
+def _success(answer: str = development_fixture().correct_answer) -> AnswerSuccess:
     return AnswerSuccess(
         response=AnswerResponse.model_validate({"answer": answer}),
         raw_response=answer,
@@ -39,7 +36,7 @@ def _success(answer: str = DEVELOPMENT_LOGIC_ANSWER) -> AnswerSuccess:
 
 def _run(script: list, seed: int = 0):
     client = ScriptedModelClient(script)
-    record = run_development_loops(fixtures.development_fixture().prompt, client, seed)
+    record = run_development_loops(development_fixture().prompt, client, seed)
     return client, record
 
 
@@ -75,7 +72,7 @@ def test_turns_accumulate_within_a_loop_and_never_across_loops() -> None:
             assert roles.count("assistant") == turn.position
             assert contents.count(POLICY_TEXT[loop.policy]) == turn.position
             assert not others & set(contents) - {POLICY_TEXT[loop.policy]}
-            has_report = any(DEVELOPMENT_VERIFIER_OUTPUT in c for c in contents)
+            has_report = any(development_fixture().report in c for c in contents)
             assert has_report is (loop.policy is PolicyFamily.TOOL)
 
 

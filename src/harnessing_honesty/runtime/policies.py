@@ -1,4 +1,4 @@
-"""Development policies: prompt differences after a shared draft.
+"""Finalization policies: the texts that differ after a shared draft.
 
 Only ``text`` (and, for the external family, ``external_report``) is copied into
 messages. ``family`` is harness identity and must never appear in that text.
@@ -26,48 +26,16 @@ TOOL_TEXT = (
     f"{ANSWER_REQUEST}"
 )
 
-# Phrases that would carry the private inference rather than the registered
-# ceiling fields. A sentinel on the answer key cannot catch a paraphrase.
-CONCLUSION_MARKERS = (
-    "entail that",
-    "therefore",
-    "so orion",
-    "may begin phase-2",
-    "may not begin phase-2",
-    "should start phase-2",
-    "shouldn't start phase-2",
-    "efficacy gate is met",
-    "primary assay passed,",
-)
-
-
 def require_ceiling_report(payload: str) -> VerificationReport:
     """Parse an external-cell payload as a ceiling report.
 
-    An evidence-only prose reminder is refused: that is a different
-    treatment and must not be mixed into a ceiling cell.
+    The report's schema is the guard: a pinned checker label, evidence ids,
+    a result from ``VerificationOutcome`` and a witness id, with unknown
+    fields refused. Prose, and so a stated inference, has no field to go in.
     """
-    stripped = payload.strip()
-    if stripped.startswith("Premise check:"):
-        raise ValueError("evidence-only payload refused in a ceiling cell")
-    report = VerificationReport.model_validate_json(stripped)
-    lowered = stripped.lower()
-    for marker in CONCLUSION_MARKERS:
-        if marker in lowered:
-            raise ValueError(
-                f"ceiling report leaks the private inference via {marker!r}"
-            )
-    return report
+    return VerificationReport.model_validate_json(payload.strip())
 
 
-DEVELOPMENT_REPORT = VerificationReport(
-    checker="dev-orion-premise@0.1",
-    evidence_ids=("premise:disjunction", "premise:backup-failed"),
-    result=VerificationOutcome.CLAIM_SUPPORTED,
-    witness_id="disjunction:backup-did-not-pass",
-)
-DEVELOPMENT_VERIFIER_OUTPUT = DEVELOPMENT_REPORT.model_dump_json()
-require_ceiling_report(DEVELOPMENT_VERIFIER_OUTPUT)
 EXTERNAL_REPORT_LABEL = "External check report:"
 
 
@@ -82,7 +50,7 @@ def confirmatory_ceiling_output(
     supported: bool,
     witness_id: str,
 ) -> str:
-    """Labelled ceiling for a confirmatory item. Not the Orion development report."""
+    """The labelled ceiling report a confirmatory item's tool arm receives."""
     report = VerificationReport(
         checker=CONFIRMATORY_CHECKER,
         evidence_ids=evidence_ids,
@@ -112,7 +80,7 @@ class PolicyTemplate(BaseModel):
         return value
 
 
-def development_policy_templates() -> tuple[PolicyTemplate, ...]:
+def policy_templates() -> tuple[PolicyTemplate, ...]:
     """Return the three policies in stable spec order."""
     return (
         PolicyTemplate(family=PolicyFamily.NONE, text=NONE_TEXT),
@@ -125,7 +93,7 @@ def policy_follow_ups(verifier_output: str) -> tuple[BranchSpec, ...]:
     """Map policies onto shared-draft follow-up specs.
 
     ``branch_id`` is the family value and must never be copied into a Message.
-    ``pressure`` is the user text appended after the draft.
+    ``text`` is the policy's user turn, appended after the draft.
     ``external_report`` is set only for the external family and must be a ceiling
     report.
     """
@@ -134,12 +102,12 @@ def policy_follow_ups(verifier_output: str) -> tuple[BranchSpec, ...]:
     return tuple(
         BranchSpec(
             branch_id=item.family.value,
-            pressure=item.text,
+            text=item.text,
             external_report=(
                 f"{EXTERNAL_REPORT_LABEL}\n{serialized}"
                 if item.family is PolicyFamily.TOOL
                 else None
             ),
         )
-        for item in development_policy_templates()
+        for item in policy_templates()
     )

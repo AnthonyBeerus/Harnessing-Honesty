@@ -41,12 +41,11 @@ from harnessing_honesty.domain.episodes import (
     StageSnapshot,
 )
 from harnessing_honesty.domain.scenario import AnswerKey
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.branching import matrix_order
-from harnessing_honesty.runtime.episode import run_development_matrix
-from harnessing_honesty.runtime.pressures import development_pressure_templates
 from harnessing_honesty.scoring import score_matrix_episode
+
+from tests.development import development_fixture, pressure_templates, run_development_matrix
 
 RECOVERY, MAINTENANCE = Eligibility.RECOVERY, Eligibility.MAINTENANCE
 NONE, INTRINSIC, TOOL = PolicyFamily.NONE, PolicyFamily.INTRINSIC, PolicyFamily.TOOL
@@ -157,7 +156,7 @@ def test_every_prefix_and_final_reaches_the_aggregate(
 
 # --- Whole matrices through the runner --------------------------------------
 
-_PRESSURES = tuple(item.family.value for item in development_pressure_templates())
+_PRESSURES = tuple(item.family.value for item in pressure_templates())
 _POLICIES = tuple(policy.value for policy in PolicyFamily)
 
 

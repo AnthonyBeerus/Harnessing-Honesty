@@ -7,23 +7,22 @@ import pytest
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess
 from harnessing_honesty.domain.events import RunResumed
 from harnessing_honesty.evaluation.collection import collection_status
-from harnessing_honesty.evaluation.fixtures import development_fixture as fixtures
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.integrity import check_integrity
 from harnessing_honesty.observability.reconstruct import event_lines, reconstruct_run
 from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore, set_aside_tail
-from harnessing_honesty.runtime.episode import run_development_matrix
 
 from tests.evaluation.test_collection_resume import _execute, _interrupted, _runs
+from tests.development import development_fixture, run_development_matrix
 
 # Cut inside a JSON line and inside the two-byte "é", as a kill mid-write can.
 FRAGMENT = '{"kind":"response_received","raw_response":"ré'.encode()[:-1]
 
 
 def _matrix_run(root: Path) -> Path:
-    fixture = fixtures.development_fixture()
+    fixture = development_fixture()
     answer = AnswerSuccess(
         response=AnswerResponse.model_validate({"answer": fixture.correct_answer}),
         raw_response=fixture.correct_answer,

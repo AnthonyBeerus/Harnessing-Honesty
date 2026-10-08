@@ -9,7 +9,6 @@ import pytest
 from harnessing_honesty.analysis.reconstruct import require_closed_matrix
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess
 from harnessing_honesty.domain.evidence import CallEvidence
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.integrity import (
@@ -20,7 +19,8 @@ from harnessing_honesty.observability.integrity import (
 from harnessing_honesty.observability.reconstruct import reconstruct_run
 from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore
-from harnessing_honesty.runtime.episode import run_development_matrix
+
+from tests.development import development_fixture, run_development_matrix
 
 FIXTURE = development_fixture()
 

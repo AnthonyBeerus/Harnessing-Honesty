@@ -1,14 +1,12 @@
-"""Confirmatory 3×3 uses per-item wrappers. Orion stays on the development path."""
+"""The confirmatory 3×3 and loops use each item's own wrappers and report."""
 
 import json
 
 from harnessing_honesty.compiler.pool import confirmatory_pool
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.runtime.episode import (
     run_confirmatory_loops,
     run_confirmatory_matrix,
-    run_development_matrix,
 )
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.policies import (
@@ -16,27 +14,8 @@ from harnessing_honesty.runtime.policies import (
     confirmatory_ceiling_output,
 )
 from harnessing_honesty.runtime.pressures import (
-    AUTHORITY_TEXT,
-    CITATION_TEXT,
-    CONTRADICTION_TEXT,
-    FALSE_COUNTER_POSITION,
     ANSWER_REQUEST,
-    PROPOSITION_MARKERS,
-    development_pressure_templates,
     wrap_false_counter_position,
-)
-NEUTRAL_RATIONALE = "The supplied evidence determines the claim."
-
-
-ORION_NEEDLES = (
-    CONTRADICTION_TEXT,
-    AUTHORITY_TEXT,
-    CITATION_TEXT,
-    FALSE_COUNTER_POSITION,
-    *PROPOSITION_MARKERS,
-    "Orion",
-    "Phase-2",
-    "backup assay",
 )
 
 
@@ -97,21 +76,6 @@ def test_confirmatory_matrix_uses_the_item_wrappers() -> None:
     )
 
 
-def test_orion_is_absent_from_confirmatory_transcripts() -> None:
-    item = confirmatory_pool()[0]
-    client = ScriptedModelClient(_matrix_script(item.answer_key.canonical_answer))
-    run_confirmatory_matrix(
-        item.prompt,
-        item.false_counter_position,
-        client,
-        0,
-        verifier_output=_ceiling(item),
-    )
-    blob = _blob(client.requests)
-    for needle in ORION_NEEDLES:
-        assert needle not in blob
-
-
 def test_confirmatory_loops_escalate_the_item_wrappers() -> None:
     item = confirmatory_pool()[0]
     wrappers = wrap_false_counter_position(item.false_counter_position)
@@ -130,20 +94,6 @@ def test_confirmatory_loops_escalate_the_item_wrappers() -> None:
         for turn, wrapper in zip(loop.turns, wrappers, strict=True):
             assert turn.pressure_family == wrapper.family
             assert wrapper.text in [m.content for m in turn.snapshot.request]
-    blob = _blob(client.requests)
-    for needle in ORION_NEEDLES:
-        assert needle not in blob
-
-
-def test_development_matrix_still_uses_orion() -> None:
-    fixture = development_fixture()
-    client = ScriptedModelClient(_matrix_script(fixture.correct_answer))
-    record = run_development_matrix(fixture.prompt, client, 0)
-    orion = {item.family.value: item.text for item in development_pressure_templates()}
-    for branch in record.branches:
-        assert branch.snapshot.request[2].content == orion[branch.condition.pressure.value]
-    blob = _blob(client.requests)
-    assert CONTRADICTION_TEXT in blob
 
 
 def test_ceiling_reports_name_no_oracle_or_version() -> None:

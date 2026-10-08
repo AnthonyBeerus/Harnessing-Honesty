@@ -14,22 +14,20 @@ from harnessing_honesty.domain import (
 from harnessing_honesty.domain.enums import Role, RoleName
 from harnessing_honesty.domain.protocols import ModelClient
 from harnessing_honesty.models.fake import ScriptedModelClient
-from harnessing_honesty.evaluation.fixtures.scenarios import (
-    DEVELOPMENT_LOGIC_ANSWER,
-    DEVELOPMENT_LOGIC_QUESTION,
-)
+
+from tests.development import development_fixture
 
 
 def test_fake_preserves_exact_role_order() -> None:
     messages = (
         Message(role="system", content="Be concise."),
-        Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),
+        Message(role="user", content=development_fixture().prompt.question),
     )
     client = ScriptedModelClient(
         [
             AnswerSuccess(
-                response=AnswerResponse(answer=DEVELOPMENT_LOGIC_ANSWER),
-                raw_response=DEVELOPMENT_LOGIC_ANSWER,
+                response=AnswerResponse(answer=development_fixture().correct_answer),
+                raw_response=development_fixture().correct_answer,
                 requested_message_count=2,
             )
         ]
@@ -56,7 +54,7 @@ def test_malformed_scripted_output_is_parse_failure() -> None:
     )
 
     result = client.complete(
-        (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
+        (Message(role="user", content=development_fixture().prompt.question),)
     )
 
     assert result == ParseFailure(detail="expected exactly yes or no")

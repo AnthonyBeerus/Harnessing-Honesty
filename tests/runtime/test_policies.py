@@ -3,14 +3,15 @@ from pydantic_core import ValidationError
 
 from harnessing_honesty.domain.enums import PolicyFamily
 from harnessing_honesty.runtime.policies import (
-    DEVELOPMENT_VERIFIER_OUTPUT,
     INTRINSIC_TEXT,
     NONE_TEXT,
     TOOL_TEXT,
     PolicyTemplate,
-    development_policy_templates,
+    policy_templates,
     policy_follow_ups,
 )
+
+from tests.development import development_fixture
 
 FORBIDDEN = (
     "experiment",
@@ -26,7 +27,7 @@ FORBIDDEN = (
 
 
 def test_three_policies_in_spec_order() -> None:
-    templates = development_policy_templates()
+    templates = policy_templates()
 
     assert tuple(item.family for item in templates) == (
         PolicyFamily.NONE,
@@ -41,12 +42,12 @@ def test_three_policies_in_spec_order() -> None:
 
 
 def test_texts_are_distinct() -> None:
-    texts = [item.text for item in development_policy_templates()]
+    texts = [item.text for item in policy_templates()]
     assert len(set(texts)) == 3
 
 
 def test_family_labels_are_not_in_the_text() -> None:
-    for template in development_policy_templates():
+    for template in policy_templates():
         blob = template.text.lower()
         assert template.family.value not in blob
         for word in FORBIDDEN:
@@ -54,8 +55,8 @@ def test_family_labels_are_not_in_the_text() -> None:
 
 
 def test_follow_ups_use_family_ids_and_policy_text() -> None:
-    follow_ups = policy_follow_ups(DEVELOPMENT_VERIFIER_OUTPUT)
-    templates = development_policy_templates()
+    follow_ups = policy_follow_ups(development_fixture().report)
+    templates = policy_templates()
     assert follow_ups[0].external_report is None
     assert follow_ups[1].external_report is None
     assert follow_ups[2].external_report is not None
@@ -64,11 +65,11 @@ def test_follow_ups_use_family_ids_and_policy_text() -> None:
     assert tuple(spec.branch_id for spec in follow_ups) == tuple(
         item.family.value for item in templates
     )
-    assert tuple(spec.pressure for spec in follow_ups) == tuple(
+    assert tuple(spec.text for spec in follow_ups) == tuple(
         item.text for item in templates
     )
     for spec in follow_ups:
-        assert spec.branch_id not in spec.pressure
+        assert spec.branch_id not in spec.text
 
 
 def test_intrinsic_is_the_only_policy_that_requests_a_self_check() -> None:
@@ -80,7 +81,7 @@ def test_intrinsic_is_the_only_policy_that_requests_a_self_check() -> None:
 
 def test_every_policy_constrains_the_entire_visible_response() -> None:
     endpoint = "Your entire response must be exactly one lowercase word: yes or no."
-    for template in development_policy_templates():
+    for template in policy_templates():
         assert template.text.endswith(endpoint)
 
 
@@ -89,9 +90,8 @@ def test_empty_policy_text_is_rejected() -> None:
         PolicyTemplate(family=PolicyFamily.NONE, text="  ")
 
 def test_verifier_text_has_no_private_labels() -> None:
-    from harnessing_honesty.runtime.policies import DEVELOPMENT_VERIFIER_OUTPUT
 
-    lowered = DEVELOPMENT_VERIFIER_OUTPUT.lower()
+    lowered = development_fixture().report.lower()
     for word in FORBIDDEN:
         assert word not in lowered
     for family in PolicyFamily:

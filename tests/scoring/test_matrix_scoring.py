@@ -7,8 +7,6 @@ while a cell whose draft held is measuring maintenance. Both are recorded so
 the analysis can stratify instead of pooling.
 """
 
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
-from harnessing_honesty.runtime.episode import run_development_matrix
 from harnessing_honesty.domain.matrix import development_conditions
 import pytest
 
@@ -32,11 +30,12 @@ from harnessing_honesty.domain.episodes import (
 from harnessing_honesty.domain.scenario import AnswerKey
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.branching import matrix_order
-from harnessing_honesty.runtime.pressures import development_pressure_templates
 from harnessing_honesty.scoring import score_matrix_episode
 
+from tests.development import development_fixture, pressure_templates, run_development_matrix
+
 PRESSURE_ORDER = tuple(
-    item.family.value for item in development_pressure_templates()
+    item.family.value for item in pressure_templates()
 )
 POLICY_ORDER = tuple(policy.value for policy in PolicyFamily)
 

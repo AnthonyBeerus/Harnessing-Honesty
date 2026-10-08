@@ -1,6 +1,5 @@
-"""Episode runners.
+"""Episode runners: the 3x3 matrix and the descriptive policy loops.
 
-The one-call serving smoke, the 3x3 matrix, and the descriptive policy loops.
 The matrix is the primary condition; loop turns never produce a matrix cell.
 """
 
@@ -30,10 +29,9 @@ from harnessing_honesty.domain import (
 from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.enums import PolicyFamily
 from harnessing_honesty.domain.matrix import development_conditions
-from harnessing_honesty.runtime.policies import DEVELOPMENT_VERIFIER_OUTPUT, policy_follow_ups
+from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import (
     PressureTemplate,
-    development_pressure_templates,
     wrap_false_counter_position,
 )
 from harnessing_honesty.runtime.prompt_view import messages_for
@@ -59,15 +57,6 @@ def _label(
     label = getattr(client, "label", None)
     if label is not None:
         label(stage.value, cell_identity, scenario_id)
-
-
-def run_episode(
-    prompt: PromptView,
-    client: ModelClient,
-    session: object | None = None,
-) -> ModelResult:
-    """Send only the projected question. Used by the live one-call smoke."""
-    return _bound(client, session).complete(messages_for(prompt))
 
 
 def _run_matrix(
@@ -153,7 +142,7 @@ def _run_matrix(
                     Message(role="user", content=spec.external_report)
                 )
             branch_transcript = branch_transcript.append(
-                Message(role="user", content=spec.pressure)
+                Message(role="user", content=spec.text)
             )
             branch_request = branch_transcript.snapshot()
             _label(client, branch_stage, condition.identity, prompt.id)
@@ -180,23 +169,6 @@ def _run_matrix(
             records[identity] for identity in spec_ids if identity in records
         ),
         execution_order=tuple(execution_order),
-    )
-
-
-def run_development_matrix(
-    prompt: PromptView,
-    client: ModelClient,
-    order_seed: int,
-    session: object | None = None,
-) -> MatrixEpisodeRecord:
-    """Development 3×3. Orion pressure texts stay on this path only."""
-    return _run_matrix(
-        prompt,
-        development_pressure_templates(),
-        client,
-        order_seed,
-        session,
-        verifier_output=DEVELOPMENT_VERIFIER_OUTPUT,
     )
 
 
@@ -277,7 +249,7 @@ def _run_loops(
                     Message(role="user", content=spec.external_report)
                 )
             loop_transcript = loop_transcript.append(
-                Message(role="user", content=spec.pressure)
+                Message(role="user", content=spec.text)
             )
             turn_request = loop_transcript.snapshot()
             cell = f"loop__{policy.value}__{pressure.family.value}"
@@ -302,23 +274,6 @@ def _run_loops(
         shared=shared,
         loops=tuple(loops[policy] for policy in policies),
         execution_order=order,
-    )
-
-
-def run_development_loops(
-    prompt: PromptView,
-    client: ModelClient,
-    order_seed: int,
-    session: object | None = None,
-) -> LoopEpisodeRecord:
-    """Development loops. Orion pressure texts stay on this path only."""
-    return _run_loops(
-        prompt,
-        development_pressure_templates(),
-        client,
-        order_seed,
-        session,
-        verifier_output=DEVELOPMENT_VERIFIER_OUTPUT,
     )
 
 

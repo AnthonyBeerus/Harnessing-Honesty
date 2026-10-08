@@ -20,14 +20,14 @@ from harnessing_honesty.domain.results import (
     ProtocolFailure,
     ProviderFailure,
 )
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.retries import RetryingClient
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore
-from harnessing_honesty.runtime.episode import run_development_matrix, run_episode
 from harnessing_honesty.scoring import score_matrix_episode
+
+from tests.development import development_fixture, run_development_matrix, run_episode
 
 FIXTURE = development_fixture()
 RIGHT = FIXTURE.correct_answer
@@ -37,8 +37,8 @@ FRESH_PROCESS = """
 import json, sys
 from pathlib import Path
 from harnessing_honesty.analysis.reconstruct import require_closed_matrix, rows_from_matrix_score
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.scoring import score_matrix_episode
+from tests.development import development_fixture
 
 fixture = development_fixture()
 record = require_closed_matrix(Path(sys.argv[1]))

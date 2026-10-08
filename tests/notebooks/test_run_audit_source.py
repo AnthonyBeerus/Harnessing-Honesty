@@ -6,13 +6,13 @@ import pytest
 
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess
 from harnessing_honesty.domain.results import ParseFailure
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.retries import RetryingClient
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore
-from harnessing_honesty.runtime.episode import run_development_matrix, run_episode
+
+from tests.development import development_fixture, run_development_matrix, run_episode
 
 SOURCE = Path(__file__).resolve().parents[2] / "notebooks" / "02_run_audit.py"
 

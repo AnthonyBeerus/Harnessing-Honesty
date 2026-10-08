@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
@@ -14,9 +13,6 @@ from harnessing_honesty.domain import (
     RequestSent,
 )
 from harnessing_honesty.domain.enums import RecordStatus
-from harnessing_honesty.runtime.episode import (
-    run_development_matrix,
-)
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.reconstruct import reconstruct_run
@@ -27,6 +23,8 @@ from harnessing_honesty.observability.store import (
     RunDirectoryExistsError,
 )
 from harnessing_honesty.scoring import score_pair
+
+from tests.development import development_fixture, run_development_matrix
 
 
 def _success(answer: str, count: int) -> AnswerSuccess:

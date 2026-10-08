@@ -1,9 +1,9 @@
 """The model-visible ceiling report is not the private answer key.
 
 The controller checker holds the key. The tool-cell payload is a labelled
-report: checker@version, evidence IDs, a registered result, and a witness.
-It must not copy the canonical answer or the canonical rationale, and an
-evidence-only reminder must not be mixed into a ceiling cell.
+report: a pinned checker label, evidence IDs, a registered result and a
+witness. Its schema has no field for the canonical answer, a rationale or
+prose, and unknown fields are refused.
 """
 
 import re
@@ -11,32 +11,25 @@ import re
 import pytest
 from pydantic import ValidationError
 
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
-from harnessing_honesty.runtime.episode import (
-    run_development_matrix,
-)
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, ModelResult
 from harnessing_honesty.domain.report import VerificationReport
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.policies import (
-    CONCLUSION_MARKERS,
-    DEVELOPMENT_REPORT,
-    DEVELOPMENT_VERIFIER_OUTPUT,
+    CONFIRMATORY_CHECKER,
     EXTERNAL_REPORT_LABEL,
     policy_follow_ups,
     require_ceiling_report,
 )
-from harnessing_honesty.evaluation.fixtures.scenarios import (
-    DEVELOPMENT_LOGIC_ANSWER,
-)
+
+from tests.development import development_fixture, run_development_matrix
 
 
 def _matrix_script() -> list[ModelResult]:
     counts = (1,) + (3,) * 3 + (5,) * 9
     return [
         AnswerSuccess(
-            response=AnswerResponse(answer=DEVELOPMENT_LOGIC_ANSWER),
-            raw_response=DEVELOPMENT_LOGIC_ANSWER,
+            response=AnswerResponse(answer=development_fixture().correct_answer),
+            raw_response=development_fixture().correct_answer,
             requested_message_count=count,
         )
         for count in counts
@@ -44,10 +37,9 @@ def _matrix_script() -> list[ModelResult]:
 
 
 def test_payload_is_a_ceiling_report() -> None:
-    report = require_ceiling_report(DEVELOPMENT_VERIFIER_OUTPUT)
+    report = require_ceiling_report(development_fixture().report)
 
-    assert report == DEVELOPMENT_REPORT
-    assert report.checker == "dev-orion-premise@0.1"
+    assert report.checker == CONFIRMATORY_CHECKER
     assert report.evidence_ids
     assert report.witness_id
     assert "canonical_answer" not in VerificationReport.model_fields
@@ -55,58 +47,36 @@ def test_payload_is_a_ceiling_report() -> None:
     assert "answer" not in VerificationReport.model_fields
 
 
-def test_payload_states_no_private_inference() -> None:
-    lowered = DEVELOPMENT_VERIFIER_OUTPUT.lower()
-
-    for marker in CONCLUSION_MARKERS:
-        assert marker not in lowered, (
-            f"the ceiling report carries the inference via {marker!r}"
-        )
-
-
 def test_payload_does_not_carry_the_canonical_answer() -> None:
     canonical = development_fixture().correct_answer
 
     assert not re.search(
         rf"\b{re.escape(canonical)}\b",
-        DEVELOPMENT_VERIFIER_OUTPUT,
+        development_fixture().report,
         flags=re.IGNORECASE,
     )
 
 
-def test_evidence_ids_name_premises_that_are_in_the_question() -> None:
-    question = development_fixture().prompt.question.lower()
+def test_evidence_ids_name_the_item_they_check() -> None:
+    case = development_fixture()
+    report = require_ceiling_report(case.report)
 
-    assert "primary assay passed or backup assay passed" in question
-    assert "backup assay did not pass" in question
-    assert DEVELOPMENT_REPORT.evidence_ids == (
-        "premise:disjunction",
-        "premise:backup-failed",
-    )
+    for evidence_id in report.evidence_ids:
+        subject = evidence_id.split(":", 1)[1]
+        assert subject in case.prompt.question
 
 
-def test_a_report_that_states_the_inference_is_refused() -> None:
-    leak = DEVELOPMENT_REPORT.model_copy(
-        update={"witness_id": "premises entail that Orion may begin"}
-    )
-    with pytest.raises(ValueError, match="entail that"):
-        require_ceiling_report(leak.model_dump_json())
-
-
-def test_evidence_only_payload_is_refused_in_a_ceiling_cell() -> None:
-    with pytest.raises(ValueError, match="evidence-only payload refused"):
-        require_ceiling_report(
-            "Premise check: the premise list contains 'Primary assay passed "
-            "or backup assay passed'."
-        )
+def test_prose_is_not_a_ceiling_report() -> None:
+    with pytest.raises(ValidationError):
+        require_ceiling_report("Premise check: the claim follows from the facts.")
 
 
 def test_a_report_that_grows_private_fields_is_refused() -> None:
     with pytest.raises(ValidationError):
         VerificationReport.model_validate(
             {
-                "checker": "dev-orion-premise@0.1",
-                "evidence_ids": ["premise:disjunction"],
+                "checker": CONFIRMATORY_CHECKER,
+                "evidence_ids": ["entail:Mica"],
                 "result": "claim_supported",
                 "witness_id": "w1",
                 "canonical_answer": "yes",
@@ -114,7 +84,7 @@ def test_a_report_that_grows_private_fields_is_refused() -> None:
         )
 
 
-def test_no_tool_cell_receives_a_conclusion() -> None:
+def test_every_tool_cell_receives_the_labelled_report() -> None:
     fixture = development_fixture()
     client = ScriptedModelClient(_matrix_script())
 
@@ -130,10 +100,8 @@ def test_no_tool_cell_receives_a_conclusion() -> None:
             for message in branch.snapshot.request
             if message.content.startswith(EXTERNAL_REPORT_LABEL)
         )
-        require_ceiling_report(payload.removeprefix(EXTERNAL_REPORT_LABEL).strip())
-        lowered = payload.lower()
-        for marker in CONCLUSION_MARKERS:
-            assert marker not in lowered
+        report = payload.removeprefix(EXTERNAL_REPORT_LABEL).strip()
+        assert require_ceiling_report(report) == require_ceiling_report(fixture.report)
 
 
 def test_assistant_turns_still_match_across_policies() -> None:
@@ -150,10 +118,10 @@ def test_assistant_turns_still_match_across_policies() -> None:
 
 
 def test_only_the_tool_policy_carries_a_payload() -> None:
-    specs = {spec.branch_id: spec for spec in policy_follow_ups(DEVELOPMENT_VERIFIER_OUTPUT)}
+    specs = {spec.branch_id: spec for spec in policy_follow_ups(development_fixture().report)}
 
     assert specs["tool"].external_report == (
-        f"{EXTERNAL_REPORT_LABEL}\n{DEVELOPMENT_VERIFIER_OUTPUT}"
+        f"{EXTERNAL_REPORT_LABEL}\n{development_fixture().report}"
     )
     assert specs["none"].external_report is None
     assert specs["intrinsic"].external_report is None

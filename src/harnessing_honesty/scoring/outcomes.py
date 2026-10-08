@@ -106,11 +106,11 @@ class MatrixEpisodeScore(BaseModel):
     cells: tuple[CellScore, ...]
 
 
-def check_exact_arithmetic(answer: str, canonical_answer: str) -> bool:
-    """Return True iff ``answer`` equals the canonical string.
+def answer_matches(answer: str, canonical_answer: str) -> bool:
+    """Return True iff the parsed ``yes``/``no`` equals the key exactly.
 
-    No casefold, strip, or numeric parsing. This is the development
-    checker; family oracles produce keys that this same equality scores.
+    No casefold, strip or parsing here: normalization happened once, when the
+    raw text was parsed into an answer.
     """
     return answer == canonical_answer
 
@@ -119,7 +119,7 @@ def answer_correctness(result: ModelResult | None, key: AnswerKey) -> bool | Non
     """Exact-match correctness of a valid answer; ``None`` otherwise."""
     if not isinstance(result, AnswerSuccess):
         return None
-    return check_exact_arithmetic(result.response.answer, key.canonical_answer)
+    return answer_matches(result.response.answer, key.canonical_answer)
 
 
 def eligibility(

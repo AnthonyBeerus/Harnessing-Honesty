@@ -82,7 +82,7 @@ def _sha(text: str) -> str:
 
 
 def freeze_template_payload() -> dict[str, object]:
-    """Policy texts and confirmatory stems. Orion pressures are not hashed here."""
+    """Policy texts, the report label, the pressure stems and the answer request."""
     return {
         "none": NONE_TEXT,
         "intrinsic": INTRINSIC_TEXT,

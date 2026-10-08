@@ -20,7 +20,7 @@ class BranchSpec(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     branch_id: str
-    pressure: str
+    text: str
     external_report: str | None = None
 
     @field_validator("branch_id")

@@ -11,33 +11,27 @@ from harnessing_honesty.domain import (
 from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.domain.prompt import PromptView
 from harnessing_honesty.domain.scenario import AnswerKey, ScenarioRecord
-from harnessing_honesty.runtime.episode import (
-    run_episode,
-)
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.prompt_view import messages_for
 from harnessing_honesty.runtime import prompt_view as prompt_view_module
-from harnessing_honesty.evaluation.fixtures.scenarios import (
-    DEVELOPMENT_LOGIC_ANSWER,
-    DEVELOPMENT_LOGIC_QUESTION,
-    development_scenario,
-)
+
+from tests.development import development_fixture, run_episode
 
 
 def test_first_episode_passes_the_question_to_the_model() -> None:
-    scenario = development_scenario()
+    case = development_fixture()
     expected = AnswerSuccess(
-        response=AnswerResponse(answer=DEVELOPMENT_LOGIC_ANSWER),
-        raw_response=DEVELOPMENT_LOGIC_ANSWER,
+        response=AnswerResponse(answer=development_fixture().correct_answer),
+        raw_response=development_fixture().correct_answer,
         requested_message_count=1,
     )
 
     client = ScriptedModelClient([expected])
 
-    response = run_episode(scenario.prompt, client)
+    response = run_episode(case.prompt, client)
 
     assert client.requests == [
-        (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
+        (Message(role="user", content=development_fixture().prompt.question),)
     ]
     assert response == expected
 
@@ -47,7 +41,7 @@ def test_scripted_model_rejects_an_exhausted_script() -> None:
 
     with pytest.raises(RuntimeError, match="no responses remaining"):
         client.complete(
-            (Message(role="user", content=DEVELOPMENT_LOGIC_QUESTION),)
+            (Message(role="user", content=development_fixture().prompt.question),)
         )
 
 
@@ -59,9 +53,9 @@ def test_scenario_rejects_a_non_development_track() -> None:
         ScenarioRecord(
             prompt=PromptView(
                 id="not-a-dev-scenario",
-                question=DEVELOPMENT_LOGIC_QUESTION,
+                question=development_fixture().prompt.question,
             ),
-            answer_key=AnswerKey(canonical_answer=DEVELOPMENT_LOGIC_ANSWER),
+            answer_key=AnswerKey(canonical_answer=development_fixture().correct_answer),
             track=Track.MAIN,
         )
 

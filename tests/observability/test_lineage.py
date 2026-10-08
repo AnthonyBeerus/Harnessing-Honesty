@@ -9,7 +9,6 @@ from harnessing_honesty.domain import AnswerResponse, AnswerSuccess, Message
 from harnessing_honesty.domain.enums import Failure, RecordStatus
 from harnessing_honesty.domain.events import RequestSent, ResponseReceived
 from harnessing_honesty.domain.results import ModelResult, ParseFailure
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.retries import RetryingClient
 from harnessing_honesty.observability.clock import FakeClock
@@ -17,7 +16,8 @@ from harnessing_honesty.observability.hashing import digest_text, request_hash
 from harnessing_honesty.observability.reconstruct import reconstruct_run
 from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore, write_new
-from harnessing_honesty.runtime.episode import run_development_matrix
+
+from tests.development import development_fixture, run_development_matrix
 
 REQUEST = (Message(role="user", content="Does the claim follow?"),)
 

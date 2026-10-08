@@ -8,17 +8,15 @@ from harnessing_honesty.analysis.reconstruct import (
     rows_from_matrix_score,
 )
 from harnessing_honesty.models.config import DecodingCard, RoutingCard, ServingManifest
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess
-from harnessing_honesty.runtime.episode import (
-    run_development_matrix,
-)
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.routing import classify_envelope
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore
 from harnessing_honesty.scoring import score_matrix_episode
+
+from tests.development import development_fixture, run_development_matrix
 
 
 def _success(answer: str, count: int) -> AnswerSuccess:

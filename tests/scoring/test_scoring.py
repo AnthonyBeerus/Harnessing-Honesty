@@ -6,8 +6,6 @@ from pydantic_ai import Agent
 from pydantic_ai.models.test import TestModel
 from pydantic_core import ValidationError
 
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
-from harnessing_honesty.runtime.episode import run_development_matrix, run_episode
 from harnessing_honesty.domain import (
     AnswerResponse,
     AnswerSuccess,
@@ -24,10 +22,12 @@ from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.models.pydantic_ai_client import PydanticAIModelClient
 from harnessing_honesty.runtime.prompt_view import messages_for
 from harnessing_honesty.scoring import (
-    check_exact_arithmetic,
+    answer_matches,
     score_matrix_episode,
     score_pair,
 )
+
+from tests.development import development_fixture, run_development_matrix, run_episode
 
 SENTINEL_CANONICAL = "SENTINEL_ANSWER_KEY_CANONICAL_7f3a9c1e"
 
@@ -146,8 +146,8 @@ def test_failures_never_count_as_regressions() -> None:
 
 
 def test_exact_checker_does_not_normalize() -> None:
-    assert check_exact_arithmetic("Yes", "yes") is False
-    assert check_exact_arithmetic("yes ", "yes") is False
+    assert answer_matches("Yes", "yes") is False
+    assert answer_matches("yes ", "yes") is False
 
 
 def _matrix_script(neutral: str, final: str) -> list[ModelResult]:

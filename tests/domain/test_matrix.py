@@ -1,7 +1,3 @@
-from harnessing_honesty.evaluation.fixtures.development_fixture import development_fixture
-from harnessing_honesty.runtime.episode import (
-    run_development_matrix,
-)
 from harnessing_honesty.domain.matrix import development_conditions
 from harnessing_honesty.domain import (
     AnswerResponse,
@@ -12,14 +8,11 @@ from harnessing_honesty.domain import (
 from harnessing_honesty.domain.enums import Stage
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.runtime.policies import (
-    DEVELOPMENT_VERIFIER_OUTPUT,
-    development_policy_templates,
+    policy_templates,
     policy_follow_ups,
 )
-from harnessing_honesty.runtime.pressures import development_pressure_templates
-from harnessing_honesty.evaluation.fixtures.scenarios import (
-    DEVELOPMENT_LOGIC_ANSWER,
-)
+
+from tests.development import development_fixture, pressure_templates, run_development_matrix
 
 FORBIDDEN = (
     "experiment",
@@ -43,9 +36,9 @@ def _success(answer: str, requested_message_count: int) -> AnswerSuccess:
 
 
 def _happy_script() -> list[AnswerSuccess]:
-    yes = _success(DEVELOPMENT_LOGIC_ANSWER, 1)
-    return [yes] + [_success(DEVELOPMENT_LOGIC_ANSWER, 3)] * 3 + [
-        _success(DEVELOPMENT_LOGIC_ANSWER, 5)
+    yes = _success(development_fixture().correct_answer, 1)
+    return [yes] + [_success(development_fixture().correct_answer, 3)] * 3 + [
+        _success(development_fixture().correct_answer, 5)
     ] * 9
 
 
@@ -77,7 +70,7 @@ def test_one_neutral_three_drafts_nine_finals() -> None:
     assert len(record.drafts) == 3
     assert all(draft.snapshot.stage == Stage.DRAFT for draft in record.drafts)
     assert [draft.pressure_family for draft in record.drafts] == [
-        item.family.value for item in development_pressure_templates()
+        item.family.value for item in pressure_templates()
     ]
     assert len(record.branches) == 9
     assert [branch.condition.identity for branch in record.branches] == list(
@@ -91,7 +84,7 @@ def test_one_neutral_three_drafts_nine_finals() -> None:
 
 def test_each_pressure_draft_is_reused_by_its_three_policies() -> None:
     _, _, record = _run(_happy_script(), seed=0)
-    pressures = development_pressure_templates()
+    pressures = pressure_templates()
 
     for index, pressure in enumerate(pressures):
         draft = record.drafts[index]
@@ -111,7 +104,7 @@ def test_each_pressure_draft_is_reused_by_its_three_policies() -> None:
 
 def test_pressures_do_not_leak_across_cells() -> None:
     _, _, record = _run(_happy_script(), seed=0)
-    texts = {item.family.value: item.text for item in development_pressure_templates()}
+    texts = {item.family.value: item.text for item in pressure_templates()}
 
     for branch in record.branches:
         blob = _contents(branch.snapshot.request)
@@ -130,10 +123,10 @@ def test_verifier_only_on_tool_cells() -> None:
         contents = _contents(branch.snapshot.request)
         if branch.condition.policy.value == "tool":
             assert roles.count("user") == 4
-            assert any(DEVELOPMENT_VERIFIER_OUTPUT in text for text in contents)
+            assert any(development_fixture().report in text for text in contents)
         else:
             assert roles.count("user") == 3
-            assert all(DEVELOPMENT_VERIFIER_OUTPUT not in text for text in contents)
+            assert all(development_fixture().report not in text for text in contents)
 
 
 def test_cell_ids_and_labels_are_not_model_visible() -> None:
@@ -147,11 +140,11 @@ def test_cell_ids_and_labels_are_not_model_visible() -> None:
         assert word not in lowered
     for identity in tuple(item.identity for item in development_conditions()):
         assert identity not in blob
-    for pressure in development_pressure_templates():
+    for pressure in pressure_templates():
         assert pressure.family.value not in blob
-    for policy in development_policy_templates():
+    for policy in policy_templates():
         assert policy.family.value not in blob
-    for spec in policy_follow_ups(DEVELOPMENT_VERIFIER_OUTPUT):
+    for spec in policy_follow_ups(development_fixture().report):
         assert spec.branch_id not in blob
 
 

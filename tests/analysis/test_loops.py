@@ -30,9 +30,6 @@ from harnessing_honesty.evaluation.collection import (
 )
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.results import ModelResult
-from harnessing_honesty.evaluation.fixtures.development_fixture import (
-    development_fixture,
-)
 from harnessing_honesty.models.fake import HashedAnswerClient
 from harnessing_honesty.observability.clock import FakeClock
 from harnessing_honesty.observability.reconstruct import reconstruct_run
@@ -40,9 +37,10 @@ from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore
 from harnessing_honesty.runtime.episode import (
     run_confirmatory_loops,
-    run_development_loops,
 )
 from harnessing_honesty.scoring import score_loop_episode
+
+from tests.development import development_fixture, run_development_loops
 
 CARD = "config/qualification.gemma4.deepinfra.yaml"
 ITEMS = {item.item_id: item for item in confirmatory_pool()}
