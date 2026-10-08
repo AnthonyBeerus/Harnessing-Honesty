@@ -584,9 +584,10 @@ correlation of a branch's finals (0.0, 0.5), which this design adds. The
 record is `data/power/assessment-v1.json`, shown by notebook 03.
 
 The record (400 runs per cell, 999 resamples, seed 20261006, analysis code
-hash `adc3d2ef...`, re-recorded on 7 October 2026 after the loop analysis
-and later changes to the analysis source, with every estimate unchanged from hashes
-`3ac120cc...`, `1d16c504...` and `df6d7329...`) gives
+hash `e30021c2...`, re-recorded on 8 October 2026 after the interval was made
+to agree with the test; power, the null rate and the recovery-branch counts are
+unchanged from the earlier records `adc3d2ef...`, `3ac120cc...`, `1d16c504...` and
+`df6d7329...`) gives
 8-29% power for H1 intrinsic, 10-29% for H1 tool and 3-11% for H3 across the 16 planning cells, with 33-78 recovery branches per SUT; under
 no effect, some contrast was confirmed in 3.75% of runs. At central
 assumptions 80% power needs about 25 points for H1 and over 40 for H3. All
@@ -1068,7 +1069,7 @@ rule; under the recorded power assessment no contrast is confirmatory, so it
 decides nothing in this study.
 
 The recorded power simulation shows the nominal 95% intervals covering the
-true effect about 93% of the time across the planning grid (as low as 89%),
+true effect about 93% of the time across the planning grid (as low as 90%),
 and 77–81% in the low-eligibility scenario; the results notebook says so next
 to the intervals. That simulation drew 999 resamples per dataset, against
 5,000 in the analysis, to keep it to about an hour; power estimated with fewer
