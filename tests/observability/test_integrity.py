@@ -8,6 +8,7 @@ import pytest
 
 from harnessing_honesty.analysis.reconstruct import require_closed_matrix
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess
+from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.domain.evidence import CallEvidence
 from harnessing_honesty.models.fake import ScriptedModelClient
 from harnessing_honesty.observability.clock import FakeClock
@@ -20,7 +21,7 @@ from harnessing_honesty.observability.reconstruct import reconstruct_run
 from harnessing_honesty.observability.recording import RunSession
 from harnessing_honesty.observability.store import FilesystemRecordStore
 
-from tests.development import development_fixture, run_development_matrix
+from tests.development import answered, development_fixture, run_development_matrix
 
 FIXTURE = development_fixture()
 
@@ -170,3 +171,26 @@ def test_an_interrupted_history_is_not_corruption(run_dir: Path) -> None:
     assert check_integrity(run_dir) == ()
     assert rebuilt.interrupted
     assert rebuilt.attempts[-1].outcome == "no_outcome"
+
+
+@pytest.mark.parametrize(
+    ("client", "unserved"),
+    [(_WithEvidence, 0), (ScriptedModelClient, 13)],
+    ids=["with provider evidence", "without provider evidence"],
+)
+def test_a_main_answer_needs_provider_evidence(
+    tmp_path: Path, client: type[ScriptedModelClient], unserved: int
+) -> None:
+    store = FilesystemRecordStore(tmp_path)
+    session = RunSession(
+        store, "run-1", "m", 0,
+        clock=FakeClock(), track=Track.MAIN, freeze_id="freeze-test",
+    )
+    session.start()
+    answers = [answered(FIXTURE.correct_answer)] * 13
+    run_development_matrix(FIXTURE.prompt, client(answers), 0, session=session)
+    session.close()
+
+    issues = check_integrity(store.run_dir("run-1"))
+
+    assert [issue.kind for issue in issues] == [Integrity.UNSERVED_ANSWER] * unserved

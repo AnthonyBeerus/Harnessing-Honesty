@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 
 from harnessing_honesty import cli
+from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
+from harnessing_honesty.domain.enums import Track
 from harnessing_honesty.evaluation import collection, workload
 from harnessing_honesty.evaluation.collection import (
     CollectionStopped,
@@ -15,7 +17,7 @@ from harnessing_honesty.evaluation.collection import (
     start_collection,
 )
 from harnessing_honesty.evaluation.live import open_session
-from harnessing_honesty.evaluation.specification import readiness
+from harnessing_honesty.evaluation.specification import build_spec, readiness
 from harnessing_honesty.models.config import load_run_config
 from harnessing_honesty.models.fake import HashedAnswerClient
 from harnessing_honesty.observability.clock import FakeClock
@@ -111,3 +113,41 @@ def test_a_run_records_the_seed_actually_sent(
     assert config.serving.decoding.seed == seed
     summary = json.loads((session.run_dir / "summary.json").read_text(encoding="utf-8"))
     assert summary["seed"] == seed
+
+
+def _main_collection(tmp_path: Path) -> Path:
+    spec = build_spec(
+        "main-test", Track.MAIN, PRIMARY_SERVING_CARDS[:1], ("item",), scheduler_seed=0
+    )
+    return start_collection(tmp_path, spec)
+
+
+def test_main_refuses_the_synthetic_client_at_execution(tmp_path: Path) -> None:
+    directory = _main_collection(tmp_path)
+
+    with pytest.raises(ValueError, match="only with the live client"):
+        execute(directory, lambda serving: HashedAnswerClient(), approved_calls=23)
+    # The live client passes this check and meets readiness instead.
+    with pytest.raises(ValueError, match="not ready"):
+        execute(directory, collection._CLIENTS["live"], approved_calls=23)
+
+    assert sorted(path.name for path in directory.iterdir()) == [
+        "schedule.json", "spec.json",
+    ]
+
+
+def test_main_refuses_the_synthetic_client_at_launch_and_resume(
+    tmp_path: Path,
+) -> None:
+    directory = _main_collection(tmp_path)
+    request_stop(directory)
+
+    with pytest.raises(ValueError, match="only with the live client"):
+        collection.launch(directory, approved_calls=23, client="synthetic")
+    with pytest.raises(ValueError, match="only with the live client"):
+        collection.resume(directory, approved_calls=23, client="synthetic")
+
+    # No worker started, and the stop was not cleared.
+    assert sorted(path.name for path in directory.iterdir()) == [
+        "schedule.json", "spec.json", "stop.json",
+    ]

@@ -22,7 +22,7 @@ from pydantic import BaseModel, ConfigDict, TypeAdapter
 
 from harnessing_honesty import REPO_ROOT
 from harnessing_honesty.domain import Message, ModelResult
-from harnessing_honesty.domain.enums import Failure
+from harnessing_honesty.domain.enums import Failure, Track
 from harnessing_honesty.domain.events import DomainEvent
 from harnessing_honesty.domain.results import ProtocolFailure, ProviderFailure
 from harnessing_honesty.domain.protocols import Clock, ModelClient
@@ -137,12 +137,14 @@ def execute(
     """Run every block in schedule order, then close each SUT's run.
 
     Refuses to start unless readiness is clean and ``approved_calls`` equals
-    the planned call count. One SUT is one run directory and one block is one
-    recorded block; retries sit outside the recorder, so every attempt is
-    recorded. An interruption leaves the runs incomplete with their evidence;
-    calling ``execute`` again resumes them (``_Replay``).
+    the planned call count, and refuses MAIN with any client but the live
+    one. One SUT is one run directory and one block is one recorded block;
+    retries sit outside the recorder, so every attempt is recorded. An
+    interruption leaves the runs incomplete with their evidence; calling
+    ``execute`` again resumes them (``_Replay``).
     """
     spec, schedule = load_collection(directory)
+    _refuse_offline_main(spec, client_factory)
     items = block_items(spec.track)
     findings = readiness(spec)
     if findings:
@@ -555,6 +557,25 @@ _CLIENTS: dict[str, Callable[[ServingManifest], ModelClient]] = {
 }
 
 
+def _refuse_offline_main(
+    spec: CollectionSpec, client_factory: Callable[[ServingManifest], ModelClient]
+) -> None:
+    """MAIN answers come from the served models, however it is started or resumed.
+
+    DEV takes any client, so a whole collection can run offline.
+    """
+    if spec.track is Track.MAIN and client_factory != _CLIENTS["live"]:
+        raise ValueError("a MAIN collection runs only with the live client")
+
+
+def _check_client(directory: Path, client: str) -> None:
+    """Refuse an unknown client, or a client the collection's track does not take."""
+    if client not in _CLIENTS:
+        raise ValueError(f"client must be one of {sorted(_CLIENTS)}")
+    spec, _ = load_collection(directory)
+    _refuse_offline_main(spec, _CLIENTS[client])
+
+
 def launch(directory: Path, *, approved_calls: int, client: str) -> CollectionStatus:
     """Start one worker process for the collection, or report why not.
 
@@ -563,10 +584,9 @@ def launch(directory: Path, *, approved_calls: int, client: str) -> CollectionSt
     from the caller (a notebook kernel may end without ending it) and writes
     its output to a log of its own, ``worker-{time}.log``: workers launched
     together cannot overwrite each other's lines. ``client`` is ``synthetic``
-    or ``live``.
+    or ``live``; MAIN takes ``live`` only.
     """
-    if client not in _CLIENTS:
-        raise ValueError(f"client must be one of {sorted(_CLIENTS)}")
+    _check_client(directory, client)
     status = collection_status(directory)
     if status.owner is not None or status.complete:
         return status
@@ -591,7 +611,9 @@ def resume(directory: Path, *, approved_calls: int, client: str) -> CollectionSt
 
     Refused while a worker still owns the collection: clearing the stop first
     would let a worker that is finishing its current block run on to the end.
+    A client the collection does not take is refused before the stop is cleared.
     """
+    _check_client(directory, client)
     owner = collection_status(directory).owner
     if owner is not None:
         raise RuntimeError(f"collection is still owned by {owner}; wait until it stops")

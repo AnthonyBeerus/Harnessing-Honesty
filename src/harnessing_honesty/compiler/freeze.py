@@ -3,7 +3,7 @@
 import hashlib
 import json
 import platform
-from importlib.metadata import version
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import ClassVar
 
@@ -115,14 +115,27 @@ PRIMARY_SERVING_CARDS: tuple[str, ...] = (
 )
 
 
-# Packages that build or carry a request; their resolved versions are part of
-# what was run, not only of what was declared.
-REQUEST_PATH_PACKAGES = ("harnessing_honesty", "pydantic", "pydantic-ai", "openai", "httpx")
+# Every declared dependency, and the distributions beneath the request path
+# that a declared range does not fix. Their resolved versions are part of what
+# was run, not only of what was declared.
+RECORDED_PACKAGES = (
+    "harnessing_honesty",
+    "pydantic", "pydantic-ai", "pydantic-ai-slim", "openai", "httpx", "httpcore",
+    "pyyaml", "python-dotenv",
+    "numpy", "scipy", "gpboost", "z3-solver",
+)
+
+
+def _installed(name: str) -> str:
+    try:
+        return version(name)
+    except PackageNotFoundError:
+        return "absent"
 
 
 def resolved_environment() -> tuple[tuple[str, str], ...]:
-    """Python and the request-path package versions installed now."""
-    packages = tuple((name, version(name)) for name in REQUEST_PATH_PACKAGES)
+    """Python and the recorded package versions installed now."""
+    packages = tuple((name, _installed(name)) for name in RECORDED_PACKAGES)
     return (("python", platform.python_version()), *packages)
 
 

@@ -11,7 +11,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
-from harnessing_honesty.domain.enums import RecordStatus
+from harnessing_honesty.domain.enums import RecordStatus, Track
 from harnessing_honesty.domain.events import (
     AttemptInterrupted,
     DomainEvent,
@@ -19,6 +19,7 @@ from harnessing_honesty.domain.events import (
     RequestSent,
     ResponseReceived,
     RunClosed,
+    RunStarted,
 )
 from harnessing_honesty.domain.messages import Message
 from harnessing_honesty.domain.records import RunRecord
@@ -47,6 +48,7 @@ class Integrity(StrEnum):
     BROKEN_LINEAGE = "broken_lineage"
     MIXED_BLOCK = "mixed_block"
     UNREFERENCED_FILE = "unreferenced_file"
+    UNSERVED_ANSWER = "unserved_answer"
 
 
 class IntegrityIssue(BaseModel):
@@ -87,6 +89,7 @@ def check_integrity(run_dir: Path) -> tuple[IntegrityIssue, ...]:
         *_file_issues(run_dir, events),
         *_lineage_issues(run_dir, events),
         *_block_issues(events),
+        *_provenance_issues(events),
     )
 
 
@@ -171,6 +174,21 @@ def _attempt_issues(events: list[DomainEvent]) -> Iterator[IntegrityIssue]:
         if isinstance(event, _OUTCOMES) and not _answers(previous, event):
             detail = f"no request for {(event.call_id, event.attempt)}"
             yield _issue(Integrity.MISLINKED_OUTCOME, where, detail)
+
+
+def _provenance_issues(events: list[DomainEvent]) -> Iterator[IntegrityIssue]:
+    """In a MAIN run, every answer carries its provider evidence.
+
+    The live client captures every exchange and refuses a response without
+    provider identity, so an answer with no envelope came from no served model.
+    """
+    started = next((e for e in events if isinstance(e, RunStarted)), None)
+    if started is None or started.track is not Track.MAIN:
+        return
+    for event in events:
+        if isinstance(event, ResponseReceived) and not event.envelope_ref:
+            where = f"event {event.sequence}"
+            yield _issue(Integrity.UNSERVED_ANSWER, where, "no provider evidence")
 
 
 def _file_issues(run_dir: Path, events: list[DomainEvent]) -> Iterator[IntegrityIssue]:

@@ -105,7 +105,7 @@
   "claims_hash": "87c8aa4bcb35893db284ba6e6146ba6ab46d02ad404aa23cf28f3003c85eff33",
   "serving_config_hash": "3b2fcf876ae2c7114d1356705df6833f2a838b12f0f6c99aee6557115c5e191f",
   "analysis_code_hash": "e30021c2903030ba1671e9dfd9c8bb1d5888061919e5fe551b8a459795348b5f",
-  "source_hash": "d0fb08bf1f26740911af869e537c3bd9aed4cc17ec955dd72949ccbaca5b3954",
+  "source_hash": "b07f14d34e6a7afa4a58a13d97fe5b5ad302f8393ec03a70f9c032e49c17200a",
   "environment": [
     [
       "python",
@@ -124,12 +124,44 @@
       "1.107.1"
     ],
     [
+      "pydantic-ai-slim",
+      "1.107.1"
+    ],
+    [
       "openai",
       "2.53.0"
     ],
     [
       "httpx",
       "0.28.1"
+    ],
+    [
+      "httpcore",
+      "1.0.9"
+    ],
+    [
+      "pyyaml",
+      "6.0.3"
+    ],
+    [
+      "python-dotenv",
+      "1.2.2"
+    ],
+    [
+      "numpy",
+      "2.5.3"
+    ],
+    [
+      "scipy",
+      "1.18.1"
+    ],
+    [
+      "gpboost",
+      "1.7.4"
+    ],
+    [
+      "z3-solver",
+      "4.16.0.0"
     ]
   ],
   "signer": "Anthony Morima jr"
