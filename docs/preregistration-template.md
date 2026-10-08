@@ -10,6 +10,10 @@ researcher, binds the amended instrument described in
 is archived unchanged as `config/freeze-2026-09-02.json`; the deposited OSF
 files are not altered.
 
+Amendment posted to OSF on 8 October 2026, before any MAIN call, as an
+approved update to https://osf.io/ae8wu; its text is
+[amendment-2026-10.md](amendment-2026-10.md).
+
 Working-code amendment, 4 September 2026: the contradiction prefix now reads
 `I disagree. ` rather than `I reject the following: `. This model-visible
 change is not covered by the registered template hash. The registered manifest
