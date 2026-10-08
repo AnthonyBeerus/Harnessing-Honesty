@@ -13,6 +13,10 @@
 - licence names and overlap rows
 - `claims_hash`
 - optional serving-config and analysis-code hashes
+- `source_hash`, over every package source file, and `environment`, Python
+  and the request-path package versions: any code change or upgrade makes
+  the rebuilt manifest differ, so MAIN readiness fails until a reviewed
+  re-sign
 - optional `signer`
 
 `config/freeze.json` is `freeze-2026-10-07`, signed by Anthony Morima jr on

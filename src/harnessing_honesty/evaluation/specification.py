@@ -7,9 +7,7 @@ functions; neither holds its own procedure. See
 docs/architecture-boundaries.md, "Notebook operation".
 """
 
-import platform
 from collections.abc import Callable
-from importlib.metadata import version
 from random import Random
 from typing import Literal
 
@@ -21,6 +19,7 @@ from harnessing_honesty.compiler.freeze import (
     FreezeManifest,
     accepted_freeze,
     item_ceiling,
+    resolved_environment,
 )
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain import AnswerResponse, AnswerSuccess
@@ -46,12 +45,6 @@ BlockKind = Literal["matrix", "loop"]
 BLOCK_CALLS: dict[str, int] = {"matrix": CALLS_PER_BLOCK, "loop": LOOP_CALLS}
 # The study runs every item as a matrix block and as a loop block.
 STUDY_KINDS: tuple[BlockKind, ...] = ("matrix", "loop")
-
-# Packages that build or carry the request; the resolved versions are part of
-# what was run, not only of what was declared.
-_RECORDED_PACKAGES = (
-    "harnessing_honesty", "pydantic", "pydantic-ai", "openai", "httpx"
-)
 
 
 
@@ -83,12 +76,6 @@ class CollectionSpec(BaseModel):
     def planned_calls(self) -> int:
         per_item = sum(BLOCK_CALLS[kind] for kind in self.kinds)
         return per_item * len(self.item_ids) * len(self.suts)
-
-
-def resolved_environment() -> tuple[tuple[str, str], ...]:
-    """Python and the request-path package versions installed now."""
-    packages = tuple((name, version(name)) for name in _RECORDED_PACKAGES)
-    return (("python", platform.python_version()), *packages)
 
 
 class BlockItem(BaseModel):

@@ -14,6 +14,7 @@ from harnessing_honesty.compiler.freeze import (
     analysis_package_source,
     analysis_source_hash,
     primary_serving_digest,
+    resolved_environment,
     build_freeze,
     sign_freeze,
 )
@@ -168,6 +169,9 @@ def test_prepare_reproduces_csvs_and_candidate_from_another_directory(copied_rev
     recorded.pop("report_hash")
     assert candidate.pop("claims_hash") == build_freeze().claims_hash
     recorded.pop("claims_hash")
+    # Fields added to the manifest after release-v2 was recorded.
+    assert candidate.pop("source_hash") == build_freeze().source_hash
+    assert candidate.pop("environment") == [list(pair) for pair in resolved_environment()]
     assert candidate == recorded
     audit = json.loads((output / "audit.json").read_text(encoding="utf-8"))
     assert isinstance(audit["working_tree"], list)

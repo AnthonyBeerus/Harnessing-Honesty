@@ -1,7 +1,9 @@
-"""Freeze manifest: hashes of prompts, templates, checkers, pool, and config."""
+"""Freeze manifest: hashes of the instrument, its configuration and its code."""
 
 import hashlib
 import json
+import platform
+from importlib.metadata import version
 from pathlib import Path
 from typing import ClassVar
 
@@ -74,6 +76,10 @@ class FreezeManifest(BaseModel):
     claims_hash: str
     serving_config_hash: str | None = None
     analysis_code_hash: str | None = None
+    # Every package source file, and the versions on the request path: any
+    # code change or upgrade makes the rebuilt manifest differ.
+    source_hash: str | None = None
+    environment: tuple[tuple[str, str], ...] = ()
     signer: str | None = None
 
 
@@ -107,6 +113,31 @@ PRIMARY_SERVING_CARDS: tuple[str, ...] = (
     "config/qualification.gpt4o.openai.yaml",
     "config/qualification.gemma4.deepinfra.yaml",
 )
+
+
+# Packages that build or carry a request; their resolved versions are part of
+# what was run, not only of what was declared.
+REQUEST_PATH_PACKAGES = ("harnessing_honesty", "pydantic", "pydantic-ai", "openai", "httpx")
+
+
+def resolved_environment() -> tuple[tuple[str, str], ...]:
+    """Python and the request-path package versions installed now."""
+    packages = tuple((name, version(name)) for name in REQUEST_PATH_PACKAGES)
+    return (("python", platform.python_version()), *packages)
+
+
+def package_source_hash() -> str:
+    """Hash every source file of the package by path and text.
+
+    Text is read with universal newlines, so Windows and Unix checkouts agree.
+    """
+    root = Path(__file__).resolve().parents[1]
+    sources = {
+        path.relative_to(root).as_posix(): path.read_text(encoding="utf-8")
+        for path in sorted(root.rglob("*.py"))
+        if "__pycache__" not in path.parts
+    }
+    return config_hash({"package_source": sources})
 
 
 def analysis_package_source() -> str:
@@ -167,6 +198,8 @@ def build_freeze(
         claims_hash=_sha(json.dumps(CLAIMS, sort_keys=True)),
         serving_config_hash=serving_config_hash,
         analysis_code_hash=analysis_code_hash or analysis_source_hash(analysis_package_source()),
+        source_hash=package_source_hash(),
+        environment=resolved_environment(),
     )
 
 
@@ -185,6 +218,8 @@ def sign_freeze(freeze: FreezeManifest, signer: str) -> FreezeManifest:
         raise ValueError("signed freeze requires construction configuration")
     if not freeze.corpus_sha256:
         raise ValueError("signed freeze requires accepted corpus hash")
+    if not freeze.source_hash or not freeze.environment:
+        raise ValueError("signed freeze requires the package source and environment")
     return freeze.model_copy(update={"signer": name})
 
 

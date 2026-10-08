@@ -251,6 +251,30 @@ def test_changed_template_cannot_inherit_the_registered_signer(monkeypatch) -> N
         accepted_freeze()
 
 
+@pytest.mark.parametrize(
+    ("name", "changed", "field"),
+    [
+        ("package_source_hash", lambda: "a different implementation", "source_hash"),
+        ("resolved_environment", lambda: (("python", "3.12.99"),), "environment"),
+    ],
+)
+def test_changed_code_or_packages_cannot_inherit_the_signer(
+    monkeypatch, name, changed, field
+) -> None:
+    from harnessing_honesty.compiler import freeze as freeze_module
+
+    monkeypatch.setattr(freeze_module, name, changed)
+    with pytest.raises(ValueError, match=field):
+        accepted_freeze()
+
+
+def test_a_freeze_without_its_source_cannot_be_signed() -> None:
+    freeze = build_freeze(freeze_id="freeze-test", serving_config_hash="serving")
+
+    with pytest.raises(ValueError, match="package source"):
+        sign_freeze(freeze.model_copy(update={"source_hash": None}), "reviewer")
+
+
 def test_claims_markdown_matches_the_locked_sentences() -> None:
     from pathlib import Path
 
