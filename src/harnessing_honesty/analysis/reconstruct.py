@@ -23,7 +23,7 @@ from harnessing_honesty.domain.episodes import (
 )
 from harnessing_honesty.domain.events import RequestSent
 from harnessing_honesty.domain.instrument import InstrumentItem
-from harnessing_honesty.domain.matrix import development_conditions
+from harnessing_honesty.domain.matrix import matrix_conditions
 from harnessing_honesty.domain.results import ModelResult
 from harnessing_honesty.observability.integrity import require_integrity
 from harnessing_honesty.observability.reconstruct import (
@@ -273,13 +273,12 @@ def _matrix_record(
             condition = Condition(
                 pressure=PressureFamily(pressure),
                 policy=PolicyFamily(policy),
-                track=rebuilt.record.track,
             )
             branches[cell] = MatrixBranchRecord(condition=condition, snapshot=snapshot)
             execution_order.append(cell)
         else:
             raise ValueError(f"stage {stage} is not part of the matrix")
-    expected = development_conditions()
+    expected = matrix_conditions()
     families = tuple(dict.fromkeys(item.pressure.value for item in expected))
     return MatrixEpisodeRecord(
         shared=shared,

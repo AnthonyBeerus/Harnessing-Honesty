@@ -6,8 +6,9 @@ difference in deductive tasks minus that in document-grounded tasks. Whole
 scenarios are resampled with replacement, keeping each scenario's branches and
 policies together [29, Sec. 5.2], within each task family so every resample
 keeps the 15-per-family design. The interval runs from the 2.5th to the 97.5th
-percentile of the resampled estimates. The p-value is the smallest level at
-which such an interval excludes zero, so test and interval cannot disagree.
+percentile of the resampled estimates, each end an observed draw. The p-value
+is the smallest level at which such an interval excludes zero, so test and
+interval cannot disagree, even when resampled estimates tie at zero.
 Holm's procedure [103, Thm. 1] adjusts the three p-values together. Every
 contrast predicts less regressive shift ([97, Appendix A], [98, Hypotheses]):
 it is confirmed when it is still confirmatory after the power gate, its
@@ -97,6 +98,20 @@ def percentile_p_value(draws: Sequence[float]) -> float:
     return float(min(1.0, 2 * tail))
 
 
+def percentile_interval(draws: Sequence[float]) -> tuple[float, float]:
+    """The ``1 - ALPHA`` percentile interval from the same tails as the p-value.
+
+    The lower end is the smallest draw with at least ``ALPHA / 2`` of the draws
+    at or below it; the upper end mirrors it. Neither end is interpolated, so
+    the interval excludes zero exactly when ``percentile_p_value`` is below
+    ``ALPHA``; interpolated quantiles can disagree when draws tie at zero.
+    """
+    values = np.asarray(draws)
+    low = np.quantile(values, ALPHA / 2, method="inverted_cdf")
+    high = -np.quantile(-values, ALPHA / 2, method="inverted_cdf")
+    return float(low), float(high)
+
+
 def holm(p_values: Sequence[float]) -> tuple[float, ...]:
     """Holm-adjusted p-values in the input order [103, Thm. 1]."""
     count = len(p_values)
@@ -174,9 +189,7 @@ def scenario_bootstrap(
         estimate = estimates[contrast]
         failed = n_resamples - len(draws[contrast])
         interval = (
-            np.quantile(draws[contrast], [ALPHA / 2, 1 - ALPHA / 2])
-            if draws[contrast]
-            else (None, None)
+            percentile_interval(draws[contrast]) if draws[contrast] else (None, None)
         )
         results.append(
             ContrastResult(

@@ -13,6 +13,7 @@ from harnessing_honesty.analysis.bootstrap import (
     Contrast,
     holm,
     ScenarioResampler,
+    percentile_interval,
     percentile_p_value,
     scenario_bootstrap,
 )
@@ -117,6 +118,24 @@ def test_the_p_value_agrees_with_the_percentile_interval() -> None:
     assert percentile_p_value([-0.2, -0.1]) == 0.0
     assert percentile_p_value([0.1, 0.2]) == 0.0
     assert percentile_p_value([-0.1, 0.1]) == 1.0
+
+
+@pytest.mark.parametrize(
+    "draws",
+    [
+        [0.0] * 25 + [0.1] * 975,  # p = 0.05: interpolation would exclude zero
+        [-0.1] * 975 + [0.0] * 25,
+        [0.0] * 24 + [0.1] * 976,
+        [-0.2] * 10 + [0.0] * 40 + [0.3] * 950,
+    ],
+)
+def test_the_interval_agrees_with_the_test_when_draws_tie_at_zero(
+    draws: list[float],
+) -> None:
+    low, high = percentile_interval(draws)
+
+    assert (low > 0 or high < 0) == (percentile_p_value(draws) < 0.05)
+    assert low in draws and high in draws
 
 
 def test_a_strong_effect_is_confirmed_even_with_a_zero_tool_arm() -> None:

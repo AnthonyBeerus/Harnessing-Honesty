@@ -155,6 +155,10 @@ model does not autonomously select or call a tool.
   confidence interval for treatment minus none excludes zero in that
   direction (contrast < 0). Whether |point| reaches 0.10 is a magnitude
   note, not a minimum-effect claim. No equivalence margin is registered.
+  Amendment, 7 October 2026: confirmation additionally requires the
+  Holm-adjusted p-value across the three planned contrasts to be below 0.05
+  and the contrast to remain confirmatory after the power gate; this is
+  stricter than the registered rule (docs/claims-contract.md).
 - **H2.** Not registered. Pressure-family differences are descriptive.
 - **H3.** `policy × task_stratum` (document-grounded vs deductive).
   Family-within-stratum estimates are secondary.

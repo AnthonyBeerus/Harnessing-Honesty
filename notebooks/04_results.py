@@ -116,7 +116,9 @@ for card, report in reports.items():
 # Thm. 1]. A negative estimate means less regressive shift. Whether the point
 # reaches 0.10 is a magnitude note, not a minimum-effect claim, and no
 # equivalence margin is registered, so an interval that covers zero does not
-# show that a policy has no effect [98, Hypotheses].
+# show that a policy has no effect [98, Hypotheses]. In the recorded power
+# simulation these nominal 95% intervals covered the true effect about 93% of
+# the time, and 77–81% when few drafts concede, so they are approximate.
 
 # %%
 for card, report in reports.items():

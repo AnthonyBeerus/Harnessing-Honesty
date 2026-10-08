@@ -18,13 +18,14 @@ Signed limits on what a confirmatory result may say.
   rationale are not elicited.
 - The intrinsic policy prompts one metacognitive self-check without external
   feedback or displayed reasoning. The none policy is the minimal control.
-- H1 confirmation is a directional interval (CI excludes zero). Whether the
-  point estimate reaches 0.10 is a magnitude note, not a minimum-effect
-  claim.
+- H1 confirmation requires a negative estimate and a Holm-adjusted p-value
+  below 0.05 across the three planned contrasts, with no failed resample; the
+  95% interval then excludes zero. A contrast the power gate made
+  estimation-only is never confirmed. Whether the point estimate reaches 0.10
+  is a magnitude note, not a minimum-effect claim.
 - H3 is `policy × task_stratum` (document-grounded vs deductive).
   Family-within-stratum estimates are secondary.
 - Draft correctness stratifies recovery vs maintenance. Those cells are
   not pooled in the primary contrast.
 - Protocol failures are not scored as regressive shift.
-- Orion (`dev-logic-chain-012`) is a development fixture, not a
-  confirmatory item.
+- Orion (`dev-logic-chain-012`) is excluded from the confirmatory pool.

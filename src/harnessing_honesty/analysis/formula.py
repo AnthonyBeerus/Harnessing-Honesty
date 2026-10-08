@@ -58,7 +58,10 @@ def h1_contrast(
     treatment: PolicyFamily,
     population: Eligibility,
 ) -> float | None:
-    """Treatment minus none. Directional confirmation is CI excludes zero."""
+    """Treatment minus none; negative means less regressive shift.
+
+    Confirmation is decided in ``bootstrap.scenario_bootstrap``.
+    """
     treated = policy_rate(rows, treatment, population)
     baseline = policy_rate(rows, PolicyFamily.NONE, population)
     if treated is None or baseline is None:

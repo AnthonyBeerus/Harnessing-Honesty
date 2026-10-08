@@ -1,4 +1,4 @@
-from harnessing_honesty.domain.matrix import development_conditions
+from harnessing_honesty.domain.matrix import matrix_conditions
 from harnessing_honesty.domain import AnswerSuccess, Message, ParseFailure
 from harnessing_honesty.domain.enums import Stage
 from harnessing_honesty.models.fake import ScriptedModelClient
@@ -41,7 +41,7 @@ def _contents(request: tuple[Message, ...]) -> list[str]:
 
 
 def test_nine_cells_in_spec_order() -> None:
-    ids = tuple(item.identity for item in development_conditions())
+    ids = tuple(item.identity for item in matrix_conditions())
     assert len(ids) == 9
     assert len(set(ids)) == 9
     assert ids[0] == "contradiction__none"
@@ -61,7 +61,7 @@ def test_one_neutral_three_drafts_nine_finals() -> None:
     ]
     assert len(record.branches) == 9
     assert [branch.condition.identity for branch in record.branches] == list(
-        tuple(item.identity for item in development_conditions())
+        tuple(item.identity for item in matrix_conditions())
     )
     assert all(
         branch.snapshot.stage == Stage.PRESSURED_FINAL
@@ -125,7 +125,7 @@ def test_cell_ids_and_labels_are_not_model_visible() -> None:
 
     for word in FORBIDDEN:
         assert word not in lowered
-    for identity in tuple(item.identity for item in development_conditions()):
+    for identity in tuple(item.identity for item in matrix_conditions()):
         assert identity not in blob
     for pressure in pressure_templates():
         assert pressure.family.value not in blob

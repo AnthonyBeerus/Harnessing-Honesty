@@ -1044,3 +1044,36 @@ before any MAIN outcome. Gemma 4 results therefore describe the pinned
 DeepInfra route only; no statement about robustness across hosting routes is
 made. If the comparison is run later it is reported as an addition after
 MAIN, not as the registered sensitivity analysis.
+
+## 2026-10-08 — Interval, decision rule and coverage, before MAIN
+
+These changes are made before any MAIN outcome and are disclosed with the
+amendment.
+
+The bootstrap interval was read from interpolated quantiles of the resampled
+estimates, while the p-value counts the resamples at or beyond zero. When many
+resampled differences tie at zero, as they can with few recovery branches, the
+two disagreed: 25 draws of 0.0 and 975 of 0.1 gave an interval [0.0975, 0.1]
+excluding zero with p = 0.05. Each end of the interval is now an observed draw
+taken from the same tails as the p-value, so the interval excludes zero exactly
+when p < 0.05; on 200,000 tie-heavy draw sets the old rule disagreed 3 times
+and the new one never.
+
+The registered H1 rule reads "the confidence interval excludes zero". The
+analysis has applied a stricter rule since the power gate was added: a
+negative estimate, a Holm-adjusted p-value below 0.05 across the three planned
+contrasts, no failed resample, and a contrast still confirmatory after the
+power gate. The claims text and the working preregistration now state that
+rule; under the recorded power assessment no contrast is confirmatory, so it
+decides nothing in this study.
+
+The recorded power simulation shows the nominal 95% intervals covering the
+true effect about 93% of the time across the planning grid (as low as 89%),
+and 77–81% in the low-eligibility scenario; the results notebook says so next
+to the intervals. That simulation drew 999 resamples per dataset, against
+5,000 in the analysis, to keep it to about an hour; power estimated with fewer
+resamples is slightly noisier, not biased.
+
+A matrix cell is now a pressure and a policy only. Its track was always the
+development default in runner records and was never read by an estimator; the
+run record carries the track.

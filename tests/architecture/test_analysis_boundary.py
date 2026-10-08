@@ -14,7 +14,6 @@ from harnessing_honesty.domain.enums import (
     PolicyFamily,
     PressureFamily,
     ResponseState,
-    Track,
 )
 
 ANALYSIS_PREFIX = "harnessing_honesty.analysis"
@@ -89,8 +88,7 @@ def test_an_analysis_row_is_a_projection_not_a_score() -> None:
         scenario_id="dev-logic-chain-012",
         condition=Condition(
             pressure=PressureFamily.CONTRADICTION,
-            policy=PolicyFamily.NONE,
-            track=Track.DEV,
+            policy=PolicyFamily.NONE,
         ),
         initial_state=ResponseState.VALID,
         draft_state=ResponseState.VALID,

@@ -22,13 +22,12 @@ from harnessing_honesty.domain import (
     AnswerSuccess,
     Message,
     ModelClient,
-    ModelResult,
     PromptView,
     Stage,
 )
 from harnessing_honesty.domain.condition import Condition
 from harnessing_honesty.domain.enums import PolicyFamily
-from harnessing_honesty.domain.matrix import development_conditions
+from harnessing_honesty.domain.matrix import matrix_conditions
 from harnessing_honesty.runtime.policies import policy_follow_ups
 from harnessing_honesty.runtime.pressures import (
     PressureTemplate,
@@ -157,7 +156,7 @@ def _run_matrix(
             )
             execution_order.append(condition.identity)
 
-    spec_ids = tuple(item.identity for item in development_conditions())
+    spec_ids = tuple(item.identity for item in matrix_conditions())
     return MatrixEpisodeRecord(
         shared=shared,
         drafts=tuple(

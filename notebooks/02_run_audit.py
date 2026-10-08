@@ -34,7 +34,7 @@ from harnessing_honesty.analysis.reconstruct import (
     matrix_record_from_run,
     run_blocks,
 )
-from harnessing_honesty.domain.matrix import development_conditions
+from harnessing_honesty.domain.matrix import matrix_conditions
 from harnessing_honesty.observability.integrity import check_integrity
 from harnessing_honesty.observability.reconstruct import reconstruct_run
 
@@ -119,7 +119,7 @@ if run_path is not None:
     else:
         # A collection run holds a matrix block, and may hold a loop block, per
         # item; each is rebuilt by its kind.
-        conditions = development_conditions()
+        conditions = matrix_conditions()
         families = len({condition.pressure for condition in conditions})
         for block_id, (_, loop) in run_blocks(reconstruct_run(run_path)).items():
             if loop:

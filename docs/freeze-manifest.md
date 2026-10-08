@@ -72,7 +72,9 @@ is rebuilt with the changed serving configuration. The same day, the
 model-visible checker label became `external-check@1` for every item
 (instrument-amendment.md), which moves `report_hash`; reproduction binds it to
 the current rendering. Registering the served snapshots that day also moved
-the serving hash.
+the serving hash. On 7 October 2026 the claims text stated the Holm-adjusted
+decision rule and Orion's exclusion, which moves `claims_hash`; reproduction
+binds it to the current claims.
 
 ## Replacement-freeze procedure
 

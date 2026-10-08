@@ -11,7 +11,7 @@ from harnessing_honesty.domain.enums import (
 )
 from harnessing_honesty.domain.responses import BinaryAnswer
 from harnessing_honesty.domain.episodes import LoopEpisodeRecord, MatrixEpisodeRecord
-from harnessing_honesty.domain.matrix import development_conditions
+from harnessing_honesty.domain.matrix import matrix_conditions
 from harnessing_honesty.domain.results import (
     AnswerSuccess,
     ModelResult,
@@ -183,7 +183,7 @@ def score_matrix_episode(
     draft, so absent drafts and cells are filled from the registered matrix
     as ``MISSING``. A stored cell outside that matrix is an error.
     """
-    expected = development_conditions()
+    expected = matrix_conditions()
     finals = {branch.condition.identity: branch for branch in record.branches}
     unexpected = set(finals) - {condition.identity for condition in expected}
     if unexpected:
