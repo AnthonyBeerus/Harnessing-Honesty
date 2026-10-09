@@ -1,0 +1,96 @@
+"""From a finished collection to the report: the steps the README runs, as functions.
+
+The results notebook calls these so a demonstration needs no terminal. Each
+step writes its folder once and reuses it afterwards, so running a cell again
+never overwrites evidence; a folder left half-written is refused rather than
+completed silently.
+"""
+
+import json
+from collections.abc import Mapping
+from pathlib import Path
+
+from harnessing_honesty.analysis.bootstrap import Contrast
+from harnessing_honesty.analysis.collected import (
+    collection_loop_rows,
+    collection_reports,
+    collection_rows,
+)
+from harnessing_honesty.analysis.loops import loop_summary
+from harnessing_honesty.analysis.report import ResultsReport
+from harnessing_honesty.evaluation.collection import load_collection
+
+from scripts.compare_runs import compare
+from scripts.export_rows import export
+from scripts.item_attributes import item_attributes
+from scripts.report.__main__ import build_report
+from scripts.report.common import load
+
+RESULT_FILES = ("results.json", "matrix-rows.csv", "loop-rows.csv")
+
+
+def results_location(collection: Path) -> Path:
+    """Where a collection's results go: ``runs/results/<id>`` beside ``runs/<track>/<id>``."""
+    return collection.parents[1] / "results" / collection.name
+
+
+def results_folder(
+    collection: Path,
+    confirmatory: frozenset[Contrast],
+    reports: Mapping[str, ResultsReport] | None = None,
+    output: Path | None = None,
+) -> Path:
+    """The collection's CSVs and ``results.json``, written once.
+
+    ``reports`` are the per-SUT reports when the caller has them already;
+    otherwise they are computed as ``analysis.collected`` computes them.
+    """
+    output = output or results_location(collection)
+    present = [name for name in RESULT_FILES if (output / name).exists()]
+    if len(present) == len(RESULT_FILES):
+        return output
+    if present:
+        raise ValueError(f"{output} holds only {present}; remove it to write the results again")
+    spec, _ = load_collection(collection)
+    export(output, collection, collection_rows(collection), collection_loop_rows(collection),
+           item_attributes(spec.track))
+    if reports is None:
+        reports = collection_reports(collection, confirmatory)
+    payload = {
+        "collection": str(collection),
+        "confirmatory": sorted(contrast.value for contrast in confirmatory),
+        "reports": {card: report.model_dump(mode="json") for card, report in reports.items()},
+        "loops": {
+            card: [summary.model_dump(mode="json") for summary in loop_summary(rows)]
+            for card, rows in collection_loop_rows(collection).items()
+        },
+    }
+    with (output / "results.json").open("x", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+    return output
+
+
+def stability_comparison(first: Path, second: Path, output: Path) -> Path:
+    """Call agreement between two collections of the same selection, written once."""
+    if not output.exists():
+        with output.open("x", encoding="utf-8") as handle:
+            json.dump(compare([first, second]), handle, indent=2, default=str)
+    return output
+
+
+def draw_report(
+    results: Path,
+    collection: Path,
+    output: Path | None = None,
+    replicate: Path | None = None,
+    stability: Path | None = None,
+) -> Path:
+    """Every figure and table, written once into ``output`` (``<results>/report``)."""
+    output = output or results / "report"
+    if (output / "figures.md").exists():
+        return output
+    if output.exists() and any(output.iterdir()):
+        raise ValueError(f"{output} is incomplete; remove it to draw the report again")
+    data = load(results, collection, [replicate] if replicate else (), stability)
+    build_report(data, output)
+    return output

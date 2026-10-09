@@ -235,3 +235,31 @@ def test_a_collection_of_frozen_items_replays_its_bootstrap(tmp_path: Path) -> N
     }), encoding="utf-8")
 
     assert replay_draws(load(results, directory))
+
+
+def test_the_pipeline_writes_each_folder_once_and_reuses_it(tmp_path: Path) -> None:
+    from harnessing_honesty.compiler.pool import confirmatory_pool
+
+    from scripts.report.pipeline import draw_report, results_folder, results_location
+
+    items = tuple(item.item_id for item in confirmatory_pool())[:4]
+    spec = build_spec("piped", Track.DEV, PRIMARY_SERVING_CARDS[:1], items, scheduler_seed=0,
+                      kinds=STUDY_KINDS)
+    directory = start_collection(tmp_path / "runs", spec)
+    execute(directory, lambda serving: HashedAnswerClient(),
+            approved_calls=spec.planned_calls, clock=FakeClock())
+
+    results = results_folder(directory, frozenset())
+    report = draw_report(results, directory)
+
+    assert results == results_location(directory) == tmp_path / "runs" / "results" / "piped"
+    assert (report / "figures.md").exists() and (report / "4-2a_answer_change.png").exists()
+    stamp = (results / "results.json").stat().st_mtime_ns
+    # Running again reuses both folders and writes nothing.
+    assert results_folder(directory, frozenset()) == results
+    assert draw_report(results, directory) == report
+    assert (results / "results.json").stat().st_mtime_ns == stamp
+
+    (results / "results.json").unlink()
+    with pytest.raises(ValueError, match="holds only"):
+        results_folder(directory, frozenset())

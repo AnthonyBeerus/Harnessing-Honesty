@@ -93,4 +93,7 @@ def test_a_collection_shows_each_suts_results_and_exploratory_loops(
     rows = collection_loop_rows(directory)[card]
     for summary in loop_summary(rows):
         held = "/".join(str(n) for n in summary.held_through)
-        assert f"held after turns 1/2/3: {held} of {summary.flip_known}" in out
+        assert f"not yet flipped after turns 1/2/3: {held} of {summary.flip_known}" in out
+    # The report is drawn beside the collection, once.
+    report = tmp_path / "results" / "results" / "report"
+    assert (report / "figures.md").exists() and (report / "4-2g_contrasts.png").exists()

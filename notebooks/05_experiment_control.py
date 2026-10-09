@@ -55,6 +55,22 @@ directory = runs_root / TRACK.value / COLLECTION_ID
 print(f"Directory: {directory}")
 
 # %% [markdown]
+# ### Settings for the study
+# As it stands, the selection is an offline development collection of the
+# frozen items, for rehearsal with `CLIENT = "synthetic"`. The registered
+# collections change three lines above, and below set `APPROVED_CALLS = 4140`
+# and `CLIENT = "live"` (MAIN refuses any other client):
+#
+# | Collection | `COLLECTION_ID` | `TRACK` | `FREEZE_ID` |
+# |---|---|---|---|
+# | MAIN | `"main-2026-10-09"` | `Track.MAIN` | `"freeze-2026-10-07"` |
+# | Stability run, after MAIN completes | `"main-2026-10-09-repeat"` | `Track.MAIN` | `"freeze-2026-10-07"` |
+#
+# The stability run is declared before MAIN (`docs/research-design-decisions.md`,
+# 9 October 2026): the same selection under a new identifier, reported
+# separately and never pooled.
+
+# %% [markdown]
 # ## Plan, readiness and cost
 # What the selection would run, every reason it may not start, and the
 # expected cost from recorded runs only, with the assumptions the estimate
@@ -169,3 +185,16 @@ if not (REQUEST_STOP or RESUME or CLEAR_PAUSE_CARD or RELEASE_OWNER_PID):
 for sut in spec.suts:
     run_id = collection.sut_run_id(spec, sut.card)
     print(f"run_directory = {runs_root / TRACK.value / run_id}")
+
+# %% [markdown]
+# ## When the collection is complete
+# The status shows `complete: True`. The results notebook, `04_results.py`,
+# then reads it: set its `COLLECTION` to the directory printed below (and, once
+# the stability run is complete, `STABILITY_RUN` to that run's directory). It
+# rebuilds every SUT's results from the run files and draws the report's
+# figures and tables beside the collection. The same steps from a terminal are
+# in the README.
+
+# %%
+print(f"COLLECTION = root / {str(directory.relative_to(root))!r}"
+      if directory.is_relative_to(root) else f"COLLECTION = Path({str(directory)!r})")

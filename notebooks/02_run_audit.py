@@ -39,7 +39,9 @@ from harnessing_honesty.observability.integrity import check_integrity
 from harnessing_honesty.observability.reconstruct import reconstruct_run
 
 root = REPO_ROOT
+# For example Path("data/runs/main/main-2026-10-09/qualification.gpt4o.openai").
 run_directory = None  # Set an explicit Path relative to the repository root.
+SHOW_ATTEMPTS = 20  # attempts listed in full below; a MAIN run has about 1,380
 run_path = None if run_directory is None else root / run_directory
 attempts = issues = ()  # filled below once a run is selected
 if run_path is None:
@@ -78,11 +80,18 @@ if run_path is not None:
 # %% [markdown]
 # ## Lineage and retries
 # Each row is one attempt. Retries share a call; the parent is the call whose
-# request plus answer the new request extends.
+# request plus answer the new request extends. Attempts by stage and outcome
+# come first, then every retried call, then the first `SHOW_ATTEMPTS` rows.
 
 # %%
 if run_path is not None:
+    by_stage = Counter((a.stage, a.failure.value if a.failure else a.outcome) for a in attempts)
+    for (stage, result), count in sorted(by_stage.items(), key=lambda kv: (str(kv[0][0]), kv[0][1])):
+        print(f"{stage}: {result} x{count}")
     for a in attempts:
+        if a.attempt > 1:
+            print(f"retried: {a.call_id} #{a.attempt} {a.stage} {a.cell_identity}")
+    for a in attempts[:SHOW_ATTEMPTS]:
         result = a.failure.value if a.failure else a.outcome
         print(f"{a.call_id} #{a.attempt} {a.block_id} {a.stage} {a.cell_identity} "
               f"{result} parent={a.parent_call_id}")
@@ -91,10 +100,14 @@ if run_path is not None:
 # ## Serving evidence and hashes
 # Observed fields are `None` when the response did not state them. Request and
 # envelope hashes are those recorded at dispatch; integrity checks the files.
+# The distinct observed models, endpoints, snapshots and cache states come
+# first, then the first `SHOW_ATTEMPTS` attempts in full.
 
 # %%
 if run_path is not None:
-    for a in attempts:
+    for field in ("observed_model", "observed_endpoint", "observed_snapshot", "cache_status"):
+        print(f"{field}: {dict(Counter(getattr(a, field) for a in attempts))}")
+    for a in attempts[:SHOW_ATTEMPTS]:
         tokens = a.usage.model_dump() if a.usage else None
         print(f"{a.call_id} #{a.attempt}: {a.observed_model} via {a.observed_endpoint}; "
               f"snapshot {a.observed_snapshot}; cache {a.cache_status}; "

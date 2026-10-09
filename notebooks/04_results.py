@@ -21,8 +21,11 @@
 # stay separate.
 #
 # All results come from `harnessing_honesty.analysis.report`, which wires the
-# tested modules together; no statistic is computed in this notebook. Methods
-# and their sources are in
+# tested modules together; no statistic is computed in this notebook. For
+# collected data, the last section draws the report's figures and tables
+# (`scripts.report`), whose measures are defined in
+# [Measures and feature construction](../docs/measures.md). Methods and their
+# sources are in
 # [Sources for the methods](../docs/method-sources.md#scoring-inference-and-records).
 
 # %%
@@ -52,8 +55,10 @@ from harnessing_honesty.analysis.report import (
 
 root = REPO_ROOT
 power_record = root / DEFAULT_ASSESSMENT
-# A finished collection's directory, e.g. root / "data/runs/main/<id>".
+# A finished collection's directory, e.g. root / "data/runs/main/main-2026-10-09".
 COLLECTION: Path | None = None
+# The declared stability run, once finished, e.g. root / "data/runs/main/main-2026-10-09-repeat".
+STABILITY_RUN: Path | None = None
 
 if COLLECTION is None:
     rows = simulate_rows(SYNTHETIC_FIXTURE, np.random.default_rng(ANALYSIS_SEED))
@@ -61,6 +66,7 @@ if COLLECTION is None:
     print(f"SYNTHETIC fixture, seed {ANALYSIS_SEED}: {len(rows)} rows")
     print("True effects:", {c.value: value for c, value in truth.items()})
 else:
+    rows = ()  # collected rows are rebuilt per SUT from the run files below
     truth = {}
     print(f"Collected data: {COLLECTION}")
 
@@ -197,10 +203,11 @@ for card, report in reports.items():
 # policy runs as a fixed three-turn workflow on its own transcript:
 # contradiction, then authority, then citation, always in that order, so a
 # turn's pressure cannot be separated from its position or the history before
-# it. Among loops whose neutral answer was correct, each row
-# gives how many still held the correct answer after each turn, the mean Turn
-# of Flip (4 when a loop held throughout) and the mean Number of Flip [10],
-# each with the count it is computed over. Shown for collected data only.
+# it. Among loops whose neutral answer was correct, each row gives how many had
+# not yet flipped after each turn (survival, among loops whose first flip is
+# known), the mean Turn of Flip (a loop that held throughout is censored at 4)
+# and the mean Number of Flip [10], each with the count it is computed over.
+# Shown for collected data only.
 
 # %%
 if COLLECTION is None:
@@ -211,9 +218,53 @@ else:
         for item in loop_summary(loop_rows):
             held = "/".join(str(n) for n in item.held_through)
             print(f"{item.policy.value:<9} eligible {item.eligible} of {item.loops}; "
-                  f"held after turns 1/2/3: {held} of {item.flip_known}; "
+                  f"not yet flipped after turns 1/2/3: {held} of {item.flip_known}; "
                   f"Turn of Flip {show(item.mean_turn_of_flip)}; "
                   f"Number of Flip {show(item.mean_flips)} (n={item.flips_known})")
+
+# %% [markdown]
+# ## Report figures and tables
+# For collected data, the collection's rows and results are written once
+# beside it (`data/runs/results/<id>`), then every figure and table of the
+# report is drawn into its `report` folder, indexed by results section in
+# `figures.md` and `tables.md`; a second run of these cells reuses them. With
+# `STABILITY_RUN` set, the declared stability run's results and the call
+# agreement between the two runs are added. Six key figures are shown below;
+# every value they draw is defined in `docs/measures.md`, and every view beyond
+# the registered contrasts is descriptive.
+
+# %%
+KEY_FIGURES = (
+    "4-1b_draft_concession",   # how often a correct answer is abandoned
+    "4-2a_answer_change",      # what became of it under each policy
+    "4-2c_repair_and_harm",    # repair against harm, by policy
+    "4-2g_contrasts",          # the registered contrasts
+    "4-4a_usage_setting",      # single turn against multi-turn
+    "4-5b_missingness",        # whether a policy broke the format
+)
+report_dir = None
+if COLLECTION is None:
+    print("Figures are drawn for collected data; set COLLECTION.")
+else:
+    from IPython.display import Image, display
+
+    from scripts.report.pipeline import (
+        draw_report,
+        results_folder,
+        stability_comparison,
+    )
+
+    results_dir = results_folder(COLLECTION, confirmatory, reports)
+    replicate = agreement = None
+    if STABILITY_RUN is not None:
+        replicate = results_folder(STABILITY_RUN, confirmatory)
+        agreement = stability_comparison(COLLECTION, STABILITY_RUN,
+                                         results_dir / "stability.json")
+    report_dir = draw_report(results_dir, COLLECTION, replicate=replicate,
+                             stability=agreement)
+    print(f"Report: {report_dir} (index: figures.md, tables.md)")
+    for name in KEY_FIGURES:
+        display(Image(filename=str(report_dir / f"{name}.png")))
 
 # %% [markdown]
 # ## Reading the results
