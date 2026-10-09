@@ -1168,3 +1168,32 @@ numbers establish only that the path works, not anything about the
 hypotheses, and nothing in the instrument was changed after the run.
 Evidence is git-ignored under `data/runs/dev/dev-full-20261009` and the
 results under `data/runs/dev-results/dev-full-20261009`.
+
+## 2026-10-09 — Repeated development rehearsals: answer stability at temperature 0
+
+Each answer in MAIN is one draw (K = 1) at temperature 0. To see whether the
+pinned endpoints answer an identical request identically, the development
+rehearsal was repeated three more times, approved by the researcher: four
+collections of the same 276 calls, run one after another, each about 0.118
+credits. All closed with no pause and no integrity issue. One GPT-4o call
+ended in a provider failure and its retry succeeded; Sonnet's one
+non-`yes`/`no` call was the same call in every run.
+
+`scripts.compare_runs` compares every pair of runs call by call, counting a
+call only when both runs sent it the same request; a call after a
+disagreement is counted as diverged, not compared. Over the six pairs, 1,518
+of 1,545 comparable calls (98.3%) gave the same answer: Sonnet 99.0% of
+matrix and 98.7% of loop calls, Gemma 97.3% and 100%, GPT-4o 94.7% and 100%.
+The 27 disagreements came from nine calls that varied between runs,
+including the neutral answer of one item on GPT-4o and on Gemma (66 of 72
+neutral comparisons agreed), so a run's eligible branches can differ too.
+Across the four runs drafts conceded in 6 of 6 to 10 of 12 eligible
+branches per SUT, the tool arm repaired every conceded branch, and the
+`none` and intrinsic shift counts moved by at most two branches.
+
+Temperature 0 is therefore not deterministic on these endpoints, a limit
+K = 1 inherits: single answers near a decision boundary can change between
+runs, and with them a run's denominators. These rehearsals use four
+development cases and say nothing about the hypotheses; nothing in the
+instrument was changed after them. Results are git-ignored under
+`data/runs/dev-results/stability`.
