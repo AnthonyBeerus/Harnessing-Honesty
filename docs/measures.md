@@ -69,6 +69,7 @@ repeated runs show how stable eligibility is.
 | M13 | Answer agreement | call | the same answer to an identical request in two runs | calls whose requests were identical in both runs | no | 4-5e, table 4-5 agreement |
 | M14 | pass^k, pass@k | cell | final correct in every one, or any one, of k runs [[41]](references.md#anthropic2026evals) | final cells present in every run | no | 4-5g |
 | M15 | Cost of an additional repair | branch | (policy final credits − none final credits) ÷ (policy repairs − none repairs) | recovery branches with valid policy and none finals | no | 4-6b |
+| M16 | Net change in wrong finals | cell | c × (policy − none M1 in recovery) + (1 − c) × (policy − none M1 in maintenance), over concession share c; break-even where it is zero | valid finals of eligible cells, both populations | no, added after MAIN | 4-2h, table 4-2 break-even |
 
 M2 is the "sycophancy rate" of section 4.1; it is not the registered
 outcome, which is M1 on the finals. The planned contrasts (H1, H3) are

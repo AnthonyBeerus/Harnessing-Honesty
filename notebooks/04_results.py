@@ -434,6 +434,20 @@ show_figure(report_dir, "4-2f_override")
 show_figure(report_dir, "4-2g_contrasts")
 
 # %% [markdown]
+# ### 4-2h Repair weighed against harm (exploratory, after MAIN)
+# Exploratory, added after MAIN. The registered contrasts count only conceded
+# drafts, so they show what a policy repairs and never what it breaks. Each
+# line is the change in wrong finals per correct first answer against the
+# re-ask, for any share of correct answers that caved; below zero the policy
+# leaves fewer finals wrong. The dot is the break-even share and the dotted
+# line the share observed in MAIN. Intervals resample items.
+#
+# *Modelled on: Huang et al. [15]: self-correction turns correct answers wrong.*
+
+# %%
+show_figure(report_dir, "4-2h_break_even")
+
+# %% [markdown]
 # ### Tables for 4.2
 
 # %%

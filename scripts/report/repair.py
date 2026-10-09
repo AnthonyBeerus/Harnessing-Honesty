@@ -13,6 +13,7 @@ resamples items.
 """
 
 from collections import Counter, defaultdict
+from dataclasses import dataclass
 from itertools import product
 from pathlib import Path
 
@@ -21,6 +22,8 @@ import numpy as np
 from matplotlib.patches import Rectangle
 
 from scripts.report.common import (
+    BOOTSTRAP_RESAMPLES,
+    BOOTSTRAP_SEED,
     INK,
     MUTED,
     POLICIES,
@@ -402,6 +405,150 @@ def contrasts(data: ReportData, output: Path) -> list[Path]:
     return save(figure, output, "4-2g_contrasts")
 
 
+@dataclass(frozen=True)
+class NetEffect:
+    """A policy's change in wrong finals against the re-ask, in each population.
+
+    ``recovery`` and ``maintenance`` are the policy's share of wrong finals
+    minus the re-ask's, among conceded and among held drafts; ``concession``
+    is the share of correct first answers that caved (the re-ask arm's
+    valid finals). The draws resample whole items, both arms together.
+    """
+
+    recovery: float
+    maintenance: float
+    concession: float
+    recovery_draws: np.ndarray
+    maintenance_draws: np.ndarray
+
+    def at(self, concession: float | np.ndarray) -> float | np.ndarray:
+        """The change in wrong finals per correct first answer at a concession share."""
+        return concession * self.recovery + (1 - concession) * self.maintenance
+
+    def break_even(self) -> float | None:
+        """The concession share above which the policy leaves fewer finals wrong."""
+        return _break_even(self.recovery, self.maintenance)
+
+    def break_even_interval(self) -> tuple[float, float] | None:
+        found = [_break_even(r, m) for r, m in zip(self.recovery_draws, self.maintenance_draws)]
+        values = [value for value in found if value is not None]
+        if len(values) < len(found) / 2:
+            return None
+        low, high = np.percentile(values, [2.5, 97.5])
+        return float(low), float(high)
+
+
+def _break_even(recovery: float, maintenance: float) -> float | None:
+    """0 when the policy never adds a wrong final, 1 when it never removes one."""
+    if np.isnan(recovery) or np.isnan(maintenance):
+        return None
+    if maintenance <= 0 and recovery <= 0:
+        return 0.0
+    if recovery >= 0 and maintenance >= 0:
+        return 1.0
+    if recovery > 0:
+        return None
+    return maintenance / (maintenance - recovery)
+
+
+def net_effects(rows: Rows) -> dict[str, dict[str, NetEffect]]:
+    """Per model, each harness policy against the re-ask, both populations at once.
+
+    Exploratory, added after MAIN: the registered contrasts use recovery
+    alone, so they show a policy's repairs and never the held answers it
+    breaks. Every interval resamples whole items, the same items for both
+    arms and both populations.
+    """
+    rates = repair_harm(rows)
+    found: dict[str, dict[str, NetEffect]] = defaultdict(dict)
+    for card in ordered(rates):
+        base = rates[card]["none"]
+        for policy in ("intrinsic", "tool"):
+            arms = rates[card][policy]
+            # (item, wrong) per arm: a conceded draft left wrong, a held one broken.
+            units = ([(i, not hit) for i, hit in arms["repair"]],
+                     [(i, not hit) for i, hit in base["repair"]],
+                     arms["harm"], base["harm"])
+            if not all(units):
+                continue
+            items = sorted({item for arm in units for item, _ in arm})
+            index = {item: k for k, item in enumerate(items)}
+            counts = np.zeros((len(items), 4, 2))
+            for column, arm in enumerate(units):
+                for item, wrong in arm:
+                    counts[index[item], column] += (wrong, 1)
+            draws = np.random.default_rng(BOOTSTRAP_SEED).integers(
+                len(items), size=(BOOTSTRAP_RESAMPLES, len(items)))
+            sampled = counts[draws].sum(axis=1)
+            with np.errstate(invalid="ignore", divide="ignore"):
+                rate = sampled[..., 0] / sampled[..., 1]
+            total = counts.sum(axis=0)
+            point = total[:, 0] / total[:, 1]
+            found[card][policy] = NetEffect(
+                float(point[0] - point[1]), float(point[2] - point[3]),
+                total[1, 1] / (total[1, 1] + total[3, 1]),
+                rate[:, 0] - rate[:, 1], rate[:, 2] - rate[:, 3])
+    return found
+
+
+def break_even(data: ReportData, output: Path) -> list[Path]:
+    """Change in wrong finals against the re-ask across every concession share."""
+    effects = net_effects(data.rows)
+    cards = ordered(effects)
+    figure, axes = panels(max(len(cards), 1), height=3.2)
+    shares = np.linspace(0, 1, 101)
+    labelled: set[str] = set()
+    for axis, card in zip(axes, cards):
+        axis.axhline(0, color=MUTED, linewidth=0.8)
+        for policy, effect in effects[card].items():
+            colour = POLICY_COLOUR[policy]
+            lines = np.outer(effect.recovery_draws, shares) + np.outer(
+                effect.maintenance_draws, 1 - shares)
+            low, high = np.nanpercentile(lines, [2.5, 97.5], axis=0)
+            axis.fill_between(shares, low, high, color=colour, alpha=0.18, linewidth=0)
+            axis.plot(shares, effect.at(shares), color=colour, linewidth=2,
+                      label=None if policy in labelled else POLICY_LABEL[policy])
+            labelled.add(policy)
+            point = effect.break_even()
+            if point is not None and 0 < point < 1:
+                axis.plot(point, 0, "o", color=colour, markeredgecolor="white", zorder=4)
+        concession = next(iter(effects[card].values())).concession
+        axis.axvline(concession, color=INK, linewidth=0.8, linestyle=":")
+        axis.text(concession, 0.97, f" observed\n concession {concession:.0%}",
+                  transform=axis.get_xaxis_transform(), fontsize=7, va="top", color=INK)
+        axis.set_xlim(0, 1)
+        axis.set_ylim(-1.05, 1.05)
+        axis.set_title(model_name(card))
+        axis.set_xlabel("Share of correct first answers that caved")
+    if not cards:
+        empty(axes[0], "No model has both populations under the re-ask and a policy")
+    axes[0].set_ylabel("Change in wrong finals per correct\n"
+                       "first answer vs re-ask (negative: fewer)")
+    if labelled:
+        figure.legend(loc="outside lower center", ncols=2, fontsize=8)
+    title(figure, "Exploratory, added after MAIN: repair weighed against harm, "
+                  "95% intervals over items (dot: break-even)")
+    return save(figure, output, "4-2h_break_even")
+
+
+def break_even_table(data: ReportData) -> Table:
+    header = ["Model", "Policy", "Wrong finals vs re-ask: conceded drafts",
+              "Wrong finals vs re-ask: held drafts", "Observed concession",
+              "Net change at observed concession", "Break-even concession (95% interval)"]
+    body = []
+    effects = net_effects(data.rows)
+    for card in ordered(effects):
+        for policy, effect in effects[card].items():
+            point, interval = effect.break_even(), effect.break_even_interval()
+            text = "–" if point is None else f"{point:.2f}"
+            if point is not None and interval is not None:
+                text += f" [{interval[0]:.2f}, {interval[1]:.2f}]"
+            body.append([model_name(card), POLICY_LABEL[policy], f"{effect.recovery:+.3f}",
+                         f"{effect.maintenance:+.3f}", f"{effect.concession:.0%}",
+                         f"{effect.at(effect.concession):+.3f}", text])
+    return header, body
+
+
 def shift_table(data: ReportData) -> Table:
     """Regressive-shift rate per model, population and policy, with its scenarios."""
     header = ["Model", "Population", "Policy", "Shifted / valid finals", "Missing finals",
@@ -459,6 +606,8 @@ FIGURES = (
                override),
     FigureSpec("4-2g_contrasts", "Planned contrasts with 95% intervals",
                "Sharma et al. [1, Fig. 5]", contrasts),
+    FigureSpec("4-2h_break_even", "Repair weighed against harm (exploratory, after MAIN)",
+               "Huang et al. [15]: self-correction turns correct answers wrong", break_even),
 )
 TABLES = (
     TableSpec("4-2_shift", "Regressive shift by policy, with the missing-final scenarios",
@@ -466,4 +615,6 @@ TABLES = (
     TableSpec("4-2_repair", "Repair and harm by policy, each in its own population",
               repair_table),
     TableSpec("4-2_contrasts", "Planned contrasts, recovery population", contrast_table),
+    TableSpec("4-2_break_even", "Repair weighed against harm (exploratory, after MAIN)",
+              break_even_table),
 )

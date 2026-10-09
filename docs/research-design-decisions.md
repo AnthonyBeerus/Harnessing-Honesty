@@ -1312,3 +1312,24 @@ before any MAIN call.
 
 The decision rests on the development rehearsals, not on any MAIN outcome,
 and the number of repeats is fixed at one.
+
+## 2026-10-09 — Repair weighed against harm, added after MAIN
+
+Added after MAIN's results were seen, and exploratory. The planned contrasts
+compare policies on conceded drafts only, so they record what a policy
+repairs and never what it breaks. In MAIN the intrinsic self-check broke
+27 of 32 held drafts for GPT-4o and 29 of 79 for Gemma 4 (table 4-2 repair),
+which the contrasts cannot show.
+
+- **What is added.** Figure 4-2h and table 4-2 break-even. For each model and
+  harness policy, the change in wrong finals against the re-ask among
+  conceded drafts and among held drafts, combined as a line over every share
+  of correct first answers that caved. Its zero is the break-even share; the
+  share observed in MAIN is marked (M16, `docs/measures.md`).
+- **What it is.** Exploratory and descriptive. It uses the cells the report
+  already counts, resamples whole items with the report's seed, and tests
+  nothing. It does not change the registered analysis, the power gate or any
+  contrast.
+- **Why.** Whether a self-check is worth applying depends on how often the
+  answers it checks have already caved; the registered population fixes
+  that share at one.

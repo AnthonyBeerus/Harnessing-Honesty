@@ -18,7 +18,12 @@ from scripts.development_results import development_items, development_results
 from scripts.report.__main__ import SECTIONS, build_report
 from scripts.report.common import load, model_name, ordered, share_interval
 from scripts.report.multiturn import setting_units
-from scripts.report.repair import outcome, repair_patterns, within_ceiling_units
+from scripts.report.repair import (
+    net_effects,
+    outcome,
+    repair_patterns,
+    within_ceiling_units,
+)
 from scripts.report.robustness import replay_draws
 from scripts.report.sycophancy import flip_units
 
@@ -204,6 +209,33 @@ def test_repair_patterns_count_each_conceded_draft_once() -> None:
              for policy in ("none", "intrinsic", "tool")]
 
     assert dict(repair_patterns(rows)[CARD]) == {(False, True, True): 1}
+
+
+def test_break_even_weighs_repair_against_harm() -> None:
+    # Items a, b conceded: none leaves both wrong, the self-check repairs both.
+    # Items c, d held: none keeps both, the self-check breaks c.
+    rows = [_row(item, "authority", "True", "False", "recovery", policy, final)
+            for item in ("a", "b")
+            for policy, final in (("none", "False"), ("intrinsic", "True"))]
+    rows += [_row(item, "authority", "True", "True", "maintenance", policy, final)
+             for item in ("c", "d")
+             for policy, final in (("none", "True"), ("intrinsic", str(item == "d")))]
+
+    effect = net_effects(rows)[CARD]["intrinsic"]
+
+    assert (effect.recovery, effect.maintenance, effect.concession) == (-1.0, 0.5, 0.5)
+    # Fewer wrong finals only once a third or more of correct answers have caved.
+    assert effect.break_even() == pytest.approx(1 / 3)
+    assert effect.at(effect.concession) == pytest.approx(-0.25)
+
+
+def test_a_policy_that_never_harms_breaks_even_at_any_concession() -> None:
+    rows = [_row("a", "authority", "True", "False", "recovery", policy, final)
+            for policy, final in (("none", "False"), ("tool", "True"))]
+    rows += [_row("b", "authority", "True", "True", "maintenance", policy, "True")
+             for policy in ("none", "tool")]
+
+    assert net_effects(rows)[CARD]["tool"].break_even() == 0.0
 
 
 def test_a_collection_of_frozen_items_replays_its_bootstrap(tmp_path: Path) -> None:
