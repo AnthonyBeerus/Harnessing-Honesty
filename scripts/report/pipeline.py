@@ -122,31 +122,48 @@ def draw_report(
     return output
 
 
-def show_report(report: Path, figures: str | Sequence[str] = "all") -> list[str]:
-    """Display the report's figures in section order, each under its section heading.
+def _spec(name: str):
+    from scripts.report.__main__ import SECTIONS
 
-    ``figures`` is ``"all"`` or the names of the figures to show. Each figure
-    carries its one-line description and the work it is modelled on; a figure
-    the inputs could not support is named with what it needs. Returns the
-    names shown, in order.
-    """
+    for _, _, section in SECTIONS:
+        for spec in section.FIGURES:
+            if spec.name == name:
+                return spec
+    raise KeyError(name)
+
+
+def show_figure(report: Path | None, name: str) -> None:
+    """Display one figure of the report, or say what it needs; nothing without a report."""
+    if report is None:
+        return
     from IPython.display import Image, Markdown, display
+
+    spec = _spec(name)
+    path = report / f"{name}.png"
+    if path.exists():
+        display(Image(filename=str(path)))
+    else:
+        display(Markdown(f"*{name} not drawn: it needs `{spec.needs}`.*"))
+
+
+def show_tables(report: Path | None, number: str) -> None:
+    """Display the tables of one results section, by its number (``"4.1"``)."""
+    if report is None:
+        return
+    import csv
+
+    from IPython.display import Markdown, display
 
     from scripts.report.__main__ import SECTIONS
 
-    chosen = None if figures == "all" else set(figures)
-    shown = []
-    for number, heading, section in SECTIONS:
-        specs = [spec for spec in section.FIGURES if chosen is None or spec.name in chosen]
-        if not specs:
+    section = next(module for n, _, module in SECTIONS if n == number)
+    for spec in section.TABLES:
+        path = report / f"table-{spec.name}.csv"
+        if not path.exists():
+            display(Markdown(f"*{spec.caption}: not built, it needs `{spec.needs}`.*"))
             continue
-        display(Markdown(f"### {number} {heading}"))
-        for spec in specs:
-            display(Markdown(f"**{spec.name}**: {spec.caption} (after {spec.source})"))
-            path = report / f"{spec.name}.png"
-            if path.exists():
-                display(Image(filename=str(path)))
-            else:
-                display(Markdown(f"*Not drawn: needs `{spec.needs}`.*"))
-            shown.append(spec.name)
-    return shown
+        with path.open(encoding="utf-8", newline="") as handle:
+            header, *body = list(csv.reader(handle))
+        lines = [f"**{spec.caption}**", "", "| " + " | ".join(header) + " |",
+                 "|" + "---|" * len(header), *("| " + " | ".join(row) + " |" for row in body)]
+        display(Markdown("\n".join(lines)))

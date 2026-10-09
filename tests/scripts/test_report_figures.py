@@ -265,27 +265,43 @@ def test_the_pipeline_writes_each_folder_once_and_reuses_it(tmp_path: Path) -> N
         results_folder(directory, frozenset())
 
 
-def test_show_report_walks_the_sections_in_order(tmp_path: Path, monkeypatch) -> None:
+def test_show_figure_and_tables_display_one_figure_or_section(
+    tmp_path: Path, monkeypatch
+) -> None:
     import IPython.display
 
-    from scripts.report.pipeline import show_report
+    from scripts.report.pipeline import show_figure, show_tables
 
     report = tmp_path / "report"
     report.mkdir()
     (report / "4-2a_answer_change.png").write_bytes(b"")
+    (report / "table-4-3_pressure.csv").write_text("Model,Pressure\nGPT-4o,authority\n",
+                                                    encoding="utf-8")
     shown: list[object] = []
     monkeypatch.setattr(IPython.display, "display", shown.append)
     monkeypatch.setattr(IPython.display, "Image", lambda filename: ("image", filename))
 
-    every = show_report(report)
-    names = [spec.name for _, _, section in SECTIONS for spec in section.FIGURES]
-    assert every == names  # every figure, in report order
+    show_figure(report, "4-2a_answer_change")
+    show_figure(report, "4-5e_answer_agreement")
+    show_tables(report, "4.3")
+    show_figure(None, "4-2a_answer_change")  # no report: nothing shown
 
-    shown.clear()
-    key = show_report(report, ("4-5e_answer_agreement", "4-2a_answer_change"))
-    # Section order, not the order asked for; one heading per section shown.
-    assert key == ["4-2a_answer_change", "4-5e_answer_agreement"]
     texts = [getattr(item, "data", item) for item in shown]
-    assert sum(1 for t in texts if isinstance(t, str) and t.startswith("### ")) == 2
-    assert ("image", str(report / "4-2a_answer_change.png")) in texts
-    assert any(isinstance(t, str) and "Not drawn" in t and "--stability" in t for t in texts)
+    assert texts[0] == ("image", str(report / "4-2a_answer_change.png"))
+    assert "not drawn" in texts[1] and "--stability" in texts[1]
+    assert "| GPT-4o | authority |" in texts[2]
+    assert "not built" in texts[3]  # the second 4.3 table is absent
+    assert len(texts) == 4
+
+
+@pytest.mark.parametrize("notebook", ["04_results.py", "06_development_rehearsal.py"])
+def test_the_notebooks_show_every_figure_in_report_order(notebook: str) -> None:
+    import re
+
+    source = (Path(__file__).resolve().parents[2] / "notebooks" / notebook).read_text(
+        encoding="utf-8")
+    shown = re.findall(r'show_figure\(report_dir, "([^"]+)"\)', source)
+    tables = re.findall(r'show_tables\(report_dir, "([^"]+)"\)', source)
+
+    assert shown == [spec.name for _, _, section in SECTIONS for spec in section.FIGURES]
+    assert tables == [number for number, _, section in SECTIONS if section.TABLES]
