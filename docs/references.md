@@ -348,3 +348,19 @@ The archived registration retains its original references.
 <a id="he2026spae"></a>
 
 [121] Y. He et al., “Suppressing pressure, amplifying evidence: self-guided attention steering to mitigate sycophancy and stubbornness,” arXiv preprint arXiv:2610.04329, 2026. Version 1, 2026-10-03. doi: [10.48550/arXiv.2610.04329](https://doi.org/10.48550/arXiv.2610.04329). [Source](https://arxiv.org/abs/2610.04329v1).
+
+<a id="bean2025constructvalidity"></a>
+
+[122] A. M. Bean et al., “Measuring what matters: construct validity in large language model benchmarks,” in *Proc. Adv. Neural Inf. Process. Syst. (NeurIPS), Datasets and Benchmarks Track*, 2025, sec. 3. arXiv:2511.04703. [Source](https://arxiv.org/abs/2511.04703).
+
+<a id="jacobs2021measurement"></a>
+
+[123] A. Z. Jacobs and H. Wallach, “Measurement and fairness,” in *Proc. ACM Conf. Fairness, Accountability, and Transparency (FAccT)*, 2021. arXiv:1912.05511. [Source](https://arxiv.org/abs/1912.05511).
+
+<a id="gebru2021datasheets"></a>
+
+[124] T. Gebru et al., “Datasheets for datasets,” *Commun. ACM*, vol. 64, no. 12, pp. 86–92, 2021. arXiv:1803.09010. [Source](https://arxiv.org/abs/1803.09010).
+
+<a id="miller2024errorbars"></a>
+
+[125] E. Miller, “Adding error bars to evals: a statistical approach to language model evaluations,” arXiv preprint arXiv:2411.00640, 2024. Version 1, 2024-11-01, secs. 2.2 and 4.2. [Source](https://arxiv.org/abs/2411.00640v1).

@@ -13,19 +13,23 @@ describe four cases: they check the path, not the hypotheses.
 
 import argparse
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from harnessing_honesty.analysis.bootstrap import N_RESAMPLES
 from harnessing_honesty.analysis.loops import loop_rows_from_run, loop_summary
 from harnessing_honesty.analysis.reconstruct import rows_from_run
 from harnessing_honesty.analysis.report import results_report
 from harnessing_honesty.domain.enums import TaskFamily, TaskStratum, Track
+from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.domain.scenario import AnswerKey
 from harnessing_honesty.evaluation.collection import load_collection, sut_run_id
 from harnessing_honesty.evaluation.fixtures.scenarios import checked_development_blocks
 
 from scripts.export_rows import export
+from scripts.item_attributes import item_attributes
 
 _STRATUM = {
     TaskFamily.SYSTEMS: TaskStratum.DOCUMENT_GROUNDED,
@@ -64,8 +68,11 @@ def development_results(
     items, families = development_items()
     runs = directory.parents[1] / spec.track.value
     run_dirs = {sut.card: runs / sut_run_id(spec, sut.card) for sut in spec.suts}
-    matrix = {card: rows_from_run(run, items) for card, run in run_dirs.items()}
-    loops = {card: loop_rows_from_run(run, items) for card, run in run_dirs.items()}
+    # The row builders read only each item's answer key and stratum, which a
+    # DevelopmentItem carries; their annotation names the frozen item type.
+    keyed = cast(Mapping[str, InstrumentItem], items)
+    matrix = {card: rows_from_run(run, keyed) for card, run in run_dirs.items()}
+    loops = {card: loop_rows_from_run(run, keyed) for card, run in run_dirs.items()}
     payload = {
         "collection": str(directory),
         "confirmatory": [],
@@ -83,7 +90,7 @@ def development_results(
     output.mkdir(parents=True, exist_ok=True)
     with (output / "results.json").open("x", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2)
-    export(output, matrix, loops, families)
+    export(output, directory, matrix, loops, item_attributes(Track.DEV))
     return payload
 
 

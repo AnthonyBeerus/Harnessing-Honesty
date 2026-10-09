@@ -1197,3 +1197,118 @@ runs, and with them a run's denominators. These rehearsals use four
 development cases and say nothing about the hypotheses; nothing in the
 instrument was changed after them. Results are git-ignored under
 `data/runs/dev-results/stability`.
+
+## 2026-10-09 — Report figures and tables, fixed before MAIN
+
+The report's figures and tables are chosen now, before any MAIN outcome, and
+drawn by `scripts.report` from the exported rows and the recorded events. The
+registered contrasts come from the analysis unchanged; every other quantity
+is a descriptive measure constructed in `scripts/`, defined in
+`docs/measures.md` (M1 to M15) and tested by nothing. Fixing the set before
+MAIN, not where the code sits, is what stops a figure being chosen for what
+it shows; anything added after the outcomes will be labelled post hoc.
+
+The set follows the sections of the results. 4.1 Sycophancy: neutral
+accuracy by task family; draft concession (M2) per model on each model's own
+correct items and on the items every model got right [1, Sec. 3.2, Fig. 2;
+74, Fig. 2]; flips from a correct and from a wrong first answer, the second a
+control in which the pressure repeats the model's own answer (M3) [119];
+concession by task family [2, Fig. 6], with a table by family, model and
+usage setting [2, Tables 2-3]; which items break which models; agreement on
+fragile items; and concession by the direction of the corpus key. 4.2
+Harness repair: what became of every correct first answer [15, Fig. 1; 74,
+Fig. 9] and the same as a flow; repair (M4) and harm (M5) by policy, each in
+its own population; which policies repaired the same conceded draft; the
+drafts the report repaired that the self-check also repaired (M6); override
+(M7); and the planned contrasts [1, Fig. 5]. 4.3 Task structure and
+pressure: H3 as an interaction plot and pressure by policy as a heatmap, with
+the two descriptive tables declared in the amendment. 4.4 Multi-turn,
+exploratory: the same contradiction in the matrix draft and turn 1 of the
+`none` loop on items both neutral draws answered correctly (M8) [74, Sec.
+4.3, Figs. 5-6]; survival without a flip (M9) beside correctness per turn
+(M10); the distribution of Turn of Flip, censored at 4 (M11) [10]; and
+flip-flopping (M12). 4.5 Robustness: every sensitivity analysis; missing
+answers by call group in their own units; the secondary odds ratios; the
+bootstrap distributions, replayed with the recorded seed and refused unless
+they reproduce the reported intervals; answer agreement between runs (M13)
+[10, Table 6]; estimates across runs; pass^k and pass@k (M14) [41]; retries;
+neutral re-draw agreement; invalid answers that end in yes or no, disclosed
+and never rescored; and the balance of dispatch positions. 4.6 Harness cost:
+tokens and credits per final call, and the cost of an additional repair over
+the re-ask control (M15).
+
+Every bar carries its counts and a 95% interval from resampling items, the
+units answers depend on [125, Sec. 2.2]; the `none` arm is labelled a re-ask
+control. Colours were validated for colour-vision deficiency. All of it was
+checked on the development rehearsals, whose values say nothing about the
+hypotheses.
+
+## 2026-10-09 — Measures reviewed before MAIN
+
+An independent review of the exported features and the report's measures,
+against construct-validity practice for LLM benchmarks [122, Sec. 3] and
+measurement modelling [123], found the registered scoring sound and the
+descriptive layer in need of correction. Changed before MAIN, all outside
+the frozen code:
+
+- The accuracy change under pressure mixed items first answered correctly
+  with items first answered wrongly, on which the "false" pressure repeats
+  the model's own answer; it could show no effect where every correct answer
+  was abandoned. It is replaced by flips from each starting answer (M2, M3),
+  and its source is Sharma et al.'s "Are you sure?" challenge [1, Sec. 3.2],
+  not their single-turn biasing prompt.
+- The loop draws its own neutral answer, which disagreed with the matrix
+  neutral on 2 of 48 model-item pairs in the rehearsals. It is exported, its
+  agreement is tabulated, and settings are compared only on items both draws
+  answered correctly.
+- The loop curve labelled "still correct" plotted survival without a first
+  flip; both are now drawn and labelled.
+- `regressive_shift` was written `False` for ineligible rows, which made the
+  column's mean understate the outcome by a quarter to a third; it is now
+  empty outside the primary populations, and `valid` is renamed
+  `initial_and_final_valid`.
+- The answer key was read back from the finals; it now comes from the corpus
+  record, with the counter-answer and archetype.
+- The net effect pooled recovery with maintenance and is dropped; the ratio
+  "share of the ceiling" becomes a paired share (M6); the cost per repair
+  becomes the cost of an additional repair over the re-ask control (M15).
+- Every bar has an interval from resampling items, or says it has one item.
+- The export adds each draft's and loop turn's answer, raw text and attempts,
+  each final's attempts and failure, dispatch positions, the loop's neutral
+  state and the number of models answering each item correctly.
+
+Features considered and not added, because they vary too little or would
+invite stories after the fact: output length, serving metadata as
+covariates, prompt length as a predictor of shift, per-archetype contrasts
+and pressure effects within the fixed-order loop.
+
+## 2026-10-09 — A stability run of MAIN, declared before MAIN
+
+Every MAIN answer is one draw (K = 1) at temperature 0, and the four
+development rehearsals showed that identical requests do not always get the
+same answer: 98.3% of comparable calls agreed, and one neutral answer per
+model changed between runs on GPT-4o and Gemma, which moves a run's
+eligible branches (entries above). To measure how much this matters for the
+registered estimates, a second, identical MAIN collection is declared now,
+before any MAIN call.
+
+- **What runs.** After MAIN completes, a second collection with the same
+  specification except its identifier: the same freeze
+  (`freeze-2026-10-07`), the same 60 items, three serving cards, scheduler
+  seed and block kinds, so every block and order seed is the same and the
+  requests are identical until an answer differs. 4,140 calls.
+- **What it is.** Exploratory and reported separately. It is never pooled
+  with MAIN, never replaces it and cannot change the registered result:
+  the primary analysis, the power gate and every contrast are those of the
+  first MAIN collection.
+- **What is reported.** Answer agreement on identical requests (M13,
+  figure 4-5e and its table); each planned contrast's estimate and interval
+  from both runs side by side (4-5f); the share of final cells answered
+  correctly in both runs and in either (pass^k and pass@k, M14, 4-5g); and
+  each run's eligible counts. Nothing is tested.
+- **If it cannot finish.** If credits or time end before it completes, the
+  completed part is reported as such, with its counts; a partial run is not
+  extended or rerun to change what it shows.
+
+The decision rests on the development rehearsals, not on any MAIN outcome,
+and the number of repeats is fixed at one.

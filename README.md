@@ -24,7 +24,15 @@ python -m harnessing_honesty.cli collection-launch --id demo --first 2 --client 
 python -m harnessing_honesty.cli collection-status --id demo
 ```
 
-The plan prints the selection, readiness and expected cost; the launch runs two items on the three models with an offline synthetic client, so nothing is sent to a provider. The run's files appear under `data/runs/dev/demo/`. When it is complete, `python -m harnessing_honesty.analysis.collected data/runs/dev/demo --output demo-results.json` writes each model's report, and `python -m scripts.export_rows data/runs/dev/demo --output demo-rows` writes its matrix and loop rows as CSV.
+The plan prints the selection, readiness and expected cost; the launch runs two items on the three models with an offline synthetic client, so nothing is sent to a provider. The run's files appear under `data/runs/dev/demo/`. When it is complete, three commands give the results:
+
+```bash
+python -m scripts.export_rows data/runs/dev/demo --output demo-results
+python -m harnessing_honesty.analysis.collected data/runs/dev/demo --output demo-results/results.json
+python -m scripts.report demo-results --output demo-report --collection data/runs/dev/demo
+```
+
+The first writes the matrix and loop rows as CSV, the second each model's report beside them, and the third the report's figures and tables by results section, indexed in `demo-report/figures.md` (`--replicate` and `--stability` add the views that need repeated runs). [docs/measures.md](docs/measures.md) defines every measure and column.
 
 Design choices are recorded in [docs/research-design-decisions.md](docs/research-design-decisions.md) as they become concrete in code.
 

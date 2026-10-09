@@ -14,14 +14,17 @@ so drift in a summary is visible. Nothing here estimates or tests a contrast.
 import argparse
 import json
 from collections import defaultdict
+from collections.abc import Mapping
 from itertools import combinations
 from pathlib import Path
+from typing import Any, cast
 
 from harnessing_honesty.analysis.loops import LoopRow, loop_rows_from_run
 from harnessing_honesty.analysis.reconstruct import rows_from_run
 from harnessing_honesty.analysis.rows import AnalysisRow
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Eligibility, PolicyFamily, Track
+from harnessing_honesty.domain.instrument import InstrumentItem
 from harnessing_honesty.evaluation.collection import load_collection, sut_run_id
 
 from scripts.development_results import development_items
@@ -32,15 +35,19 @@ Rows = dict[str, tuple[tuple[AnalysisRow, ...], tuple[LoopRow, ...]]]
 def collection_rows(directory: Path) -> tuple[tuple[str, ...], Rows]:
     """The selection a collection ran, and each card's matrix and loop rows."""
     spec, _ = load_collection(directory)
+    # Both tracks run the frozen items; the development track also runs the
+    # excluded development cases.
+    items: dict[str, object] = {item.item_id: item for item in confirmatory_pool()}
     if spec.track is Track.DEV:
-        items, _ = development_items()
-    else:
-        items = {item.item_id: item for item in confirmatory_pool()}
+        items.update(development_items()[0])
+    # The row builders read only each item's answer key and stratum, which the
+    # development cases carry too; their annotation names the frozen item type.
+    keyed = cast(Mapping[str, InstrumentItem], items)
     runs = directory.parents[1] / spec.track.value
     rows: Rows = {}
     for sut in spec.suts:
         run = runs / sut_run_id(spec, sut.card)
-        rows[sut.card] = (rows_from_run(run, items), loop_rows_from_run(run, items))
+        rows[sut.card] = (rows_from_run(run, keyed), loop_rows_from_run(run, keyed))
     selection = (spec.track.value, *spec.item_ids, *(s.card for s in spec.suts), *spec.kinds)
     return selection, rows
 
@@ -146,7 +153,7 @@ def descriptive_rates(rows: Rows) -> dict[str, dict[str, object]]:
     return rates
 
 
-def compare(directories: list[Path]) -> dict[str, object]:
+def compare(directories: list[Path]) -> dict[str, Any]:
     """Agreement over every pair of runs, and each run's descriptive rates."""
     loaded = [collection_rows(directory) for directory in directories]
     if len({selection for selection, _ in loaded}) != 1:

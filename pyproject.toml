@@ -17,10 +17,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=9,<10", "z3-solver>=4.13,<5", "harnessing_honesty[analysis]"]
+dev = ["pytest>=9,<10", "z3-solver>=4.13,<5", "harnessing_honesty[analysis,figures]"]
 oracles = ["z3-solver>=4.13,<5"]
 # Exact pin: estimator defaults and the Laplace approximation are version-specific.
 analysis = ["gpboost==1.7.4", "numpy>=2,<3", "scipy>=1.11,<2"]
+# Report figures only; nothing on the request or estimation path imports it.
+figures = ["matplotlib>=3.9,<4"]
 notebooks = [
   "harnessing_honesty[analysis]",
   "jupyterlab>=4,<5",
