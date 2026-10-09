@@ -61,9 +61,12 @@ for rehearsal in REHEARSALS:
 # Each rehearsal's rows and results are written once beside it
 # (`data/runs/dev-results/<id>`); the first rehearsal's report is drawn with the
 # others as repeats, so the stability figures compare every pair of runs.
-# Running the cells again reuses what was written.
+# Running the cells again reuses what was written. The figures are shown in
+# section order under their section headings: `SHOW = "key"` gives five key
+# figures, `SHOW = "all"` every figure.
 
 # %%
+SHOW = "key"  # "key" for the five below, "all" for every figure
 KEY_FIGURES = (
     "4-1b_draft_concession",   # how often a correct answer is abandoned
     "4-2a_answer_change",      # what became of it under each policy
@@ -73,11 +76,10 @@ KEY_FIGURES = (
 )
 report_dir = None
 if REHEARSALS:
-    from IPython.display import Image, display
-
     from scripts.report.pipeline import (
         development_results_folder,
         draw_report,
+        show_report,
         stability_comparison,
     )
 
@@ -88,9 +90,4 @@ if REHEARSALS:
     report_dir = draw_report(results[0], REHEARSALS[0], replicates=results[1:],
                              stability=agreement)
     print(f"Report: {report_dir} (index: figures.md, tables.md)")
-    for name in KEY_FIGURES:
-        figure = report_dir / f"{name}.png"
-        if figure.exists():
-            display(Image(filename=str(figure)))
-        else:
-            print(f"{name}: not drawn (it needs at least two rehearsals)")
+    show_report(report_dir, "all" if SHOW == "all" else KEY_FIGURES)

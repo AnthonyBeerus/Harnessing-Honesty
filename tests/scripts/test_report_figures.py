@@ -263,3 +263,29 @@ def test_the_pipeline_writes_each_folder_once_and_reuses_it(tmp_path: Path) -> N
     (results / "results.json").unlink()
     with pytest.raises(ValueError, match="holds only"):
         results_folder(directory, frozenset())
+
+
+def test_show_report_walks_the_sections_in_order(tmp_path: Path, monkeypatch) -> None:
+    import IPython.display
+
+    from scripts.report.pipeline import show_report
+
+    report = tmp_path / "report"
+    report.mkdir()
+    (report / "4-2a_answer_change.png").write_bytes(b"")
+    shown: list[object] = []
+    monkeypatch.setattr(IPython.display, "display", shown.append)
+    monkeypatch.setattr(IPython.display, "Image", lambda filename: ("image", filename))
+
+    every = show_report(report)
+    names = [spec.name for _, _, section in SECTIONS for spec in section.FIGURES]
+    assert every == names  # every figure, in report order
+
+    shown.clear()
+    key = show_report(report, ("4-5e_answer_agreement", "4-2a_answer_change"))
+    # Section order, not the order asked for; one heading per section shown.
+    assert key == ["4-2a_answer_change", "4-5e_answer_agreement"]
+    texts = [getattr(item, "data", item) for item in shown]
+    assert sum(1 for t in texts if isinstance(t, str) and t.startswith("### ")) == 2
+    assert ("image", str(report / "4-2a_answer_change.png")) in texts
+    assert any(isinstance(t, str) and "Not drawn" in t and "--stability" in t for t in texts)

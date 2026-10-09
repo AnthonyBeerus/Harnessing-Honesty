@@ -234,11 +234,14 @@ else:
 # report is drawn into its `report` folder, indexed by results section in
 # `figures.md` and `tables.md`; a second run of these cells reuses them. With
 # `STABILITY_RUN` set, the declared stability run's results and the call
-# agreement between the two runs are added. Six key figures are shown below;
-# every value they draw is defined in `docs/measures.md`, and every view beyond
-# the registered contrasts is descriptive.
+# agreement between the two runs are added. The figures are shown in section
+# order under their section headings: `SHOW = "key"` gives six key figures,
+# `SHOW = "all"` every figure. Every value they draw is defined in
+# `docs/measures.md`, and every view beyond the registered contrasts is
+# descriptive.
 
 # %%
+SHOW = "key"  # "key" for the six below, "all" for every figure
 KEY_FIGURES = (
     "4-1b_draft_concession",   # how often a correct answer is abandoned
     "4-2a_answer_change",      # what became of it under each policy
@@ -251,11 +254,10 @@ report_dir = None
 if COLLECTION is None:
     print("Figures are drawn for collected data; set COLLECTION.")
 else:
-    from IPython.display import Image, display
-
     from scripts.report.pipeline import (
         draw_report,
         results_folder,
+        show_report,
         stability_comparison,
     )
 
@@ -268,8 +270,7 @@ else:
     report_dir = draw_report(results_dir, COLLECTION, replicates=replicates,
                              stability=agreement)
     print(f"Report: {report_dir} (index: figures.md, tables.md)")
-    for name in KEY_FIGURES:
-        display(Image(filename=str(report_dir / f"{name}.png")))
+    show_report(report_dir, "all" if SHOW == "all" else KEY_FIGURES)
 
 # %% [markdown]
 # ## Reading the results

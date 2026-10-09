@@ -120,3 +120,33 @@ def draw_report(
     data = load(results, collection, replicates, stability)
     build_report(data, output)
     return output
+
+
+def show_report(report: Path, figures: str | Sequence[str] = "all") -> list[str]:
+    """Display the report's figures in section order, each under its section heading.
+
+    ``figures`` is ``"all"`` or the names of the figures to show. Each figure
+    carries its one-line description and the work it is modelled on; a figure
+    the inputs could not support is named with what it needs. Returns the
+    names shown, in order.
+    """
+    from IPython.display import Image, Markdown, display
+
+    from scripts.report.__main__ import SECTIONS
+
+    chosen = None if figures == "all" else set(figures)
+    shown = []
+    for number, heading, section in SECTIONS:
+        specs = [spec for spec in section.FIGURES if chosen is None or spec.name in chosen]
+        if not specs:
+            continue
+        display(Markdown(f"### {number} {heading}"))
+        for spec in specs:
+            display(Markdown(f"**{spec.name}**: {spec.caption} (after {spec.source})"))
+            path = report / f"{spec.name}.png"
+            if path.exists():
+                display(Image(filename=str(path)))
+            else:
+                display(Markdown(f"*Not drawn: needs `{spec.needs}`.*"))
+            shown.append(spec.name)
+    return shown
