@@ -1,11 +1,16 @@
 """The CSV export holds exactly the rows the analysis rebuilds."""
 
 import csv
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from harnessing_honesty.analysis.collected import collection_loop_rows, collection_rows
+from harnessing_honesty.analysis.collected import (
+    collection_loop_rows,
+    collection_rows,
+    item_families,
+)
 from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
 from harnessing_honesty.compiler.pool import confirmatory_pool
 from harnessing_honesty.domain.enums import Track
@@ -50,7 +55,9 @@ def _read(path: Path) -> list[dict[str, str]]:
 def test_every_matrix_cell_is_one_csv_row(collection: Path, tmp_path: Path) -> None:
     path = tmp_path / "matrix-rows.csv"
 
-    count = write_csv(path, MATRIX_COLUMNS, matrix_records(collection))
+    count = write_csv(
+        path, MATRIX_COLUMNS, matrix_records(collection_rows(collection), item_families())
+    )
 
     written = _read(path)
     rows = [row for card_rows in collection_rows(collection).values() for row in card_rows]
@@ -69,7 +76,9 @@ def test_every_matrix_cell_is_one_csv_row(collection: Path, tmp_path: Path) -> N
 def test_every_policy_loop_is_one_csv_row(collection: Path, tmp_path: Path) -> None:
     path = tmp_path / "loop-rows.csv"
 
-    count = write_csv(path, LOOP_COLUMNS, loop_records(collection))
+    count = write_csv(
+        path, LOOP_COLUMNS, loop_records(collection_loop_rows(collection), item_families())
+    )
 
     written = _read(path)
     rows = [row for card_rows in collection_loop_rows(collection).values() for row in card_rows]
@@ -85,15 +94,21 @@ def test_an_existing_file_is_not_overwritten(collection: Path, tmp_path: Path) -
     path.write_text("kept", encoding="utf-8")
 
     with pytest.raises(FileExistsError):
-        write_csv(path, MATRIX_COLUMNS, matrix_records(collection))
+        write_csv(
+            path, MATRIX_COLUMNS, matrix_records(collection_rows(collection), item_families())
+        )
 
     assert path.read_text(encoding="utf-8") == "kept"
 
 
-def test_an_unreadable_collection_leaves_no_file(tmp_path: Path) -> None:
+def test_rows_that_fail_partway_leave_no_file(tmp_path: Path) -> None:
     path = tmp_path / "matrix-rows.csv"
 
-    with pytest.raises(FileNotFoundError):
-        write_csv(path, MATRIX_COLUMNS, matrix_records(tmp_path / "absent"))
+    def failing() -> Iterator[dict[str, object]]:
+        yield {"card": "first"}
+        raise ValueError("unreadable run")
+
+    with pytest.raises(ValueError, match="unreadable run"):
+        write_csv(path, MATRIX_COLUMNS, failing())
 
     assert not path.exists()

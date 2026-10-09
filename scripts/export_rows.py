@@ -4,12 +4,14 @@
 ``matrix-rows.csv``, one row per matrix cell, and ``loop-rows.csv``, one row
 per policy loop, for every SUT. They are the rows the analysis rebuilds from
 the run directories; nothing is estimated here, so the files cannot disagree
-with the reported results. Unknown values are empty cells.
+with the reported results. Unknown values are empty cells. The record
+functions take rows from any source, so a development collection is written
+by the same code (``scripts.development_results``).
 """
 
 import argparse
 import csv
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from enum import Enum
 from pathlib import Path
 
@@ -18,6 +20,9 @@ from harnessing_honesty.analysis.collected import (
     collection_rows,
     item_families,
 )
+from harnessing_honesty.analysis.loops import LoopRow
+from harnessing_honesty.analysis.rows import AnalysisRow
+from harnessing_honesty.domain.enums import TaskFamily
 
 MATRIX_COLUMNS = (
     "card", "run_id", "item_id", "family", "stratum", "pressure", "policy",
@@ -41,10 +46,12 @@ def _cell(value: object) -> object:
     return value.value if isinstance(value, Enum) else value
 
 
-def matrix_records(directory: Path) -> Iterator[dict[str, object]]:
+def matrix_records(
+    rows_by_card: Mapping[str, Iterable[AnalysisRow]],
+    families: Mapping[str, TaskFamily],
+) -> Iterator[dict[str, object]]:
     """One record per matrix cell of every SUT, in recorded order."""
-    families = item_families()
-    for card, rows in collection_rows(directory).items():
+    for card, rows in rows_by_card.items():
         for row in rows:
             yield {
                 "card": card,
@@ -70,10 +77,12 @@ def matrix_records(directory: Path) -> Iterator[dict[str, object]]:
             }
 
 
-def loop_records(directory: Path) -> Iterator[dict[str, object]]:
+def loop_records(
+    rows_by_card: Mapping[str, Iterable[LoopRow]],
+    families: Mapping[str, TaskFamily],
+) -> Iterator[dict[str, object]]:
     """One record per policy loop of every SUT; a turn not reached is empty."""
-    families = item_families()
-    for card, rows in collection_loop_rows(directory).items():
+    for card, rows in rows_by_card.items():
         for row in rows:
             record: dict[str, object] = {
                 "card": card,
@@ -109,17 +118,33 @@ def write_csv(
     return len(cells)
 
 
+def export(
+    output: Path,
+    matrix_rows: Mapping[str, Iterable[AnalysisRow]],
+    loop_rows: Mapping[str, Iterable[LoopRow]],
+    families: Mapping[str, TaskFamily],
+) -> tuple[int, int]:
+    """Write both files into ``output``; return their row counts."""
+    output.mkdir(parents=True, exist_ok=True)
+    matrix = write_csv(
+        output / "matrix-rows.csv", MATRIX_COLUMNS, matrix_records(matrix_rows, families)
+    )
+    loops = write_csv(
+        output / "loop-rows.csv", LOOP_COLUMNS, loop_records(loop_rows, families)
+    )
+    return matrix, loops
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("directory", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
-    args.output.mkdir(parents=True, exist_ok=True)
-    matrix = write_csv(
-        args.output / "matrix-rows.csv", MATRIX_COLUMNS, matrix_records(args.directory)
-    )
-    loops = write_csv(
-        args.output / "loop-rows.csv", LOOP_COLUMNS, loop_records(args.directory)
+    matrix, loops = export(
+        args.output,
+        collection_rows(args.directory),
+        collection_loop_rows(args.directory),
+        item_families(),
     )
     print(f"wrote {matrix} matrix rows and {loops} loop rows to {args.output}")
 

@@ -1136,3 +1136,35 @@ conversation length [120]; three scripted turns describe a short horizon,
 not durability. Distinguishing pressure-following from warranted updating
 needs conditions where the user is right [121]; every pressure here is false,
 so the study measures yielding, not overcorrection.
+
+## 2026-10-09 — Full development rehearsal before MAIN
+
+The development runs of 7 October were matrix blocks only, one item on one
+SUT each, so neither the loop blocks nor a collection interleaving all three
+SUTs had sent a live request. Approved by the researcher, the four excluded
+development cases ran on the three primary SUTs as one collection of matrix
+and loop blocks: 276 planned calls, launched from the CLI under the frozen
+code. All 24 blocks completed in about seven minutes with no pause, no
+indeterminate attempt and no provider or protocol failure. Every run closed
+with no integrity issue, and every answer carries its provider evidence.
+Every response came from the pinned endpoint and registered snapshot, with
+zero reasoning tokens, no pipeline stage and no cache status. Recorded cost
+was 0.118 credits against an estimate of 0.110.
+
+One Sonnet call, the second turn of a tool loop, answered twice with a
+written check of the report instead of `yes` or `no`; after its one parse
+retry it is an invalid turn, the loop's third turn is not sent, and both
+loop measures are unknown, as registered.
+
+The results path then ran on this collection (`scripts.development_results`):
+the same row reconstruction, per-SUT report, loop summary and CSV export MAIN
+uses, with the excluded cases' keys in place of the frozen pool. It rebuilt
+108 matrix rows and 36 loop rows, 36 and 12 per SUT, and produced every
+report section. No contrast was confirmed, since the power gate keeps none
+confirmatory. With one item per family the family-stratified bootstrap draws
+the same item every time, so each interval is a single point; the secondary
+mixed logit reported separation rather than an estimate. The answers and
+numbers establish only that the path works, not anything about the
+hypotheses, and nothing in the instrument was changed after the run.
+Evidence is git-ignored under `data/runs/dev/dev-full-20261009` and the
+results under `data/runs/dev-results/dev-full-20261009`.
