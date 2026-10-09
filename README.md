@@ -24,7 +24,7 @@ python -m harnessing_honesty.cli collection-launch --id demo --first 2 --client 
 python -m harnessing_honesty.cli collection-status --id demo
 ```
 
-The plan prints the selection, readiness and expected cost; the launch runs two items on the three models with an offline synthetic client, so nothing is sent to a provider. The run's files appear under `data/runs/dev/demo/`.
+The plan prints the selection, readiness and expected cost; the launch runs two items on the three models with an offline synthetic client, so nothing is sent to a provider. The run's files appear under `data/runs/dev/demo/`. When it is complete, `python -m harnessing_honesty.analysis.collected data/runs/dev/demo --output demo-results.json` writes each model's report, and `python -m scripts.export_rows data/runs/dev/demo --output demo-rows` writes its matrix and loop rows as CSV.
 
 Design choices are recorded in [docs/research-design-decisions.md](docs/research-design-decisions.md) as they become concrete in code.
 
