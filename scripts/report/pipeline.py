@@ -7,7 +7,7 @@ completed silently.
 """
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from harnessing_honesty.analysis.bootstrap import Contrast
@@ -70,11 +70,34 @@ def results_folder(
     return output
 
 
-def stability_comparison(first: Path, second: Path, output: Path) -> Path:
-    """Call agreement between two collections of the same selection, written once."""
+def stability_comparison(collections: Sequence[Path], output: Path) -> Path:
+    """Call agreement between collections of the same selection, written once."""
     if not output.exists():
         with output.open("x", encoding="utf-8") as handle:
-            json.dump(compare([first, second]), handle, indent=2, default=str)
+            json.dump(compare(list(collections)), handle, indent=2, default=str)
+    return output
+
+
+def development_location(collection: Path) -> Path:
+    """Where a development rehearsal's results go: ``runs/dev-results/<id>``."""
+    return collection.parents[1] / "dev-results" / collection.name
+
+
+def development_results_folder(collection: Path, output: Path | None = None) -> Path:
+    """A rehearsal of the excluded development cases: its CSVs and results, written once.
+
+    Scored against the development cases' keys by ``scripts.development_results``,
+    since the registered analysis reads only the frozen items.
+    """
+    from scripts.development_results import development_results
+
+    output = output or development_location(collection)
+    present = [name for name in RESULT_FILES if (output / name).exists()]
+    if len(present) == len(RESULT_FILES):
+        return output
+    if present:
+        raise ValueError(f"{output} holds only {present}; remove it to write the results again")
+    development_results(collection, output)
     return output
 
 
@@ -82,15 +105,18 @@ def draw_report(
     results: Path,
     collection: Path,
     output: Path | None = None,
-    replicate: Path | None = None,
+    replicates: Sequence[Path] = (),
     stability: Path | None = None,
 ) -> Path:
-    """Every figure and table, written once into ``output`` (``<results>/report``)."""
+    """Every figure and table, written once into ``output`` (``<results>/report``).
+
+    ``replicates`` are the results folders of repeated runs of the same selection.
+    """
     output = output or results / "report"
     if (output / "figures.md").exists():
         return output
     if output.exists() and any(output.iterdir()):
         raise ValueError(f"{output} is incomplete; remove it to draw the report again")
-    data = load(results, collection, [replicate] if replicate else (), stability)
+    data = load(results, collection, replicates, stability)
     build_report(data, output)
     return output

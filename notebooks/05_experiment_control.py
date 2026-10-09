@@ -65,6 +65,11 @@ print(f"Directory: {directory}")
 # |---|---|---|---|
 # | MAIN | `"main-2026-10-09"` | `Track.MAIN` | `"freeze-2026-10-07"` |
 # | Stability run, after MAIN completes | `"main-2026-10-09-repeat"` | `Track.MAIN` | `"freeze-2026-10-07"` |
+# | Development rehearsal | `"dev-full-<date>"` | `Track.DEV` | `None` |
+#
+# For a development rehearsal, also set `ITEM_IDS` to the four excluded cases,
+# `("dev-exclude-001", "dev-exclude-002", "dev-exclude-003", "dev-exclude-004")`,
+# and `APPROVED_CALLS = 276`; it is read in `06_development_rehearsal.py`.
 #
 # The stability run is declared before MAIN (`docs/research-design-decisions.md`,
 # 9 October 2026): the same selection under a new identifier, reported

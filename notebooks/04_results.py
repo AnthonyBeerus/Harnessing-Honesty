@@ -29,6 +29,7 @@
 # [Sources for the methods](../docs/method-sources.md#scoring-inference-and-records).
 
 # %%
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -54,6 +55,10 @@ from harnessing_honesty.analysis.report import (
 )
 
 root = REPO_ROOT
+# The report scripts live in the repository, not in the installed package, and
+# a kernel may start in notebooks/, so the repository root goes on the path.
+if str(root) not in sys.path:
+    sys.path.insert(0, str(root))
 power_record = root / DEFAULT_ASSESSMENT
 # A finished collection's directory, e.g. root / "data/runs/main/main-2026-10-09".
 COLLECTION: Path | None = None
@@ -255,12 +260,12 @@ else:
     )
 
     results_dir = results_folder(COLLECTION, confirmatory, reports)
-    replicate = agreement = None
+    replicates, agreement = [], None
     if STABILITY_RUN is not None:
-        replicate = results_folder(STABILITY_RUN, confirmatory)
-        agreement = stability_comparison(COLLECTION, STABILITY_RUN,
+        replicates = [results_folder(STABILITY_RUN, confirmatory)]
+        agreement = stability_comparison([COLLECTION, STABILITY_RUN],
                                          results_dir / "stability.json")
-    report_dir = draw_report(results_dir, COLLECTION, replicate=replicate,
+    report_dir = draw_report(results_dir, COLLECTION, replicates=replicates,
                              stability=agreement)
     print(f"Report: {report_dir} (index: figures.md, tables.md)")
     for name in KEY_FIGURES:

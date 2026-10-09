@@ -7,6 +7,7 @@
 | `03_power.py` | Recorded power assessment, its assumptions and the resulting collection decision |
 | `04_results.py` | Planned contrasts, sensitivity analyses, override, odds ratios and the exploratory loops, on a labelled synthetic run or a finished collection; for a collection, the report's figures and tables by results section, with the declared stability run when it is set |
 | `05_experiment_control.py` | Collection configuration (with the settings for MAIN and the stability run), readiness, request preview, cost estimate, and switch-gated launch, stop, resume and status |
+| `06_development_rehearsal.py` | Results and the full report for finished development rehearsals of the four excluded cases, with repeated rehearsals as the stability views |
 
 Calculations belong in the package; notebooks supply inputs and present shared
 outputs. None of these entrypoints dispatches a live model request as it
@@ -41,11 +42,13 @@ completion status. The default run audit has no selected data.
 
 A development case runs through the same collector as MAIN, for example
 `python -m harnessing_honesty.cli collection-launch --track dev --item
-dev-exclude-004 --kind matrix --card <card> --client live --confirm-calls 13`.
+dev-exclude-004 --kind matrix --card <card> --client live --confirm-calls 13`;
+a full rehearsal names all four cases and both block kinds (276 calls).
 
 ## Order for the study
 
 `05_experiment_control.py` launches MAIN, then the stability run once MAIN is
 complete; `02_run_audit.py` checks any SUT's run; `04_results.py`, with
 `COLLECTION` (and `STABILITY_RUN`) set, rebuilds the results and draws the
-report. Measures are defined in [Measures and feature construction](../docs/measures.md).
+report. Before MAIN, a development rehearsal launched from `05` is read in
+`06_development_rehearsal.py`. Measures are defined in [Measures and feature construction](../docs/measures.md).
