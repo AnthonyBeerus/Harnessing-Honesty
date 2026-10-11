@@ -659,3 +659,8 @@ show_tables(report_dir, "4.6")
 # prevention [98, Claims limits]. The tool policy is a labelled external
 # ceiling: a large tool effect shows the harness can supply the fix, not that
 # the model verifies on its own.
+#
+# Exploratory checks added after MAIN, on independent items (SycoBench-600,
+# PARROT, counterbalanced multi-turn loops) and an independent verifier on
+# MAIN's own drafts, are in `07_transfer_checks.py`. They are never pooled
+# with these results.

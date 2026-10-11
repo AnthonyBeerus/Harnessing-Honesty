@@ -3,3 +3,6 @@ docs/baseline/2026-09-03/osf/* -text whitespace=blank-at-eol,blank-at-eof,space-
 
 # Keep corpus byte hashes stable across Windows and Unix checkouts.
 data/corpus/** text eol=lf
+
+# Third-party data is pinned by the hash of its exact bytes; never convert it.
+data/external/** -text

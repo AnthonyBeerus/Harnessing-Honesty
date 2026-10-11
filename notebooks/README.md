@@ -8,6 +8,7 @@
 | `04_results.py` | Planned contrasts, sensitivity analyses, override, odds ratios and the exploratory loops, on a labelled synthetic run or a finished collection; for a collection, the report's figures and tables by results section, with the declared stability run when it is set |
 | `05_experiment_control.py` | Collection configuration (with the settings for MAIN and the stability run), readiness, request preview, cost estimate, and switch-gated launch, stop, resume and status |
 | `06_development_rehearsal.py` | Results and the full report for finished development rehearsals of the four excluded cases, with repeated rehearsals as the stability views |
+| `07_transfer_checks.py` | Exploratory checks added after MAIN: SycoBench-600 and PARROT transfer, counterbalanced multi-turn loops, and an independent verifier on MAIN's drafts, read from finished records |
 
 Calculations belong in the package; notebooks supply inputs and present shared
 outputs. None of these entrypoints dispatches a live model request as it
