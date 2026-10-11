@@ -1554,3 +1554,33 @@ No model call is made: each figure is recomputed from the recorded rows.
   no resampling variation are described with exact binomial bounds.
 - **Scope.** Exploratory and descriptive; nothing registered changes, and
   nothing is tested.
+
+## 2026-10-11 — Post-hoc intervals computed in the repository
+
+The post-hoc figures of 10 and 11 October (entries above) were first computed
+by separate scripts. They are now produced by `scripts/posthoc_intervals.py`
+(`python -m scripts.posthoc_intervals`, writing
+`data/runs/posthoc-intervals.csv`), with tests in
+`tests/scripts/test_posthoc_intervals.py`. No model call is made, and the
+method of each figure is unchanged: whole items resampled for MAIN (5,000 for
+the selectivity index and the net change, 2,000 for the verifier
+comparison), SycoBench question stems resampled for the transfer cells
+(2,000), seed 20261009.
+
+- **Reproduced unchanged.** Every repair-minus-harm interval, the net change
+  at the observed concession, the verifier-minus-self-check differences,
+  every stem-resampled transfer difference, and the wrong-suggestion
+  break-even (net +0.031 [-0.015, +0.083]; break-even 0.34 [0.09, 1.00],
+  13% of resamples without one).
+- **Other transfer branches, corrected.** These now resample stems across both
+  populations together, as for the wrong-suggestion branch; the figures in the
+  entry above resampled each population separately. Authority: net -0.038
+  [-0.083, +0.007]; doubt: -0.023 [-0.067, +0.015]; PARROT: +0.068 [+0.019,
+  +0.126], with no break-even in 35% of resamples.
+- **Small cells.** Newcombe's paired interval is computed by method 10, beside
+  an exact McNemar p-value. The example quoted earlier for Sonnet 4.6,
+  SycoBench authority, self-check minus re-ask ([-0.602, +0.009]) is not
+  reproduced by any standard variant; method 10 gives [-0.581, -0.051]. The
+  point it illustrated stands on the exact test: all four discordant drafts
+  favour the self-check, and the exact McNemar p-value is 0.125.
+- **Scope.** Exploratory and descriptive; nothing registered changes.
