@@ -3,7 +3,9 @@
 Every figure draws from saved records only (no request is sent) and is
 labelled exploratory: the transfer runs and the independent verifier were
 added after MAIN (docs/research-design-decisions.md, 2026-10-10 entries).
-Intervals resample whole items.
+Intervals resample whole items, not SycoBench's shared question stems; a
+stem-resampled table differs from them by at most 0.07. T4 draws an interval
+only where at least ten drafts are compared.
 
     python -m scripts.transfer_figures
 """
@@ -38,6 +40,7 @@ SYSTEMS = [Path(card).stem.replace("qualification.", "") for card in CARDS]
 NAMES = {"sonnet.anthropic": "Sonnet 4.6", "gpt4o.openai": "GPT-4o", "gemma4.deepinfra": "Gemma 4"}
 POLICY_COLOUR = {**POLICY_COLOUR, "verifier": "#8a5cc9"}
 POLICY_LABEL = {**POLICY_LABEL, "verifier": "Independent verifier"}
+MIN_DRAFTS_FOR_INTERVAL = 10  # fewer drafts give n only, as in the write-up's transfer table
 CONDITIONS = (  # (label, instrument, pressure); MAIN pools its three pressures
     ("MAIN", "main", None),
     ("SycoBench\nsuggestion", "sycobench", "wrong_suggestion"),
@@ -96,7 +99,8 @@ def concession(output: Path) -> list[Path]:
         axis.set_title(NAMES[system])
         share_axis(axis, 1.15)
     axes[0].set_ylabel("Correct first answers abandoned\nunder one pressure")
-    title(figure, "Exploratory: concession on MAIN (grey) and on independent items (blue), 95% intervals over items")
+    title(figure, "Exploratory: concession on MAIN (grey) and on SycoBench and PARROT items (blue)\n"
+                  "95% intervals resample items")
     return save(figure, output, "T1_concession")
 
 
@@ -122,7 +126,8 @@ def repair_and_harm(output: Path) -> list[Path]:
     grid[0][0].set_ylabel("Repair: conceded drafts corrected")
     grid[1][0].set_ylabel("Harm: held drafts broken")
     figure.legend(loc="outside lower center", ncols=3, fontsize=8)
-    title(figure, "Exploratory: repair and harm by policy on MAIN and on independent items, 95% intervals over items")
+    title(figure, "Exploratory: repair and harm by policy on MAIN and on SycoBench and PARROT items\n"
+                  "95% intervals resample items")
     return save(figure, output, "T2_repair_and_harm")
 
 
@@ -179,7 +184,8 @@ def contrasts(output: Path) -> list[Path]:
                 if estimate is None:
                     continue
                 offset = -0.17 if k == 0 else 0.17
-                axis.hlines(y + offset, low, high, color=POLICY_COLOUR[policy], linewidth=1.6)
+                if n >= MIN_DRAFTS_FOR_INTERVAL:
+                    axis.hlines(y + offset, low, high, color=POLICY_COLOUR[policy], linewidth=1.6)
                 axis.plot(estimate, y + offset, "o" if k == 0 else "s", color=POLICY_COLOUR[policy],
                           markersize=4, markerfacecolor="white" if k == 1 else POLICY_COLOUR[policy])
         axis.set_yticks(range(len(rows)), [f"{r[0]}: {POLICY_LABEL[r[3]]}" for r in rows], fontsize=6.5)
@@ -187,7 +193,8 @@ def contrasts(output: Path) -> list[Path]:
         axis.set_xlim(-1.05, 1.05)
         axis.set_title(NAMES[system])
         axis.set_xlabel("Policy minus re-ask in wrong finals\n(filled: conceded drafts; open: held drafts)")
-    title(figure, "Exploratory: policy effects against the re-ask across instruments, paired by draft, 95% intervals over items")
+    title(figure, "Exploratory: policy effects against the re-ask across instruments, paired by draft\n"
+                  f"95% intervals resample items, drawn where at least {MIN_DRAFTS_FOR_INTERVAL} drafts")
     return save(figure, output, "T4_policy_effects")
 
 
@@ -209,7 +216,8 @@ def loops(output: Path) -> list[Path]:
                          label=POLICY_LABEL[policy] if column == 0 else None)
         top.set_xticks(range(4), ["Start", "Turn 1", "Turn 2", "Turn 3"])
         share_axis(top, 1.05)
-        top.set_title(NAMES[system])
+        n_loops = sum(r["policy"] == "none" for r in rows)
+        top.set_title(f"{NAMES[system]} ({n_loops} loops per policy)")
         by = first_flips_by_position([r for r in rows if r["policy"] == "none"])
         matrix = np.array([[np.mean(by[(k, t)]) if by[(k, t)] else np.nan for t in (1, 2, 3)]
                            for k in ("doubt", "authority", "wrong")])
