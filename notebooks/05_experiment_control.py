@@ -15,7 +15,7 @@
 # This notebook operates collection through the functions the CLI uses; its
 # cells hold selections and show results, never a procedure of their own
 # (docs/architecture-boundaries.md, "Notebook operation"). Opening or running
-# it as it stands dispatches nothing and writes nothing: every action below is
+# it as it stands dispatches nothing: every collection action below is
 # off until its switch is set. A worker process, not this kernel, runs a
 # collection, so a lost kernel does not stop it, and reopening the notebook
 # reconnects by collection id. Bluesky likewise separates interactive control
@@ -33,6 +33,27 @@ from harnessing_honesty.evaluation.live import RUNS_ROOT
 
 root = REPO_ROOT
 runs_root = RUNS_ROOT
+
+# %% [markdown]
+# ## Architecture and experimental boundaries
+# The offline diagram shows the implemented workflow, its provider boundary,
+# and the separation between public prompts and private scoring keys. MAIN's
+# report is a deterministic ceiling; external four-option reports only exclude
+# the proposed option. These interventions do not test autonomous tool use.
+# The comparisons in `docs/architecture-boundaries.md` describe design patterns,
+# not measured performance of competing frameworks.
+
+# %%
+from IPython.display import Image, display
+from scripts.harness_architecture_figure import build as architecture_diagram
+from scripts.message_branch_figure import build as message_diagram
+from tempfile import TemporaryDirectory
+
+with TemporaryDirectory(prefix='harness-architecture-') as diagram_directory:
+    architecture_paths = architecture_diagram(Path(diagram_directory))
+    display(Image(filename=str(architecture_paths[0])))
+    conversation_paths = message_diagram(Path(diagram_directory))
+    display(Image(filename=str(conversation_paths[0])))
 
 # %% [markdown]
 # ## Configuration

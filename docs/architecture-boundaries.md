@@ -103,6 +103,33 @@ collection resumable and a finished one auditable.
 The CLI (`cli.py`) and the notebooks sit outside the packages as driving
 adapters.
 
+## What this experiment retains and removes
+
+The architecture figure can be rebuilt offline with
+`python -m scripts.harness_architecture_figure`. It depicts MAIN's fixed
+workflow, not the exploratory four-option adapters or fresh-verifier protocol.
+
+Anthropic's public distinction between predefined workflows and model-directed
+agents places this design on the workflow side
+[[108]](references.md#anthropic2024agents). The treatment varies context and
+finalisation after a shared draft. It does not vary autonomous planning, tool
+selection, retrieval, memory or external action. Those omissions keep the
+intervention identifiable, while limiting claims about production agents.
+
+| Reference architecture | Retained here | Deliberate divergence | Evidential limit |
+|---|---|---|---|
+| Anthropic augmented LLM / evaluator–optimizer [108] | Model calls, explicit context and feedback | Fixed branch schedule; prevalidated report; one final call | No evidence about autonomous tool choice or iterative convergence |
+| Pydantic AI 1.107.1 [43] | `Agent` as provider adapter; typed configuration and result boundaries | Plain-text output, no registered function tools; experiment runner controls policy and retries | Using an SDK is not an SDK-performance comparison |
+| Inspect datasets / solvers / scorers [118] | Items, runner, separate exact-key scorer and transcripts | Local event reconstruction and private-key contracts, rather than Inspect execution | Structural comparison only; Inspect was not an experimental arm |
+| Anthropic evaluation harness [41] | Task/trial separation, recorded attempts, graders and outcomes | Controlled binary instrument; oracle verdict is declared treatment information | A binary ceiling is not an estimate of realistic tool reliability |
+
+The contribution is the controlled comparison and auditable evidence path,
+rather than a new general-purpose agent framework. The four-option transfer
+report rejects one named option; it leaves three alternatives and therefore
+does not inherit MAIN's binary ceiling. The fresh-verifier substudy separately
+changes context, wording and revision control, so it cannot isolate one of
+those changes as the mechanism.
+
 ## Classes that remain
 
 Classes are kept where a boundary needs a validated schema or state:

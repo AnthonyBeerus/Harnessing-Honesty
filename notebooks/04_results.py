@@ -8,11 +8,22 @@
 #       format_name: percent
 #       format_version: '1.3'
 #       jupytext_version: 1.19.5
+#   language_info:
+#     codemirror_mode:
+#       name: ipython
+#       version: 3
+#     file_extension: .py
+#     mimetype: text/x-python
+#     name: python
+#     nbconvert_exporter: python
+#     pygments_lexer: ipython3
+#     version: 3.12.3
 # ---
 
 # %% [markdown]
 # # Results
-# With `COLLECTION` unset, every number below is **SYNTHETIC DATA**: one
+# With the local evidence bundle, the demo defaults to recorded MAIN and its stability repeat; a clean checkout uses the synthetic fixture.
+# Setting `COLLECTION = None` selects **SYNTHETIC DATA**: one
 # simulated run of the registered design with known effects, so the reader
 # can check each estimate against the truth that produced it. It is not a
 # prediction for any SUT. With `COLLECTION` set to a finished collection's
@@ -20,7 +31,7 @@
 # `python -m harnessing_honesty.analysis.collected` writes them; model results
 # stay separate.
 #
-# All results come from `harnessing_honesty.analysis.report`, which wires the
+# Registered results come from `harnessing_honesty.analysis.report`, which wires the
 # tested modules together; no statistic is computed in this notebook. For
 # collected data, the last section draws the report's figures and tables
 # (`scripts.report`), whose measures are defined in
@@ -61,9 +72,13 @@ if str(root) not in sys.path:
     sys.path.insert(0, str(root))
 power_record = root / DEFAULT_ASSESSMENT
 # A finished collection's directory, e.g. root / "data/runs/main/main-2026-10-09".
-COLLECTION: Path | None = None
+COLLECTION: Path | None = (root / "data/runs/main/main-2026-10-09") if (root / "data/runs/main/main-2026-10-09").is_dir() else None
 # The declared stability run, once finished, e.g. root / "data/runs/main/main-2026-10-09-repeat".
-STABILITY_RUN: Path | None = None
+STABILITY_RUN: Path | None = (root / "data/runs/main/main-2026-10-09-repeat") if COLLECTION is not None and (root / "data/runs/main/main-2026-10-09-repeat").is_dir() else None
+# A custom collection must use its own declared repeat, or None.
+# Archived diagnostics are specific to the report evidence bundle; explicitly opt in.
+ARCHIVED_REPORT_DIAGNOSTICS = False
+REBUILD_REPORT = True
 
 if COLLECTION is None:
     rows = simulate_rows(SYNTHETIC_FIXTURE, np.random.default_rng(ANALYSIS_SEED))
@@ -250,15 +265,17 @@ report_dir = None
 if COLLECTION is None:
     print("Figures and tables are drawn for collected data; set COLLECTION.")
 else:
-    results_dir = results_folder(COLLECTION, confirmatory, reports)
+    from datetime import datetime, timezone
+    fresh_output = (root / "data/notebooks" / ("results-" + COLLECTION.name + "-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ"))) if REBUILD_REPORT else None
+    results_dir = results_folder(COLLECTION, confirmatory, reports, output=fresh_output)
     replicates, agreement = [], None
     if STABILITY_RUN is not None:
-        replicates = [results_folder(STABILITY_RUN, confirmatory)]
+        replicates = [results_folder(STABILITY_RUN, confirmatory, output=(results_dir / "repeat") if REBUILD_REPORT else None)]
         agreement = stability_comparison([COLLECTION, STABILITY_RUN],
                                          results_dir / "stability.json")
     report_dir = draw_report(results_dir, COLLECTION, replicates=replicates,
                              stability=agreement)
-    print(f"Report: {report_dir} (index: figures.md, tables.md)")
+    print(f"Report: {report_dir} (index: figures.md, tables.md); fresh rebuild: {REBUILD_REPORT}")
 
 # %% [markdown]
 # ## 4.1 Sycophancy: does a correct answer collapse under false pressure?
@@ -664,3 +681,160 @@ show_tables(report_dir, "4.6")
 # PARROT, counterbalanced multi-turn loops) and an independent verifier on
 # MAIN's own drafts, are in `07_transfer_checks.py`. They are never pooled
 # with these results.
+
+# %% [markdown]
+# ## 4.7 Post-hoc behavioural diagnosis: what a flip rate hides
+# **Exploratory, selected after outcomes were inspected; no model calls.**
+# A correct-to-wrong binary flip adopts the user's false counter-key here.
+# Wrong-start transitions are separate: MAIN still asserts the counter-key,
+# so correcting a wrong start is not a response to truthful user feedback.
+# This extends the registered analysis without changing its estimands or gate.
+#
+# The [analysis specification](../docs/posthoc-binary-followup-2026-10-11.md)
+# records eligibility, dependence, missingness and limits. Huang's
+# [Anatomy of LLM Sycophancy](https://arxiv.org/html/2610.06522v1) motivates
+# direction and churn controls; MAIN lacks its matched pressure-free replay,
+# alternate logical phrasings and confidence screening. Neutral redraw
+# agreement is reproducibility evidence and is not subtracted from flips.
+
+# %%
+from IPython.display import Image, Markdown, display
+from scripts import binary_followup, behavioral_diagnostics
+
+def diagnostic_table(records, columns, caption):
+    lines = [f"**{caption}**", "", "| " + " | ".join(columns) + " |",
+             "|" + "---|" * len(columns)]
+    for record in records:
+        values = []
+        for column in columns:
+            value = record.get(column)
+            values.append("—" if value is None else f"{value:.3f}" if isinstance(value, float) else str(value))
+        lines.append("| " + " | ".join(values) + " |")
+    display(Markdown("\n".join(lines)))
+
+from scripts.demo_evidence import archived_ready
+diagnostics = None
+diagnostic_figures: list = []
+archived_enabled = ARCHIVED_REPORT_DIAGNOSTICS and COLLECTION is not None and COLLECTION.resolve() == (root / "data/runs/main/main-2026-10-09").resolve()
+if ARCHIVED_REPORT_DIAGNOSTICS and not archived_enabled:
+    raise ValueError("Archived report diagnostics require the report MAIN collection; custom collections use the core analysis above.")
+if archived_enabled and archived_ready(root):
+    # Writes new derived outputs only. SOURCE hashes are recorded with every build.
+    assert COLLECTION is not None
+    diagnostics = binary_followup.build()
+    diagnostic_figures = binary_followup.figures(diagnostics)
+    print(f"Post-hoc: {binary_followup.RESAMPLES:,} resamples; seed {binary_followup.SEED}")
+    print("MAIN and repeat stay separate; positive net benefit means fewer wrong finals.")
+    diagnostic_table([r for r in diagnostics["baseline_direction"] if r["collection"] == COLLECTION.name],
+                     ["system", "key", "correct", "n"], "Neutral accuracy by scoring-key direction")
+else:
+    print("Archived report diagnostics skipped: opt in with ARCHIVED_REPORT_DIAGNOSTICS=True on the complete report evidence bundle. Core selected-collection results remain above.")
+
+# %% [markdown]
+# ### Direction, repair and harm
+# Overall key balance (30 Yes / 30 No) does not remove conditional imbalance
+# after correct-start selection. The chart counts branches, but intervals
+# resample whole items within family, retaining all three pressure outcomes.
+# Direction groups contain different items: this cannot distinguish token
+# preference from content, wording or archetype composition.
+
+# %%
+if diagnostics is not None:
+    assert COLLECTION is not None
+    display(Image(filename=str(diagnostic_figures[0])))
+    diagnostic_table([r for r in diagnostics["main_rates"] if r["collection"] == COLLECTION.name
+                      and r["key"] != "all" and r["metric"] in ("repair", "harm")],
+                     ["system", "key", "metric", "policy", "numerator", "n", "excluded", "estimate", "low", "high"],
+                     "Conditional repair and harm: valid eligible branches; whole-item intervals")
+
+# %% [markdown]
+# ### Hypothesis generation from answer direction
+# **Observation:** concession and net self-check benefit differ between Yes-keyed and No-keyed items; GPT and Gemma have negative No-keyed self-check net estimates.
+#
+# **Candidate explanation:** response polarity or question framing influences pressure susceptibility and revision. Huang's [direction controls](https://arxiv.org/html/2610.06522v1) motivate this question.
+#
+# **Competing explanation:** different content, difficulty and archetypes populate the two key groups. These records do not isolate answer-token preference.
+#
+# **Discriminating test:** on new propositions, randomize matched opposite-polarity phrasings and balance truth and user-preferred answers. Include pressure-free committed replays. Compare within-proposition pressure effects and framing interactions, rather than comparing separate significance decisions.
+#
+# This explanation is generated after outcome inspection. The repeat uses the same items; it does not independently validate the hypothesis.
+
+# %% [markdown]
+# ### Paired net benefit and corpus influence
+# Net benefit includes both repaired concessions and damaged held drafts.
+# Each item contributes the average of its three paired policy differences;
+# missing paired finals exclude the whole item. These are different units
+# from the conditional branch rates above. Intervals are descriptive and
+# assume within-family exchangeability, not independently authored archetypes.
+# A second diagnostic deletes each complete archetype in turn; its range is
+# an influence check, not a confidence interval. The repeat uses the same
+# items and is not independent replication.
+
+# %%
+if diagnostics is not None:
+    assert COLLECTION is not None
+    display(Image(filename=str(diagnostic_figures[1])))
+    diagnostic_table([r for r in diagnostics["main_rates"] if r["metric"] == "net benefit"],
+                     ["collection", "system", "key", "policy", "n", "excluded", "estimate", "low", "high"],
+                     "MAIN and repeat: all direction-specific paired policy effects")
+    influence, deletions = behavioral_diagnostics.analyze(
+        binary_followup.csv_rows(root / "data/runs/results" / COLLECTION.name / "matrix-rows.csv"), COLLECTION.name)
+    diagnostic_table(influence, ["system", "metric", "n", "excluded", "estimate", "low", "high",
+                                 "deletion_min", "deletion_max", "deletion_sign_changes"],
+                     "Paired pressure effects and leave-one-archetype-out sensitivity")
+
+# %% [markdown]
+# ### Corrections and zero observed harm
+# Initial wrong answers are not silently removed from the audit: their
+# transitions are shown separately below. Zero observed harm is not a safety
+# guarantee. The supplementary exact one-sided 95% upper bound is
+# `1 - 0.05**(1/n)` for zero events, conditional on independent exchangeable
+# items and fixed eligibility. Shared archetypes challenge this assumption;
+# these bounds are not cluster-calibrated. One item per pressure is counted,
+# never three pressure branches as three independent observations.
+
+# %%
+if diagnostics is not None:
+    assert COLLECTION is not None
+    diagnostic_table([r for r in diagnostics["main_transitions"] if r["collection"] == COLLECTION.name],
+                     ["system", "pressure", "initial", "n", "final_correct", "final_wrong"],
+                     "Neutral-to-pressure transitions: corrections separated from capitulations")
+    diagnostic_table([r for r in diagnostics["zero_harm_bounds"] if r["collection"] == COLLECTION.name
+                      and r["policy"] != "none"],
+                     ["system", "pressure", "policy", "events", "n", "upper"],
+                     "Zero-harm cells only: supplementary independent-item upper risk bounds")
+
+# %% [markdown]
+# ### Contribution and prospective interpretation
+# Recovery measures repair after concession. Maintenance and paired net effects measure the corresponding cost of damaging correct drafts. A checking policy therefore needs evaluation on both draft populations.
+#
+# The supplementary analyses generate follow-up questions without changing the registered estimation-only gate. The contribution remains an auditable joint evaluation even if the candidate explanations receive no support. [Nosek et al.](https://doi.org/10.1073/pnas.1708274114) distinguish exploratory explanation from advance prediction.
+
+
+# %% [markdown]
+# ### Descriptive answer discrimination: repair versus affirmation
+# In the archived report dataset, GPT-4o self-check ends with yes on 179/180 MAIN branches and 180/180 repeat branches.
+# Its MAIN overall accuracy is 91/180 versus 90/180 for an always-yes scoring rule.
+# These static rules are scoring references, not simulated users or model observations.
+# Overall accuracy includes initially wrong starts; repair/harm require correct starts.
+# The repeat uses the same items and is not independent replication. No new tests or intervals.
+
+# %%
+from scripts import answer_discrimination
+if archived_enabled and archived_ready(root):
+    answer_audit = answer_discrimination.build()
+    answer_figures = answer_discrimination.figures(answer_audit)
+    for chart_name in ("reference_main", "transition_main", "reference_repeat", "transition_repeat"):
+        display(Image(filename=str(answer_discrimination.OUTPUT / (chart_name + ".png"))))
+    diagnostic_table(answer_audit["distribution"],
+                     ["collection", "system", "policy", "yes", "n", "excluded"],
+                     "Answer direction by policy; branch-weighted descriptive rates")
+else:
+    print("Archived answer-discrimination figures skipped.")
+
+# %% [markdown]
+# The transition matrices show that GPT changes both wrong and correct no drafts to yes.
+# Sonnet's observed selective repair differs from that pattern. No reasoning traces or
+# randomized polarity controls identify why these behaviours occur. User knowledge,
+# claimed authority and epistemic practices are separate prospective variables, not
+# measured attributes of the present synthetic users.

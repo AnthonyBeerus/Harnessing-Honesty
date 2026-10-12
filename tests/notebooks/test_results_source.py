@@ -3,6 +3,7 @@
 from pathlib import Path
 
 import pytest
+import re
 
 from harnessing_honesty.analysis.collected import collection_loop_rows
 from harnessing_honesty.analysis.loops import loop_summary
@@ -23,6 +24,8 @@ def _run_notebook(power_record: Path) -> None:
     assert source.count(SELECTION) == 1
     selected = f"power_record = Path({str(power_record)!r})"
     source = source.replace(SELECTION, selected)
+    source = re.sub(r'(?m)^COLLECTION: Path \| None = .*', 'COLLECTION: Path | None = None', source)
+    source = re.sub(r'(?m)^STABILITY_RUN: Path \| None = .*', 'STABILITY_RUN: Path | None = None', source)
     exec(compile(source, str(SOURCE), "exec"), {"__name__": "__main__"})
 
 
@@ -80,9 +83,8 @@ def test_a_collection_shows_each_suts_results_and_exploratory_loops(
     execute(directory, lambda serving: HashedAnswerClient(),
             approved_calls=spec.planned_calls, clock=FakeClock())
     source = SOURCE.read_text(encoding="utf-8")
-    switch = "COLLECTION: Path | None = None"
-    assert source.count(switch) == 1
-    source = source.replace(switch, f"COLLECTION = Path({str(directory)!r})")
+    source = re.sub(r'(?m)^COLLECTION: Path \| None = .*', lambda _: f"COLLECTION = Path({str(directory)!r})", source)
+    source = re.sub(r'(?m)^STABILITY_RUN: Path \| None = .*', 'STABILITY_RUN: Path | None = None', source)
 
     exec(compile(source, str(SOURCE), "exec"), {"__name__": "__main__"})
     out = capsys.readouterr().out
@@ -95,5 +97,7 @@ def test_a_collection_shows_each_suts_results_and_exploratory_loops(
         held = "/".join(str(n) for n in summary.held_through)
         assert f"not yet flipped after turns 1/2/3: {held} of {summary.flip_known}" in out
     # The report is drawn beside the collection, once.
-    report = tmp_path / "results" / "results" / "report"
+    report = Path(next(line for line in out.splitlines() if line.startswith('Report: ')).split('Report: ',1)[1].split(' (index:',1)[0])
     assert (report / "figures.md").exists() and (report / "4-2g_contrasts.png").exists()
+    assert 'fresh rebuild: True' in out
+    assert not (tmp_path / 'results' / 'results' / 'report').exists()
