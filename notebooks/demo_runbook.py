@@ -17,17 +17,17 @@
 # %% [markdown]
 # # Harnessing Honesty: demonstration walkthrough
 #
-# **Situation:** an assistant can abandon a correct answer under unsupported
-# user pressure. **Problem:** a checking policy may repair those concessions
-# while damaging answers that already resisted. **Response:** compare policies
-# on identical drafts, score against a private key, and evaluate repair and
+# An assistant can abandon a correct answer under unsupported user pressure.
+# A checking policy may repair those concessions while damaging answers that
+# had already resisted. The study therefore compares policies on identical
+# drafts, scores them against a private key, and evaluates repair and
 # preservation together.
 #
-# This is the notebook to present. Run its cells in order. It executes the
-# existing analysis notebooks in fresh kernels and displays selected outputs
-# here; complete outputs and provenance are saved separately. No model calls
-# or collection-control actions are enabled. Allow a few minutes to prepare
-# the outputs, then present the selected figures in about ten minutes.
+# This notebook brings the main evidence together. Running its cells in order
+# executes the existing analysis notebooks in fresh kernels and displays
+# selected outputs here; complete outputs and provenance are saved separately.
+# No model calls or collection-control actions are enabled. Preparing the
+# outputs takes a few minutes.
 
 # %% [markdown]
 # ## Setup and evidence selection
@@ -108,7 +108,7 @@ elif MODE == "collection":
 # %% [markdown]
 # ### How the steps run
 # Each step reuses an existing notebook rather than duplicating its analysis.
-# The complete notebook runs, but only selected outputs appear in this guide.
+# The complete notebook runs, but only selected outputs appear here.
 # The manifest records source and effective-cell hashes, packages, completion
 # and duration. Re-running a step writes a new numbered copy, preserving its
 # previous output. Collection switches are forced off in the execution copy.
@@ -167,8 +167,9 @@ def present(notebook, patterns, rich_limit=None, images_only=False):
                     count += 1
 
 # %% [markdown]
-# ## 1. Instrument: what counts as a concession? — 1 minute
-# Show the balanced private keys and the checks on the frozen technical items.
+# ## 1. Instrument: what counts as a concession?
+# This section summarises the frozen technical items: their balanced private
+# keys and the checks applied to them.
 # A capitulation requires a correct neutral start followed by a wrong answer
 # under unsupported pressure. A wrong neutral answer corrected later is a
 # different event. Sixty items share twelve archetypes; textual uniqueness
@@ -179,8 +180,9 @@ instrument = execute_step("01_instrument_audit")
 present(instrument, ["name_masked_total"], rich_limit=1)
 
 # %% [markdown]
-# ## 2. Power gate: what may the study conclude? — 1 minute
-# Read the planning record, not a gate recomputed to suit the observed results.
+# ## 2. Power gate: what may the study conclude?
+# The gate shown is the recorded planning result, not one recomputed after the
+# outcomes were seen.
 # In this study every registered contrast became estimation-only before MAIN.
 # A favourable point estimate or interval does not confirm a hypothesis.
 
@@ -189,23 +191,23 @@ power = execute_step("03_power")
 present(power, ["matches the record", "confirmatory", "Analysis code: current"])
 
 # %% [markdown]
-# ## 3. Architecture and intervention — 1 minute
+# ## 3. Architecture and intervention
 # One neutral answer feeds three pressure branches. Each identical pressured
 # draft feeds re-ask, self-check and external-report finals. The experiment
 # controls the workflow; the model does not choose or execute a tool.
 # MAIN's external report is an answer-equivalent ceiling. Its scoring key is
 # private, whereas the deliberately supplied verdict is the treatment.
-# Compare fixed-workflow architecture with the patterns discussed in
-# [architecture boundaries](../docs/architecture-boundaries.md).
+# [Architecture boundaries](../docs/architecture-boundaries.md) compares this
+# fixed workflow with common agent-harness patterns.
 
 # %%
 control = execute_step("05_experiment_control")
 present(control, ["architecture_paths", "workload.plan_text", "First {kind}"], rich_limit=2)
 
 # %% [markdown]
-# ## 4. Evidence audit: can the recorded run be reconstructed? — 1 minute
-# The selected collection supplies the first system's run automatically.
-# Show completeness, serving identity and integrity results. Synthetic mode
+# ## 4. Evidence audit: can the recorded run be reconstructed?
+# The selected collection supplies the first system's run automatically. The
+# output reports completeness, serving identity and integrity. Synthetic mode
 # has no selected provider run and must not make an integrity claim.
 
 # %%
@@ -213,9 +215,9 @@ audit = execute_step("02_run_audit")
 present(audit, ["run_directory =", "run.record", "issues = check_integrity", 'for field in'])
 
 # %% [markdown]
-# ## 5. Outcome: repair must be considered alongside harm — 2 minutes
-# First show the registered contrasts, then repair of conceded drafts and
-# damage to held drafts. Those are different selected populations. Positive
+# ## 5. Outcome: repair must be considered alongside harm
+# The registered contrasts come first, followed by repair of conceded drafts
+# and damage to held drafts, which are different selected populations. Positive
 # paired net benefit means fewer wrong finals; the registered regressive-shift
 # contrast has the opposite sign convention. The repeat uses the same items
 # and checks variability, not independent replication.
@@ -228,7 +230,7 @@ results = execute_step("04_results")
 present(results, ['No power record:', '4-2g_contrasts', '4-2c_repair_and_harm', '4-2h_break_even'])
 
 # %% [markdown]
-# ### Diagnostic: correction or answer preference? — 1 minute
+# ### Diagnostic: correction or answer preference?
 # In the archived MAIN records, GPT-4o self-check answers yes in 179/180 finals.
 # High conditional repair can coexist with held-answer harm and low overall
 # discrimination. Always-yes/no lines are calculated references, not new model
@@ -259,7 +261,7 @@ else:
     print("Recorded MAIN conversation examples skipped outside archived mode.")
 
 # %% [markdown]
-# ### H2: does policy benefit depend on pressure? — 1 minute
+# ### H2: does policy benefit depend on pressure?
 # This explicitly exploratory extension evaluates the proposal's pressure
 # interaction. It includes both repair and preservation on correct-neutral
 # starts, with whole-item intervals and a same-item repeat sensitivity check.
@@ -274,8 +276,8 @@ else:
     print("Archived exploratory H2 analysis skipped outside archived mode.")
 
 # %% [markdown]
-# ## 6. External benchmarks: does the intervention travel? — 2 minutes
-# Compare adapted SycoBench/PARROT concession, then accuracy including both
+# ## 6. External benchmarks: does the intervention travel?
+# The charts show adapted SycoBench/PARROT concession, then accuracy across both
 # neutral starting states. The external four-option report excludes one option,
 # so it is not MAIN's answer-equivalent ceiling. Adaptive SycoBench suggestions
 # are false after correct starts and truthful after wrong starts. Its all-start
@@ -306,7 +308,7 @@ else:
     print("Archived external moderation analysis skipped outside archived mode.")
 
 # %% [markdown]
-# ## Close: contribution, limitations and the next experiment — 1 minute
+# ## Contribution, limitations and the next experiment
 # The contribution is a reproducible joint evaluation of repair and preservation.
 # It survives even if the candidate explanations receive no independent support.
 # Actual user knowledge, an isolated report-referent effect and internal model
@@ -317,7 +319,7 @@ else:
 
 # %% [markdown]
 # ## Checks and complete outputs
-# All six steps should complete. Open the saved step notebooks for the full
+# Every executed step should complete. Open the saved step notebooks for the full
 # calculations, detailed tables and additional charts. The manifest is a record
 # of this execution, not a new authenticated experimental freeze.
 
