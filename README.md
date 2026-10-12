@@ -17,7 +17,8 @@ A controlled evaluation harness for how harness design shapes epistemic sycophan
 Use **Python 3.12**; the package requires `>=3.12,<3.13`. The recommended
 entrypoint is [notebooks/demo_runbook.ipynb](notebooks/demo_runbook.ipynb): one
 notebook walks through the instrument, power gate, architecture, evidence
-audit, repair/harm and external results. Offline demonstrations need no API key.
+audit, repair/harm and external results, and can run a small synthetic
+experiment end to end. Offline demonstrations need no API key.
 
 | Goal | Mode | Evidence needed |
 |---|---|---|
@@ -51,8 +52,15 @@ source .venv/bin/activate
 ```bash
 python -m pip install -e ".[dev,notebooks]"
 python -m ipykernel install --prefix .venv --name harnessing-honesty --display-name "Harnessing Honesty"
+python -m jupytext --sync notebooks/demo_runbook.py
 python -m jupyterlab notebooks/demo_runbook.ipynb
 ```
+
+The `.ipynb` notebooks are not stored in Git; the `jupytext` command creates
+`demo_runbook.ipynb` from its paired `.py` source. The demo runs the other
+notebooks from their `.py` sources, so they need no `.ipynb`. In VS Code, open
+`notebooks/demo_runbook.ipynb` instead of starting JupyterLab and select the
+same kernel.
 
 In JupyterLab, select the **Harnessing Honesty** kernel. Use **Restart Kernel
 and Run All Cells**. Allow several minutes for the step notebooks to finish;
@@ -64,6 +72,12 @@ when the required local records are available. Set `MODE = "synthetic"` in that
 cell if you want an illustrative run even when archived evidence is installed.
 Both modes run offline. Archived mode executes seven step notebooks; synthetic
 mode executes six and skips the report-specific extensions.
+
+To watch the harness run an experiment, set `RUN_EXPERIMENT = True` in the
+**Run a small experiment** section before running all cells. It plans, launches,
+audits and analyses a two-item collection with the synthetic client: no model
+calls and no cost, so its rates test the pipeline rather than any model. Paid
+collections are launched only from notebook 05.
 
 ### 2. Install the evidence for the report demo
 
@@ -111,6 +125,12 @@ Exploratory records have the separate provenance limitations documented in
 
 ### 3. Run without opening JupyterLab
 
+The notebooks are optional. Without Jupyter, run every step from the
+terminal; for the full experiment workflow without notebooks, see
+[Run your own experiment](#run-your-own-experiment). In VS Code, the `.py`
+sources also run directly: each `# %%` block offers **Run Cell** in the
+Interactive Window, so no `.ipynb` is needed.
+
 From the same activated environment, choose one command:
 
 ```bash
@@ -125,14 +145,18 @@ runner saves the individual steps rather than the combined presentation.
 
 ## Run your own experiment
 
-Start with [05_experiment_control.ipynb](notebooks/05_experiment_control.ipynb).
+Start with [05_experiment_control.ipynb](notebooks/05_experiment_control.ipynb),
+created with `python -m jupytext --sync notebooks/05_experiment_control.py`.
 Choose a new collection ID, development track, and `CLIENT = "synthetic"` for
 an offline rehearsal. The notebook previews requests and the workload before
 its explicit launch switches. The
 [new-experiment walkthrough](docs/demo-runbook.md#run-another-experiment)
 explains launch, status, continuation and analysis. Live collection is a
 separate opt-in path requiring an OpenRouter key and paid provider requests;
-it is not needed for either demo mode.
+it is not needed for either demo mode. For live runs, copy
+[`.env.example`](.env.example) to `.env`, which Git ignores, and set
+`OPENROUTER_API_KEY`; the harness reads it when a live client starts.
+Synthetic and archived runs need no `.env`.
 
 An equivalent two-item offline rehearsal from the terminal is:
 

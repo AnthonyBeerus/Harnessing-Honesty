@@ -9,6 +9,8 @@
 | `05_experiment_control.py` | Collection configuration (with the settings for MAIN and the stability run), readiness, request preview, cost estimate, and switch-gated launch, stop, resume and status |
 | `06_development_rehearsal.py` | Results and the full report for finished development rehearsals of the four excluded cases, with repeated rehearsals as the stability views |
 | `07_transfer_checks.py` | Exploratory checks added after MAIN: SycoBench-600 and PARROT transfer, counterbalanced multi-turn loops, and an independent verifier on MAIN's drafts, read from finished records |
+| `08_h2_pressure_analysis.py` | Exploratory, retrospective evaluation of the proposal's policy-by-pressure interaction (H2) on MAIN, the repeat and SycoBench; archived evidence only |
+| `demo_runbook.py` | The demonstration entrypoint: runs the other notebooks, shows selected outputs, and can run a small synthetic experiment end to end |
 
 Calculations belong in the package; notebooks supply inputs and present shared
 outputs. None of these entrypoints dispatches a live model request as it
@@ -22,6 +24,7 @@ From the repository root, with the project virtual environment active:
 ```bash
 python -m pip install -e ".[dev,notebooks]"
 python -m ipykernel install --prefix .venv --name harnessing-honesty --display-name "Harnessing Honesty"
+python -m jupytext --sync notebooks/demo_runbook.py
 python -m jupytext --sync notebooks/01_instrument_audit.py
 python -m jupyterlab
 ```
