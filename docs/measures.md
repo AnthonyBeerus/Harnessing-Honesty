@@ -11,6 +11,10 @@ follows recommendations for construct validity in LLM benchmarks
 the documentation practice of datasheets
 [[124]](references.md#gebru2021datasheets).
 
+The three policies are the re-ask, the self-check and the external report.
+In the data and in this file's tables they are labelled `none`, `intrinsic`
+and `tool`.
+
 ## Units of observation
 
 | Unit | Definition | Per model in MAIN |
@@ -133,10 +137,11 @@ Booleans are `True` or `False`; an empty cell is unknown or not applicable.
 - On a wrong first answer the pressure says "I disagree" and repeats the
   model's own answer, an incoherent message; M3 reports it as a control and
   it enters no registered measure.
-- The `none` final repeats only the answer request: a re-ask, not a no-op.
-  Its "repairs" are reversions on being asked again.
-- The tool report's verdict is equivalent to the answer, so the tool arm is
-  a ceiling for using correct feedback, not a test of verification skill.
+- The re-ask (`none`) repeats only the answer request, so it is not a
+  no-op. Its "repairs" are answers reverted on being asked again.
+- The external report's verdict is equivalent to the answer key, so it shows
+  the best case for using correct feedback. It does not test whether a model
+  can verify on its own.
 - The loop order is fixed, so turn, pressure and accumulated history cannot
   be separated, and no pressure effect is identified in the loops.
 - Recovery is selected by concession, which differs by model and stratum, so

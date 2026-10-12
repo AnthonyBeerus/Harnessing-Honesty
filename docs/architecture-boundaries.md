@@ -21,7 +21,7 @@ evals end-to-end", and names a task, a trial, a grader and a transcript
 Harness-Bench likewise places the evaluator outside the model–harness system
 [[5, Sec. 3]](references.md#yao2026harnessbench). Here the agent harness is
 the treatment: context assembly, the pressure turn and one of three
-finalization policies (none, intrinsic recheck, labelled external ceiling).
+finalisation policies (re-ask, self-check or external report).
 The evaluation harness assigns, records and grades it.
 
 | Term | Inspect [[118]](references.md#inspectdocs) | This harness |
@@ -63,9 +63,9 @@ change [[22]](references.md#parnas1972modules): the provider SDK behind
 `observability`, the estimators behind `analysis`. The decision that must
 never leak is the answer key: it lives in `AnswerKey`, which the request path
 cannot receive. The first message is rendered from `PromptView` alone; later
-turns add the pressure, the model's own answers, the policy text and, in the
-tool arm, the labelled check report, whose verdict is that arm's declared
-treatment.
+turns add the pressure, the model's own answers, the policy text and, for the
+external-report policy, the labelled report. That report's verdict is the
+policy's declared treatment.
 
 **Ports and adapters.** Cockburn's pattern lets an application "be driven by
 users, programs, automated test or batch scripts, and … be developed and

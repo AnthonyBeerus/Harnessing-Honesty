@@ -22,22 +22,11 @@
 
 # %% [markdown]
 # # Results
-# With the local evidence bundle, the demo defaults to recorded MAIN and its stability repeat; a clean checkout uses the synthetic fixture.
-# Setting `COLLECTION = None` selects **SYNTHETIC DATA**: one
-# simulated run of the registered design with known effects, so the reader
-# can check each estimate against the truth that produced it. It is not a
-# prediction for any SUT. With `COLLECTION` set to a finished collection's
-# directory, each SUT's results are rebuilt from its run files alone, the way
-# `python -m harnessing_honesty.analysis.collected` writes them; model results
-# stay separate.
+# With the evidence bundle installed, this notebook uses the recorded main run and its repeat. A clean checkout uses synthetic data instead.
 #
-# Registered results come from `harnessing_honesty.analysis.report`, which wires the
-# tested modules together; no statistic is computed in this notebook. For
-# collected data, the last section draws the report's figures and tables
-# (`scripts.report`), whose measures are defined in
-# [Measures and feature construction](../docs/measures.md). Methods and their
-# sources are in
-# [Sources for the methods](../docs/method-sources.md#scoring-inference-and-records).
+# Setting `COLLECTION = None` selects **SYNTHETIC DATA**: one simulated run of the registered design with known effects, so you can check each estimate against the truth that produced it. It predicts nothing about any model. With `COLLECTION` set to a finished collection's folder, each model's results are rebuilt from its run files alone, as `python -m harnessing_honesty.analysis.collected` does, and the models are kept separate.
+#
+# The registered results come from `harnessing_honesty.analysis.report`, which combines the tested modules; this notebook computes no statistics itself. For collected data, the last section draws the report's figures and tables (`scripts.report`). The measures are defined in [Measures and feature construction](../docs/measures.md), and the methods and their sources in [Sources for the methods](../docs/method-sources.md#scoring-inference-and-records).
 
 # %%
 import sys
@@ -92,9 +81,7 @@ else:
 
 # %% [markdown]
 # ## Which contrasts may be confirmed
-# The power gate is applied before any MAIN data [97, Analysis]: a contrast
-# with less than 80% power becomes an estimation target. Without a recorded
-# assessment nothing is confirmatory.
+# The power gate is applied before any main-run data exist [97, Analysis]. A contrast with less than 80% power can only be estimated, not confirmed. Without a recorded power assessment, nothing is confirmatory.
 
 # %%
 confirmatory, current = recorded_gate(power_record)
@@ -112,10 +99,7 @@ else:
 
 # %% [markdown]
 # ## Branches and descriptive rates
-# Recovery (the draft conceded) and maintenance (the draft held) are separate
-# populations and are never pooled [98, Estimands]. Each rate uses every valid
-# final; the bounds count missing finals as no shift and as a shift, and the
-# complete-triple rate keeps branches with all three finals valid.
+# Recovery (replies that gave in) and maintenance (replies that held) are separate groups and are never pooled [98, Estimands]. Each rate uses every valid final answer. The bounds count missing final answers first as no shift and then as a shift, and the complete-triple rate keeps only branches where all three final answers are valid.
 
 # %%
 def show(value: float | None) -> str:
@@ -135,16 +119,9 @@ for card, report in reports.items():
 
 # %% [markdown]
 # ## Planned contrasts (recovery)
-# H1 is a treatment's regressive-shift rate minus that of `none`; H3 is the
-# intrinsic difference in deductive tasks minus that in document-grounded
-# tasks [97, Appendix A]. Intervals resample whole scenarios within task
-# family [29, Sec. 5.2]; Holm's procedure adjusts the three p-values [103,
-# Thm. 1]. A negative estimate means less regressive shift. Whether the point
-# reaches 0.10 is a magnitude note, not a minimum-effect claim, and no
-# equivalence margin is registered, so an interval that covers zero does not
-# show that a policy has no effect [98, Hypotheses]. In the recorded power
-# simulation these nominal 95% intervals covered the true effect about 93% of
-# the time, and 77–81% when few drafts concede, so they are approximate.
+# H1 is a policy's regressive-shift rate minus the re-ask's. H3 is the self-check's effect on deductive tasks minus its effect on document-grounded tasks [97, Appendix A]. Intervals resample whole items within each task family [29, Sec. 5.2], and Holm's procedure adjusts the three p-values [103, Thm. 1]. A negative estimate means less regressive shift.
+#
+# Whether an estimate reaches 0.10 is a note on size, not a minimum-effect claim. No equivalence margin was registered, so an interval that includes zero does not show that a policy has no effect [98, Hypotheses]. In the recorded power simulation, these nominal 95% intervals contained the true effect about 93% of the time, and 77–81% when few replies gave in, so treat them as approximate.
 
 # %%
 for card, report in reports.items():
@@ -170,11 +147,7 @@ for card, report in reports.items():
 
 # %% [markdown]
 # ## Sensitivity analyses
-# The same bootstrap on transformed rows; none can confirm a contrast. The
-# missing-final rows count every missing final as no shift, then every one as
-# a shift, in all policies alike: two scenarios, not bounds on a contrast,
-# because missingness could differ between policies. A branch with an unknown
-# prefix is never imputed [98, Exclusions].
+# These rerun the same bootstrap on adjusted rows; none can confirm a contrast. The missing-answer rows count every missing final answer first as no shift and then as a shift, in all policies alike. These are two scenarios, not bounds on a contrast, because missingness could differ between policies. A branch whose earlier answer is unknown is never filled in [98, Exclusions].
 
 # %%
 for card, report in reports.items():
@@ -194,12 +167,9 @@ for card, report in reports.items():
 
 # %% [markdown]
 # ## Override and secondary odds ratios
-# Every ceiling report agrees with the answer key, so the tool-arm override
-# rate [97, Outcomes and Scoring] is the tool-arm shift rate. The odds ratios
-# come from the secondary mixed logit [97, Analysis], fitted by GPBoost's
-# Laplace approximation [99, Sec. 2.2]; they are conditional on the scenario
-# effect, are not comparable to the risk differences above, and decide
-# nothing. A fit that is not `fitted` reports its status instead.
+# Every external report agrees with the answer key, so the rate at which a final answer overrides the report [97, Outcomes and Scoring] equals the external report's shift rate.
+#
+# The odds ratios come from the secondary mixed logit [97, Analysis], fitted with GPBoost's Laplace approximation [99, Sec. 2.2]. They are conditional on the item effect, are not comparable with the risk differences above, and decide nothing. A fit that did not finish reports its status instead.
 
 # %%
 for card, report in reports.items():
@@ -218,16 +188,9 @@ for card, report in reports.items():
 
 # %% [markdown]
 # ## Exploratory: policy loops
-# **Added after registration, and exploratory.** The registered analysis is
-# the matrix above; these results test no contrast and confirm nothing. Each
-# policy runs as a fixed three-turn workflow on its own transcript:
-# contradiction, then authority, then citation, always in that order, so a
-# turn's pressure cannot be separated from its position or the history before
-# it. Among loops whose neutral answer was correct, each row gives how many had
-# not yet flipped after each turn (survival, among loops whose first flip is
-# known), the mean Turn of Flip (a loop that held throughout is censored at 4)
-# and the mean Number of Flip [10], each with the count it is computed over.
-# Shown for collected data only.
+# **Added after registration.** The registered analysis is the matrix above; the loops test no contrast. Each policy runs as a fixed three-turn conversation on its own transcript: contradiction, then authority, then citation, always in that order. Because the order is fixed, a turn's pressure cannot be separated from its position or the conversation before it.
+#
+# Among loops whose first answer was correct, each row gives how many had not yet flipped after each turn (counting only loops whose first flip is known), the mean turn of the first flip (a loop that never flipped is counted as turn 4) and the mean number of flips [10], each with the count it is based on. These appear for collected data only.
 
 # %%
 if COLLECTION is None:
@@ -244,13 +207,7 @@ else:
 
 # %% [markdown]
 # ## Report figures and tables
-# For collected data, the collection's rows and results are written once
-# beside it (`data/runs/results/<id>`), then every figure and table of the
-# report is drawn into its `report` folder. With `STABILITY_RUN` set, the
-# declared stability run and the call agreement between the two runs are
-# added. The sections below follow the report: each figure has its own
-# explanation and cell. Every value is defined in `docs/measures.md`; every
-# view beyond the registered contrasts is descriptive.
+# For collected data, the collection's rows and results are written once beside it (`data/runs/results/<id>`), and then every figure and table of the report is drawn into its `report` folder. With `STABILITY_RUN` set, the repeat run and the answer agreement between the two runs are added. The sections below follow the report, one explanation and cell per figure. Every value is defined in `docs/measures.md`, and everything beyond the registered contrasts is descriptive.
 
 # %%
 from scripts.report.pipeline import (
@@ -279,10 +236,7 @@ else:
 
 # %% [markdown]
 # ## 4.1 Sycophancy: does a correct answer collapse under false pressure?
-# Does a model abandon a correct answer when the user falsely asserts the
-# other one? The share abandoned under one pressure is draft concession (M2):
-# a description of sycophancy, not the registered outcome, which is measured
-# on the finals in 4.2.
+# Does a model give up a correct answer when the user falsely asserts the other one? The share given up under one pressure is draft concession (M2). It describes sycophancy but is not the registered outcome, which is measured on the final answers in 4.2.
 
 # %% [markdown]
 # ### 4-1a Baseline competence by task family
@@ -297,10 +251,7 @@ show_figure(report_dir, "4-1a_neutral_accuracy")
 
 # %% [markdown]
 # ### 4-1b Draft concession per model, own and common items
-# The share of correct first answers abandoned under one false pressure, per
-# model. Dark bars use each model's own correct items; light bars use only
-# items every model answered correctly, so the models are compared on the same
-# items. Unit: branch (item × pressure); intervals resample items.
+# The share of correct first answers given up under one false pressure, per model. Dark bars use each model's own correctly answered items. Light bars use only items every model answered correctly, so the models are compared on the same items. Unit: branch (item × pressure); intervals resample items.
 #
 # *Modelled on: Sharma et al. [1, Sec. 3.2, Fig. 2]; BrokenMath [74, Fig. 2].*
 
@@ -309,10 +260,7 @@ show_figure(report_dir, "4-1b_draft_concession")
 
 # %% [markdown]
 # ### 4-1c Flips from a correct and from a wrong first answer
-# Flips from a correct first answer (the pressure contradicts it: sycophancy)
-# beside flips from a wrong one (the pressure repeats the model's own answer).
-# Similar heights would mean a model switches whenever challenged rather than
-# yielding to the user.
+# Flips from a correct first answer, where the pressure contradicts it, beside flips from a wrong one, where the pressure repeats the model's own answer. Similar heights would mean a model switches whenever challenged rather than giving way to the user.
 #
 # *Modelled on: Sharma et al. [1, Sec. 3.2]; control after Gupta et al. [119].*
 
@@ -368,11 +316,7 @@ show_tables(report_dir, "4.1")
 
 # %% [markdown]
 # ## 4.2 Harness repair: the policies compared (H1)
-# After a draft has conceded, does the harness repair it? Each branch's three
-# finals answer the same draft, under the re-ask control (`none`), an
-# intrinsic self-check or a labelled external report. The registered contrasts
-# (H1, H3) close the section; all three are estimation-only under the power
-# gate.
+# After a reply has given in, does the harness repair it? Each branch's three final answers respond to the same reply, under the re-ask, the self-check or the external report. In the tables and code these appear as `none`, `intrinsic` and `tool`. The registered contrasts (H1, H3) close the section; the power gate makes all three estimates only.
 
 # %% [markdown]
 # ### 4-2a What became of a correct first answer, by policy
@@ -397,9 +341,7 @@ show_figure(report_dir, "4-2b_flow")
 
 # %% [markdown]
 # ### 4-2c Repair of conceded drafts and harm to held drafts
-# Repair: how often a policy corrects a conceded draft. Harm: how often it
-# breaks a draft that held, the risk self-correction carries. Each is in its
-# own population and never pooled.
+# Repair is how often a policy corrects a reply that gave in. Harm is how often it breaks a reply that held, the risk that self-correction carries. Each is measured in its own group and never pooled.
 #
 # *Modelled on: Huang et al. [15]: correct to incorrect after self-correction.*
 
@@ -408,9 +350,7 @@ show_figure(report_dir, "4-2c_repair_and_harm")
 
 # %% [markdown]
 # ### 4-2d Which policies corrected the same conceded draft
-# For each conceded draft, which of the three policies corrected it. Because
-# all three answer the same draft, this shows whether the self-check repairs
-# anything the re-ask does not.
+# For each reply that gave in, which of the three policies corrected it. All three respond to the same reply, so this shows whether the self-check repairs anything the re-ask does not.
 #
 # *Modelled on: paired design.*
 
@@ -439,11 +379,7 @@ show_figure(report_dir, "4-2f_override")
 
 # %% [markdown]
 # ### 4-2g Planned contrasts with 95% intervals
-# The registered result: each policy against the re-ask control (H1) and the
-# intrinsic benefit on deductive against document-grounded tasks (H3), with
-# 95% intervals. Negative means fewer finals wrong. All three are
-# estimation-only under the power gate, and the intervals are approximate
-# (about 93% coverage in the power simulation).
+# The registered result: each policy against the re-ask (H1), and the self-check's effect on deductive against document-grounded tasks (H3), with 95% intervals. Negative means fewer wrong final answers. The power gate makes all three estimates only, and the intervals are approximate, with about 93% coverage in the power simulation.
 #
 # *Modelled on: Sharma et al. [1, Fig. 5].*
 
@@ -452,12 +388,7 @@ show_figure(report_dir, "4-2g_contrasts")
 
 # %% [markdown]
 # ### 4-2h Repair weighed against harm (exploratory, after MAIN)
-# Exploratory, added after MAIN. The registered contrasts count only conceded
-# drafts, so they show what a policy repairs and never what it breaks. Each
-# line is the change in wrong finals per correct first answer against the
-# re-ask, for any share of correct answers that caved; below zero the policy
-# leaves fewer finals wrong. The dot is the break-even share and the dotted
-# line the share observed in MAIN. Intervals resample items.
+# The registered contrasts count only replies that gave in, so they show what a policy repairs but never what it breaks. Each line is the change in wrong final answers per correct first answer against the re-ask, for any share of correct answers that gave in. Below zero, the policy leaves fewer wrong answers. The dot marks the break-even share and the dotted line the share observed in the main run. Intervals resample items.
 #
 # *Modelled on: Huang et al. [15]: self-correction turns correct answers wrong.*
 
@@ -477,9 +408,7 @@ show_tables(report_dir, "4.2")
 
 # %% [markdown]
 # ### 4-3a H3 interaction: policy by task stratum
-# Regressive shift across the two task strata, one line per policy; lines that
-# are not parallel suggest an interaction. Recovery branches are selected by
-# concession, which itself differs by stratum.
+# Regressive shift across the two task strata, one line per policy. Lines that are not parallel suggest an interaction. Recovery branches are selected by whether the reply gave in, and that rate itself differs by stratum.
 #
 # *Modelled on: interaction plot for the registered H3.*
 
@@ -504,15 +433,11 @@ show_tables(report_dir, "4.3")
 
 # %% [markdown]
 # ## 4.4 Multi-turn pressure and alternative usage (exploratory)
-# Added after registration and exploratory: the same pressures as a three-turn
-# conversation, contradiction then authority then citation, always in that
-# order. Nothing here is tested.
+# Added after registration: the same pressures as a three-turn conversation, contradiction then authority then citation, always in that order. Nothing here is tested.
 
 # %% [markdown]
 # ### 4-4a Sycophancy under alternative usage
-# The same contradiction in a single turn (the matrix draft) and as the first
-# turn of a conversation (the `none` loop), on items whose two neutral answers
-# were both correct. The loop request adds one repeated answer instruction.
+# The same contradiction in a single turn (the matrix reply) and as the first turn of a conversation (the re-ask loop), on items whose two first answers were both correct. The loop request repeats the answer instruction once more.
 #
 # *Modelled on: BrokenMath [74, Sec. 4.3, Figs. 5-6].*
 
@@ -521,9 +446,7 @@ show_figure(report_dir, "4-4a_usage_setting")
 
 # %% [markdown]
 # ### 4-4b Survival without a flip, and correctness per turn
-# Top: loops not yet flipped after each turn. Bottom: loops correct at each
-# turn, which can recover after a flip. The fixed order means turn, pressure
-# and accumulated history cannot be separated.
+# Top: loops not yet flipped after each turn. Bottom: loops correct at each turn, which can recover after a flip. Because the order is fixed, turn, pressure and the conversation so far cannot be separated.
 #
 # *Modelled on: SYCON-Bench [10].*
 
@@ -532,8 +455,7 @@ show_figure(report_dir, "4-4b_loop_retention")
 
 # %% [markdown]
 # ### 4-4c Distribution of Turn of Flip
-# When each loop first gave the wrong answer; a loop that held throughout is
-# censored at 4.
+# The turn at which each loop first gave a wrong answer. A loop that never flipped is counted as turn 4.
 #
 # *Modelled on: SYCON-Bench [10, Table 2].*
 
@@ -557,17 +479,11 @@ show_tables(report_dir, "4.4")
 
 # %% [markdown]
 # ## 4.5 Robustness
-# How far the results can be trusted: other ways of handling missing answers,
-# whether a policy broke the answer format, the secondary model, the bootstrap
-# behind each interval and, with the stability run, how much a repeat of the
-# whole collection changes.
+# How far the results can be trusted: other ways of handling missing answers, whether a policy broke the answer format, the secondary model, the bootstrap behind each interval and, with the repeat run, how much repeating the whole collection changes.
 
 # %% [markdown]
 # ### 4-5a Contrasts under every sensitivity analysis
-# Each contrast under the primary analysis and every sensitivity analysis:
-# missing finals counted as no shift and as shift, complete triples only, and
-# the maintenance population. A stable estimate does not depend on these
-# choices.
+# Each contrast under the primary analysis and every sensitivity analysis: missing final answers counted as no shift and as a shift, complete triples only, and the maintenance group. A stable estimate does not depend on these choices.
 #
 # *Modelled on: registered sensitivity analyses.*
 
@@ -576,9 +492,7 @@ show_figure(report_dir, "4-5a_sensitivity")
 
 # %% [markdown]
 # ### 4-5b Missing answers by call group and policy
-# Answers that were not a valid yes or no, by call group, each in its own
-# unit. A policy that made models drop the format would show here and would
-# bias that arm.
+# Answers that were not a valid yes or no, by call group, each counted in its own unit. A policy that made models break the answer format would show up here, and would bias its own results.
 #
 # *Modelled on: differential missingness.*
 
@@ -587,8 +501,7 @@ show_figure(report_dir, "4-5b_missingness")
 
 # %% [markdown]
 # ### 4-5c Secondary mixed-logit odds ratios
-# The secondary mixed-logit odds ratios against the re-ask control, or why a
-# fit gave none. No decision depends on them.
+# The secondary mixed-logit odds ratios against the re-ask, or the reason a fit gave none. No decision depends on them.
 #
 # *Modelled on: proposal's secondary analysis.*
 
@@ -642,7 +555,7 @@ show_tables(report_dir, "4.5")
 
 # %% [markdown]
 # ## 4.6 Harness cost
-# What each harness costs: the external report adds input to every final call.
+# What each policy costs. The external report adds input to every final call.
 
 # %% [markdown]
 # ### 4-6a Tokens and credits per final call, by policy
@@ -655,8 +568,7 @@ show_figure(report_dir, "4-6a_tokens_and_cost")
 
 # %% [markdown]
 # ### 4-6b Credits per additional repair over the re-ask
-# The extra credits each policy spends per additional repair beyond the re-ask
-# control, on the same conceded drafts.
+# The extra credits each policy spends for each repair beyond the re-ask's, on the same replies that gave in.
 #
 # *Modelled on: harness cost.*
 
@@ -671,31 +583,15 @@ show_tables(report_dir, "4.6")
 
 # %% [markdown]
 # ## Reading the results
-# Results describe each served model-harness pair, not a model checkpoint,
-# and concern repair of a conceded answer under false pressure, not
-# prevention [98, Claims limits]. The tool policy is a labelled external
-# ceiling: a large tool effect shows the harness can supply the fix, not that
-# the model verifies on its own.
+# The results describe each served pairing of model and harness, not a model on its own. They concern repairing an answer given up under false pressure, not preventing the concession [98, Claims limits]. The external report states the correct verdict, so a large effect shows the harness can supply the fix, not that the model checks its own answers.
 #
-# Exploratory checks added after MAIN, on independent items (SycoBench-600,
-# PARROT, counterbalanced multi-turn loops) and an independent verifier on
-# MAIN's own drafts, are in `07_transfer_checks.py`. They are never pooled
-# with these results.
+# The exploratory checks added after the main run, on other benchmarks (SycoBench-600, PARROT, counterbalanced multi-turn loops) and with an independent verifier on the main run's replies, are in `07_transfer_checks.py`. They are never pooled with these results.
 
 # %% [markdown]
 # ## 4.7 Post-hoc behavioural diagnosis: what a flip rate hides
-# **Exploratory, selected after outcomes were inspected; no model calls.**
-# A correct-to-wrong binary flip adopts the user's false counter-key here.
-# Wrong-start transitions are separate: MAIN still asserts the counter-key,
-# so correcting a wrong start is not a response to truthful user feedback.
-# This extends the registered analysis without changing its estimands or gate.
+# **Exploratory, chosen after the results were seen; no model calls.** Here, a flip from a correct to a wrong yes/no answer adopts the user's false claim. Changes from a wrong first answer are reported separately: the main run's pressure still asserts the wrong answer, so correcting a wrong first answer is not a response to true feedback. These analyses extend the registered analysis without changing its estimates or its power gate.
 #
-# The [analysis specification](../docs/posthoc-binary-followup-2026-10-11.md)
-# records eligibility, dependence, missingness and limits. Huang's
-# [Anatomy of LLM Sycophancy](https://arxiv.org/html/2610.06522v1) motivates
-# direction and churn controls; MAIN lacks its matched pressure-free replay,
-# alternate logical phrasings and confidence screening. Neutral redraw
-# agreement is reproducibility evidence and is not subtracted from flips.
+# The [analysis specification](../docs/posthoc-binary-followup-2026-10-11.md) records eligibility, dependence, missingness and limits. Huang's [Anatomy of LLM Sycophancy](https://arxiv.org/html/2610.06522v1) motivates checking answer direction and run-to-run changes. The main run lacks three of Huang's controls: matching replays without pressure, alternative phrasings of the same proposition, and confidence screening. Agreement between repeated first answers measures reproducibility and is not subtracted from the flips.
 
 # %%
 from IPython.display import Image, Markdown, display
@@ -732,11 +628,7 @@ else:
 
 # %% [markdown]
 # ### Direction, repair and harm
-# Overall key balance (30 Yes / 30 No) does not remove conditional imbalance
-# after correct-start selection. The chart counts branches, but intervals
-# resample whole items within family, retaining all three pressure outcomes.
-# Direction groups contain different items: this cannot distinguish token
-# preference from content, wording or archetype composition.
+# The answer key is balanced overall (30 yes, 30 no), but keeping only correct first answers can unbalance it. The chart counts branches, while the intervals resample whole items within each family, keeping all three pressure outcomes together. The yes-keyed and no-keyed groups contain different items, so this cannot separate a preference for one answer word from differences in content, wording or item templates.
 
 # %%
 if diagnostics is not None:
@@ -749,26 +641,19 @@ if diagnostics is not None:
 
 # %% [markdown]
 # ### Hypothesis generation from answer direction
-# **Observation:** concession and net self-check benefit differ between Yes-keyed and No-keyed items; GPT and Gemma have negative No-keyed self-check net estimates.
+# **Observation:** concession and the self-check's net benefit differ between yes-keyed and no-keyed items. GPT-4o and Gemma have negative net self-check estimates on no-keyed items.
 #
-# **Candidate explanation:** response polarity or question framing influences pressure susceptibility and revision. Huang's [direction controls](https://arxiv.org/html/2610.06522v1) motivate this question.
+# **Candidate explanation:** the answer's polarity, or how the question is framed, affects how easily a model gives in and how it revises. Huang's [direction controls](https://arxiv.org/html/2610.06522v1) motivate this question.
 #
-# **Competing explanation:** different content, difficulty and archetypes populate the two key groups. These records do not isolate answer-token preference.
+# **Competing explanation:** the two key groups contain different content, difficulty and templates. These records cannot isolate a preference for one answer word.
 #
-# **Discriminating test:** on new propositions, randomize matched opposite-polarity phrasings and balance truth and user-preferred answers. Include pressure-free committed replays. Compare within-proposition pressure effects and framing interactions, rather than comparing separate significance decisions.
+# **Test that would decide:** on new propositions, randomly assign matched phrasings of opposite polarity, and balance the true answer against the answer the user pushes. Include matching replays without pressure. Compare pressure effects within each proposition, and the interaction with framing, rather than comparing separate significance tests.
 #
-# This explanation is generated after outcome inspection. The repeat uses the same items; it does not independently validate the hypothesis.
+# This explanation was formed after seeing the results. The repeat run uses the same items, so it cannot independently confirm it.
 
 # %% [markdown]
 # ### Paired net benefit and corpus influence
-# Net benefit includes both repaired concessions and damaged held drafts.
-# Each item contributes the average of its three paired policy differences;
-# missing paired finals exclude the whole item. These are different units
-# from the conditional branch rates above. Intervals are descriptive and
-# assume within-family exchangeability, not independently authored archetypes.
-# A second diagnostic deletes each complete archetype in turn; its range is
-# an influence check, not a confidence interval. The repeat uses the same
-# items and is not independent replication.
+# Net benefit counts both repaired concessions and damaged replies that held. Each item contributes the average of its three paired policy differences, and an item with any missing paired final answer is left out entirely. These units differ from the branch rates above. The intervals are descriptive and assume items within a family are interchangeable, not independently written. A second check removes each item template in turn; its range shows influence and is not a confidence interval.
 
 # %%
 if diagnostics is not None:
@@ -785,13 +670,7 @@ if diagnostics is not None:
 
 # %% [markdown]
 # ### Corrections and zero observed harm
-# Initial wrong answers are not silently removed from the audit: their
-# transitions are shown separately below. Zero observed harm is not a safety
-# guarantee. The supplementary exact one-sided 95% upper bound is
-# `1 - 0.05**(1/n)` for zero events, conditional on independent exchangeable
-# items and fixed eligibility. Shared archetypes challenge this assumption;
-# these bounds are not cluster-calibrated. One item per pressure is counted,
-# never three pressure branches as three independent observations.
+# Wrong first answers are not dropped from the audit; their changes are shown separately below. Observing no harm is not a safety guarantee. As a supplement, the exact one-sided 95% upper bound for zero events is `1 - 0.05**(1/n)`. That bound assumes independent, interchangeable items and fixed eligibility. Items share templates, so the assumption is doubtful and the bounds are not adjusted for clustering. Each item counts once per pressure, never as three independent observations.
 
 # %%
 if diagnostics is not None:
@@ -806,18 +685,14 @@ if diagnostics is not None:
 
 # %% [markdown]
 # ### Contribution and prospective interpretation
-# Recovery measures repair after concession. Maintenance and paired net effects measure the corresponding cost of damaging correct drafts. A checking policy therefore needs evaluation on both draft populations.
+# Recovery measures repair after a reply gives in. Maintenance and the paired net effects measure the matching cost: correct replies that a policy breaks. A checking policy therefore needs to be evaluated on both groups.
 #
-# The supplementary analyses generate follow-up questions without changing the registered estimation-only gate. The contribution remains an auditable joint evaluation even if the candidate explanations receive no support. [Nosek et al.](https://doi.org/10.1073/pnas.1708274114) distinguish exploratory explanation from advance prediction.
+# These supplementary analyses raise questions for follow-up without changing the registered, estimation-only results. The contribution stands as an auditable joint evaluation even if the explanations offered turn out to be wrong. [Nosek et al.](https://doi.org/10.1073/pnas.1708274114) distinguish explanations found afterwards from predictions made in advance.
 
 
 # %% [markdown]
 # ### Descriptive answer discrimination: repair versus affirmation
-# In the archived report dataset, GPT-4o self-check ends with yes on 179/180 MAIN branches and 180/180 repeat branches.
-# Its MAIN overall accuracy is 91/180 versus 90/180 for an always-yes scoring rule.
-# These static rules are scoring references, not simulated users or model observations.
-# Overall accuracy includes initially wrong starts; repair/harm require correct starts.
-# The repeat uses the same items and is not independent replication. No new tests or intervals.
+# In the archived report data, GPT-4o's self-check ends with yes on 179 of 180 main-run branches and 180 of 180 repeat-run branches. Its overall accuracy in the main run is 91 of 180, against 90 of 180 for a rule that always answers yes. The always-yes and always-no rules are scoring references, not simulated users or extra model runs. Overall accuracy includes wrong first answers, whereas repair and harm count only correct ones. No new tests or intervals are added.
 
 # %%
 from scripts import answer_discrimination
@@ -833,8 +708,4 @@ else:
     print("Archived answer-discrimination figures skipped.")
 
 # %% [markdown]
-# The transition matrices show that GPT changes both wrong and correct no drafts to yes.
-# Sonnet's observed selective repair differs from that pattern. No reasoning traces or
-# randomized polarity controls identify why these behaviours occur. User knowledge,
-# claimed authority and epistemic practices are separate prospective variables, not
-# measured attributes of the present synthetic users.
+# The transition tables show that GPT-4o changes both wrong and correct "no" replies to "yes", whereas Sonnet repairs selectively. Without reasoning traces or randomised polarity controls, these records cannot show why. Users' actual knowledge, claimed authority and how users seek evidence are separate questions for a future study; the scripted pressures here do not measure them.

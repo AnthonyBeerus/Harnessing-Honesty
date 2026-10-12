@@ -19,33 +19,20 @@
 # %% [markdown]
 # # Harnessing Honesty: demonstration walkthrough
 #
-# An assistant can abandon a correct answer under unsupported user pressure.
-# A checking policy may repair those concessions while damaging answers that
-# had already resisted. The study therefore compares policies on identical
-# drafts, scores them against a private key, and evaluates repair and
-# preservation together.
+# An assistant can give up a correct answer when a user pushes back with a claim that adds no evidence. Asking it to check its answer may win back some of those answers, but it can also break answers the model had defended. The study therefore gives every policy the same pressured reply, scores the results against a private answer key, and reports repairs and damage side by side.
 #
-# This notebook brings the main evidence together. Running its cells in order
-# executes the existing analysis notebooks in fresh kernels and displays
-# selected outputs here; complete outputs and provenance are saved separately.
-# No model calls or collection-control actions are enabled. Preparing the
-# outputs takes a few minutes.
+# This notebook gathers the main evidence in one place. Running its cells in order runs the analysis notebooks in fresh kernels and shows selected outputs here. Their full outputs are saved separately. Nothing here calls a model or starts a paid collection. Preparing the outputs takes a few minutes.
 
 # %% [markdown]
 # ## Setup and evidence selection
-# Use Python 3.12 and the **Harnessing Honesty** kernel. From an editable
-# checkout, install once in a terminal (these commands are not executed here):
+# Use Python 3.12 and the **Harnessing Honesty** kernel. Install once from a terminal at the repository root (this cell does not run these commands):
 #
 # ```bash
 # python -m pip install -e ".[dev,notebooks]"
 # python -m ipykernel install --prefix .venv --name harnessing-honesty --display-name "Harnessing Honesty"
 # ```
 #
-# A Git clone lacks the Git-ignored provider records. Extract the supplied
-# evidence package at its original relative paths for the archived report.
-# Availability is checked below; it does not authenticate the supplied hashes.
-# The selected-run audit checks MAIN integrity; exploratory transport records
-# have the weaker provenance documented in notebook 07.
+# A fresh clone does not contain the recorded runs. To reproduce the report, extract the evidence bundle from OSF at its original paths, as the README describes. The check below confirms that the files are present, but it does not verify their hashes.
 
 # %%
 import hashlib
@@ -109,13 +96,9 @@ elif MODE == "collection":
 
 # %% [markdown]
 # ### How the steps run
-# Each step reuses an existing notebook rather than duplicating its analysis.
-# The complete notebook runs, but only selected outputs appear here. A step can
-# receive explicit settings, such as the small experiment below; they are
-# applied after the safety overrides and recorded in the manifest.
-# The manifest records source and effective-cell hashes, packages, completion
-# and duration. Re-running a step writes a new numbered copy, preserving its
-# previous output. Collection switches are forced off in the execution copy.
+# Each step runs one of the existing notebooks rather than repeating its analysis. The whole notebook runs, and only selected outputs appear here. A step can also receive explicit settings, as the small experiment below does. Those settings are applied after the safety overrides, which always switch collection launches off, and they are recorded in the manifest.
+#
+# The manifest also records each step's source hash, packages, completion and duration. Running a step again writes a new numbered copy, so earlier outputs are kept.
 
 # %%
 def execute_step(name, settings=None):
@@ -179,18 +162,9 @@ def present(notebook, patterns, rich_limit=None, images_only=False):
 
 # %% [markdown]
 # ## Run a small experiment
-# The notebooks that ran the study can also run a new experiment. The next
-# cell runs notebook 05 to plan and preview a small selection of the frozen
-# items, launches that collection, waits for it to finish, audits one system's
-# run with notebook 02 and analyses the collection with notebook 04, showing
-# selected outputs from each. The launch happens in this notebook's kernel,
-# using the same calls as notebook 05: a collection worker started inside a
-# step notebook would stop when that notebook's kernel closes.
+# The same notebooks that ran the study can run a new experiment. With `RUN_EXPERIMENT = True`, the next cell uses notebook 05 to plan and preview a small selection of the frozen items, launches the collection, and waits for it to finish. It then audits one model's run with notebook 02 and analyses the collection with notebook 04.
 #
-# The client is synthetic: it returns scripted answers without contacting a
-# provider, so the run costs nothing and its rates test the pipeline, not any
-# model. Set `RUN_EXPERIMENT = True` to run it. Paid collections are launched
-# only from notebook 05, with an explicit call approval.
+# The client is synthetic: it returns scripted answers without contacting a provider. The run therefore costs nothing, and its rates test the pipeline rather than any model. The launch happens in this notebook's own kernel, because a collection started inside a step notebook would stop when that notebook closes. Paid collections can only be launched from notebook 05, with an explicit call approval.
 
 # %%
 RUN_EXPERIMENT = False
@@ -240,12 +214,9 @@ else:
 
 # %% [markdown]
 # ## 1. Instrument: what counts as a concession?
-# This section summarises the frozen technical items: their balanced private
-# keys and the checks applied to them.
-# A capitulation requires a correct neutral start followed by a wrong answer
-# under unsupported pressure. A wrong neutral answer corrected later is a
-# different event. Sixty items share twelve archetypes; textual uniqueness
-# does not make them sixty independent task designs.
+# This section summarises the sixty frozen technical items, their balanced answer keys and the checks applied to them.
+#
+# A concession needs a correct first answer that turns wrong under pressure. A wrong first answer that later becomes right is a different event. The sixty items come from twelve templates, so they are not sixty independent task designs.
 
 # %%
 instrument = execute_step("01_instrument_audit")
@@ -253,10 +224,7 @@ present(instrument, ["name_masked_total"], rich_limit=1)
 
 # %% [markdown]
 # ## 2. Power gate: what may the study conclude?
-# The gate shown is the recorded planning result, not one recomputed after the
-# outcomes were seen.
-# In this study every registered contrast became estimation-only before MAIN.
-# A favourable point estimate or interval does not confirm a hypothesis.
+# The gate shown here is the planning result recorded before data collection, not one recalculated after the results were seen. It found the sample too small to confirm the planned comparisons, so every registered contrast is reported as an estimate.
 
 # %%
 power = execute_step("03_power")
@@ -264,13 +232,9 @@ present(power, ["matches the record", "confirmatory", "Analysis code: current"])
 
 # %% [markdown]
 # ## 3. Architecture and intervention
-# One neutral answer feeds three pressure branches. Each identical pressured
-# draft feeds re-ask, self-check and external-report finals. The experiment
-# controls the workflow; the model does not choose or execute a tool.
-# MAIN's external report is an answer-equivalent ceiling. Its scoring key is
-# private, whereas the deliberately supplied verdict is the treatment.
-# [Architecture boundaries](../docs/architecture-boundaries.md) compares this
-# fixed workflow with common agent-harness patterns.
+# Each item's first answer is challenged in three separate branches. Each pressured reply is then finished in three ways: a re-ask, a self-check or an external report. The harness controls every step, and the model never chooses or runs a tool.
+#
+# In the main run, the external report states the correct verdict, so it shows the best case for good feedback. The answer key used for scoring stays private. [Architecture boundaries](../docs/architecture-boundaries.md) compares this fixed workflow with common agent-harness designs.
 
 # %%
 control = execute_step("05_experiment_control")
@@ -278,9 +242,7 @@ present(control, ["architecture_paths", "workload.plan_text", "First {kind}"], r
 
 # %% [markdown]
 # ## 4. Evidence audit: can the recorded run be reconstructed?
-# The selected collection supplies the first system's run automatically. The
-# output reports completeness, serving identity and integrity. Synthetic mode
-# has no selected provider run and must not make an integrity claim.
+# The audit takes the first model's run from the selected collection and reports its completeness, the models that actually served it, and its integrity checks. Synthetic mode has no recorded provider run, so it makes no integrity claim.
 
 # %%
 audit = execute_step("02_run_audit")
@@ -288,14 +250,11 @@ present(audit, ["run_directory =", "run.record", "issues = check_integrity", 'fo
 
 # %% [markdown]
 # ## 5. Outcome: repair must be considered alongside harm
-# The registered contrasts come first, followed by repair of conceded drafts
-# and damage to held drafts, which are different selected populations. Positive
-# paired net benefit means fewer wrong finals; the registered regressive-shift
-# contrast has the opposite sign convention. The repeat uses the same items
-# and checks variability, not independent replication.
+# The registered contrasts come first. Repair of conceded replies and damage to defended replies follow. These are different groups of replies, so their rates are not directly comparable.
 #
-# Synthetic mode illustrates the estimator only; recorded-result plots require
-# archived mode or a finished custom collection.
+# Two sign conventions appear. In the paired net benefit, a positive value means fewer wrong final answers. In the registered contrasts, a negative value means the same thing. The repeat run uses the same items, so it checks run-to-run variation rather than replicating the study.
+#
+# Synthetic mode only illustrates the calculations. Plots of recorded results need archived mode or a finished collection of your own.
 
 # %%
 results = execute_step("04_results")
@@ -303,24 +262,16 @@ present(results, ['No power record:', '4-2g_contrasts', '4-2c_repair_and_harm', 
 
 # %% [markdown]
 # ### Diagnostic: correction or answer preference?
-# In the archived MAIN records, GPT-4o self-check answers yes in 179/180 finals.
-# High conditional repair can coexist with held-answer harm and low overall
-# discrimination. Always-yes/no lines are calculated references, not new model
-# observations. Direction-conditioned transitions describe behaviour, not
-# internal reasoning or real user expertise. This extension is disabled for
-# custom collections; it must never substitute report data for a new run.
+# In the main run, GPT-4o's self-check answered yes in 179 of 180 final answers. A policy like that can show high repair and high harm at the same time. The always-yes and always-no lines are calculated reference rules, not extra model runs.
+#
+# This section only runs on the archived report records. It is switched off for custom collections, so report data never stands in for a new run.
 
 # %%
 present(results, ["answer_audit = answer_discrimination.build()"], rich_limit=2)
 
 # %% [markdown]
 # ### Recorded conversations beside the aggregate results
-# Two different GPT-4o items illustrate repair after concession and harm after
-# resistance under fabricated citation. The shortest recorded questions fitting
-# those trajectories were selected post hoc; they are illustrations, not
-# representative samples. Answers and shared histories are checked against
-# recorded requests and responses. The lower panels retain the original MAIN
-# populations and interval procedure. This section runs only in archived mode.
+# Two GPT-4o items show a repair after the model gave in, and a broken answer after it had held firm, both under a fabricated citation. They were chosen after the results, as the shortest examples of each pattern, so they illustrate rather than represent. The answers and shared histories are checked against the recorded requests and responses. This section runs only in archived mode.
 
 # %%
 if MODE == "archived":
@@ -334,10 +285,7 @@ else:
 
 # %% [markdown]
 # ### H2: does policy benefit depend on pressure?
-# This explicitly exploratory extension evaluates the proposal's pressure
-# interaction. It includes both repair and preservation on correct-neutral
-# starts, with whole-item intervals and a same-item repeat sensitivity check.
-# It runs only on the archived evidence, never on a custom experiment's behalf.
+# The proposal predicted that the external report would help most under a fabricated citation. That prediction was not registered, so this analysis is exploratory. It counts both repairs and preserved answers among correct first answers, and checks the result against the repeat run. It runs only on the archived records.
 
 # %%
 if MODE == "archived":
@@ -349,16 +297,9 @@ else:
 
 # %% [markdown]
 # ## 6. External benchmarks: does the intervention travel?
-# The charts show adapted SycoBench/PARROT concession, then accuracy across both
-# neutral starting states. The external four-option report excludes one option,
-# so it is not MAIN's answer-equivalent ceiling. Adaptive SycoBench suggestions
-# are false after correct starts and truthful after wrong starts. Its all-start
-# suggestion accuracy is therefore not a false-pressure-only measure.
+# The charts show how often models gave in on adapted SycoBench and PARROT items, then their accuracy across all starting answers. On these four-option items the external report rules out one option, so it is not the same best-case verdict as in the main run. SycoBench's suggestions are false after a correct first answer and true after a wrong one, so its overall suggestion accuracy mixes good and bad advice.
 #
-# On GPT-4o PARROT the report corrects 7/27 wrong neutral starts but preserves
-# only 86/103 correct starts, giving 93/130 overall versus 101/130 under re-ask.
-# This is a benefit/cost observation, not proof of a mechanism. These numbers
-# belong to the archived report; this section skips in custom/synthetic modes.
+# On PARROT, GPT-4o's external report corrects 7 of 27 wrong first answers but keeps only 86 of 103 correct ones. That gives 93 of 130 overall, against 101 for a re-ask. This section runs only on the archived records.
 
 # %%
 transfer = execute_step("07_transfer_checks")
@@ -366,12 +307,7 @@ present(transfer, ["stem_rates =", "external_full = external_behavior_audit.buil
 
 # %% [markdown]
 # ### External pressure moderation and category effects
-# SycoBench provides an analogous pressure comparison, with matched instances
-# and stem intervals. PARROT provides category effects under a single pressure.
-# Neither directly replicates MAIN's fabricated-citation hypothesis. GPT-4o's
-# external report helps under SycoBench doubt/authority but harms under wrong
-# suggestion; on PARROT, gains after wrong neutral starts coexist with harm
-# after correct starts. These additions use archived records only.
+# SycoBench allows a pressure comparison on matched items. PARROT has a single pressure, so it shows differences between subject categories instead. Neither repeats the main run's fabricated-citation test. GPT-4o's external report helps under SycoBench's doubt and authority pressures but hurts under a wrong suggestion. On PARROT, its gains on wrong first answers come with losses on correct ones.
 
 # %%
 if MODE == "archived":
@@ -381,19 +317,13 @@ else:
 
 # %% [markdown]
 # ## Contribution, limitations and the next experiment
-# The contribution is a reproducible joint evaluation of repair and preservation.
-# It survives even if the candidate explanations receive no independent support.
-# Actual user knowledge, an isolated report-referent effect and internal model
-# mechanisms were not measured. Prospective studies need pressure-free repeated
-# controls, counterbalanced answer direction, explicit report referents and
-# separately manipulated expertise cues. Exploratory explanations remain
-# hypothesis-generating.
+# The contribution is a reproducible way to measure both what a check repairs and what it breaks. That holds even if the candidate explanations offered here turn out to be wrong.
+#
+# The study did not measure users' actual knowledge, the effect of the report's wording on its own, or anything inside the models. A follow-up would need repeated runs without pressure as a baseline, balanced yes and no answers, reports that name the claim they judge, and expertise cues varied separately. The explanations offered here are hypotheses to test.
 
 # %% [markdown]
 # ## Checks and complete outputs
-# Every executed step should complete. Open the saved step notebooks for the full
-# calculations, detailed tables and additional charts. The manifest is a record
-# of this execution, not a new authenticated experimental freeze.
+# Every step should report as completed. The saved step notebooks contain the full calculations, tables and extra charts. The manifest records this run of the notebook; it is not a new signed freeze.
 
 # %%
 assert len(execution['notebooks']) >= 6
@@ -403,19 +333,10 @@ print(f"Execution manifest: {output / 'execution.json'}")
 
 # %% [markdown]
 # ## Use this notebook for another experiment
-# For a quick synthetic run, use "Run a small experiment" above. For a fuller
-# selection or a paid run:
+# For a quick synthetic run, use **Run a small experiment** above. For a larger selection or a paid run:
 #
-# 1. Open [05 experiment control](05_experiment_control.ipynb). Choose a new
-#    `COLLECTION_ID`, `Track.DEV`, items/cards and the synthetic client for an
-#    offline rehearsal. Launch only after setting its explicit switches and
-#    exact planned-call approval; wait for `complete: True`.
-# 2. In this notebook set `MODE = "collection"`, `COLLECTION` to that finished
-#    directory and `STABILITY` to its own declared repeat, or `None`.
-# 3. Restart the kernel and run this notebook from the top. Custom results get
-#    fresh derived outputs; archived diagnostics and external results skip.
+# 1. Open [05 experiment control](05_experiment_control.ipynb). Choose a new `COLLECTION_ID`, `Track.DEV`, your items and models, and the synthetic client for an offline rehearsal. Launching needs the launch switch and the exact planned call count. Wait for `complete: True`.
+# 2. In this notebook, set `MODE = "collection"`, `COLLECTION` to the finished directory, and `STABILITY` to its own repeat run or `None`.
+# 3. Restart the kernel and run this notebook from the top. Your results get fresh outputs, and the archived-only sections are skipped.
 #
-# The detailed notebooks remain the editable controls and analyses. A new
-# instrument, pressure wording or persona manipulation needs a separate design
-# and validation. Live collection is opt-in and may incur API costs; this
-# walkthrough never launches it.
+# A new instrument, new pressure wording or a persona manipulation needs its own design and validation. Paid collections are opt-in and cost money; this notebook never launches one.
