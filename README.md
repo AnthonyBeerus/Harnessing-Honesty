@@ -12,27 +12,170 @@ A controlled evaluation harness for how harness design shapes epistemic sycophan
 
 **Results.** Per model: recovery (the draft conceded) and maintenance (the draft held) are reported separately, with scenario-bootstrap intervals and Holm-adjusted tests.
 
-## Setup
+## Start here
 
-Python 3.12, venv on, from the repo root:
+Use **Python 3.12**; the package requires `>=3.12,<3.13`. The recommended
+entrypoint is [notebooks/demo_runbook.ipynb](notebooks/demo_runbook.ipynb): one
+notebook walks through the instrument, power gate, architecture, evidence
+audit, repair/harm and external results. Offline demonstrations need no API key.
 
-```bash
-pip install -e ".[dev]"
-pytest -q
-python -m harnessing_honesty.cli collection-plan --id demo --first 2
-python -m harnessing_honesty.cli collection-launch --id demo --first 2 --client synthetic --confirm-calls 138
-python -m harnessing_honesty.cli collection-status --id demo
+| Goal | Mode | Evidence needed |
+|---|---|---|
+| Try the workflow offline | `synthetic` | A clean source checkout; numbers are illustrative |
+| Reproduce the report and prepare the demo | `archived` | The public evidence deposit installed below |
+| Analyse your own finished experiment | `collection` | Your own completed development collection |
+
+### 1. Install the project and notebook kernel
+
+Open a terminal in the repository root, the directory containing
+`pyproject.toml`. If you need the source, clone
+[the repository](https://github.com/AnthonyBeerus/Harnessing-Honesty), or use
+the deposited source tree described below.
+
+**Windows PowerShell:**
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
-The plan prints the selection, readiness and expected cost; the launch runs two items on the three models with an offline synthetic client, so nothing is sent to a provider. The run's files appear under `data/runs/dev/demo/`. When it is complete, three commands give the results:
+**macOS / Linux:**
 
 ```bash
-python -m scripts.export_rows data/runs/dev/demo --output demo-results
-python -m harnessing_honesty.analysis.collected data/runs/dev/demo --output demo-results/results.json
-python -m scripts.report demo-results --output demo-report --collection data/runs/dev/demo
+python3.12 -m venv .venv
+source .venv/bin/activate
 ```
 
-The first writes the matrix and loop rows as CSV, the second each model's report beside them, and the third the report's figures and tables by results section, indexed in `demo-report/figures.md` (`--replicate` and `--stability` add the views that need repeated runs). [docs/measures.md](docs/measures.md) defines every measure and column.
+**Then, on either platform:**
+
+```bash
+python -m pip install -e ".[dev,notebooks]"
+python -m ipykernel install --prefix .venv --name harnessing-honesty --display-name "Harnessing Honesty"
+python -m jupyterlab notebooks/demo_runbook.ipynb
+```
+
+In JupyterLab, select the **Harnessing Honesty** kernel. Use **Restart Kernel
+and Run All Cells**. Allow several minutes for the step notebooks to finish;
+their charts appear in the runbook, with full executed outputs and an execution
+manifest saved under `data/notebooks/`.
+
+The setup cell prints `Mode: synthetic` in a clean checkout, or `Mode: archived`
+when the required local records are available. Set `MODE = "synthetic"` in that
+cell if you want an illustrative run even when archived evidence is installed.
+Both modes run offline. Archived mode executes seven step notebooks; synthetic
+mode executes six and skips the report-specific extensions.
+
+### 2. Install the evidence for the report demo
+
+Download `harnessing-honesty-evidence-38c7287.zip` from the
+[public OSF deposit](https://doi.org/10.17605/OSF.IO/HMXSJ).
+`data/runs/` is Git-ignored, so cloning alone cannot reproduce the report's
+recorded results.
+
+The ZIP contains `README.txt`, `MANIFEST.sha256`, `REDACTIONS.json`, the records
+under `evidence/`, and `source-38c7287.zip`, the matching source snapshot.
+For reproduction against the deposited source, extract that inner ZIP into a
+new directory and perform step 1 there.
+
+For a fresh checkout, place the downloaded outer ZIP in the repository root
+and run these **PowerShell** commands:
+
+```powershell
+Get-FileHash -LiteralPath .\harnessing-honesty-evidence-38c7287.zip -Algorithm SHA256
+Expand-Archive -LiteralPath .\harnessing-honesty-evidence-38c7287.zip -DestinationPath .\evidence-deposit
+Copy-Item -LiteralPath .\evidence-deposit\evidence\data\runs -Destination .\data -Recurse
+```
+
+The ZIP's SHA-256 is:
+
+```text
+6dcd709c90dfda8862e109c512fa9a58b3278fac5980214c42ce36437fb37cd3
+```
+
+On macOS/Linux, extract the ZIP with your archive tool and copy
+`evidence/data/runs` into the checkout's `data/` directory. The resulting path
+must be **`data/runs/main/main-2026-10-09/`**, not
+`data/evidence/data/runs/`. Install into a fresh checkout so existing experiment
+records are preserved. Retain the extracted manifest and redaction record.
+
+Restart and run the demo notebook. Confirm **`Mode: archived`** before using
+its numbers in a presentation, and wait for **all seven steps completed**.
+The availability check lists missing paths; it does not authenticate hashes.
+
+The public copy redacts an account identifier in three provider-error
+envelopes. Their saved event-log hashes therefore differ from the deposited
+envelopes; `REDACTIONS.json` records the original and deposited hashes. Read
+the bundle's `README.txt` when interpreting these expected mismatches.
+Exploratory records have the separate provenance limitations documented in
+[the demo setup reference](docs/demo-runbook.md).
+
+### 3. Run without opening JupyterLab
+
+From the same activated environment, choose one command:
+
+```bash
+python -m scripts.demo_notebooks --mode synthetic --output data/notebooks/demo-synthetic-001
+python -m scripts.demo_notebooks --mode archived --output data/notebooks/demo-report-001
+```
+
+Each command writes executed step notebooks and `execution.json`. Use a new
+output directory each time, for example `demo-report-002` on the next run.
+For a screen recording, open and run `demo_runbook.ipynb`; the command-line
+runner saves the individual steps rather than the combined presentation.
+
+## Run your own experiment
+
+Start with [05_experiment_control.ipynb](notebooks/05_experiment_control.ipynb).
+Choose a new collection ID, development track, and `CLIENT = "synthetic"` for
+an offline rehearsal. The notebook previews requests and the workload before
+its explicit launch switches. The
+[new-experiment walkthrough](docs/demo-runbook.md#run-another-experiment)
+explains launch, status, continuation and analysis. Live collection is a
+separate opt-in path requiring an OpenRouter key and paid provider requests;
+it is not needed for either demo mode.
+
+An equivalent two-item offline rehearsal from the terminal is:
+
+```bash
+python -m harnessing_honesty.cli collection-plan --id my-demo-001 --first 2
+python -m harnessing_honesty.cli collection-launch --id my-demo-001 --first 2 --client synthetic --confirm-calls 138
+python -m harnessing_honesty.cli collection-status --id my-demo-001
+```
+
+The plan is 2 items × 3 systems × 23 matrix/loop calls = 138 planned calls.
+Use the call count printed by your own plan if you change the selection.
+Wait for collection completion before analysing
+`data/runs/dev/my-demo-001/`:
+
+```bash
+python -m scripts.demo_notebooks --mode collection --collection data/runs/dev/my-demo-001 --output data/notebooks/demo-my-demo-001
+```
+
+This analyses your collection with archived extensions disabled. Direct CSV,
+analysis and figure exports are also available:
+
+```bash
+python -m scripts.export_rows data/runs/dev/my-demo-001 --output demo-results
+python -m harnessing_honesty.analysis.collected data/runs/dev/my-demo-001 --output demo-results/results.json
+python -m scripts.report demo-results --output demo-report --collection data/runs/dev/my-demo-001
+```
+
+[Measures](docs/measures.md) defines the outputs. See
+[the notebook guide](notebooks/README.md) for individual notebooks and source
+pairing, and [the demo setup reference](docs/demo-runbook.md) for full controls.
+
+## Setup troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| Installation rejects the Python version | Run `python --version`; recreate `.venv` using Python 3.12 |
+| PowerShell blocks `Activate.ps1` | Use `.\.venv\Scripts\python.exe` instead of `python` for the commands above; activation is optional |
+| Notebook cannot import the package | Select the Harnessing Honesty kernel and install from this checkout with `python -m pip install -e ".[dev,notebooks]"` |
+| Archived evidence is missing | Check the listed paths and the extraction layout; confirm the mode before presenting results |
+| Output directory already exists | Choose a new output directory rather than replacing previous outputs |
+
+For development validation, run `python -m pytest -q` from the activated
+environment. Tests are separate from running the demo.
 
 Design choices are recorded in [docs/research-design-decisions.md](docs/research-design-decisions.md) as they become concrete in code.
 
@@ -46,30 +189,17 @@ check. Pilot candidates are not part of the accepted instrument.
 
 ## Use of AI tools
 
-This project was developed with two AI coding agents, Claude Code
-(Anthropic) and Codex (OpenAI), each running frontier models more capable
-than the systems under test. They drafted and revised the harness, its tests,
-the notebooks and the documentation, and helped ground design choices in the
-relevant research by finding, reading and checking sources.
+Claude Code and Codex supported code, tests, notebooks, documentation, and
+source finding and checking. Their work included task generators,
+deterministic oracles and the recorded evaluation harness. A separate
+construction model wrote candidate task wording after formal inputs and keys
+were fixed, under the documented
+[review protocol](docs/research-design-decisions.md).
 
-The work followed the practices these tools' developers recommend [110],
-[112]. Each change was explored and planned before code was written, so the
-research question it served was stated first; written plans and persistent
-project instructions carried decisions across sessions; long sessions were
-compacted to summaries and focused investigations ran in separate contexts
-[111]; and changes were checked against the test suite before review, many
-also against deliberately injected faults. Context and plan files of this
-kind are a documented practice in agentic coding [113], [114].
-
-The author set the research questions and the design, made every
-methodological choice, reviewed each change and committed it, and is
-responsible for all of it. Every result can be checked against the tests and
-recorded runs in this repository. The tools are separate from the language
-models under study, which are reached only through the pinned serving cards
-in `config/`. Two of those models come from the same providers as the tools
-(Anthropic and OpenAI); the tools were never used as systems under test.
-
-References are numbered as in [References](docs/references.md).
+The researcher set the questions and design, made methodological decisions,
+reviewed the implementations, rated and repaired task wording, and remains
+responsible for the work. Research tooling and the construction model are
+distinct from the systems under test.
 
 ## Repository structure
 
