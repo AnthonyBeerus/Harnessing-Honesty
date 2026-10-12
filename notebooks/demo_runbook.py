@@ -12,6 +12,8 @@
 #       format_name: percent
 #       format_version: '1.3'
 #       jupytext_version: 1.19.5
+#   language_info:
+#     name: python
 # ---
 
 # %% [markdown]
@@ -108,13 +110,19 @@ elif MODE == "collection":
 # %% [markdown]
 # ### How the steps run
 # Each step reuses an existing notebook rather than duplicating its analysis.
-# The complete notebook runs, but only selected outputs appear here.
+# The complete notebook runs, but only selected outputs appear here. A step can
+# receive explicit settings, such as the small experiment below; they are
+# applied after the safety overrides and recorded in the manifest.
 # The manifest records source and effective-cell hashes, packages, completion
 # and duration. Re-running a step writes a new numbered copy, preserving its
 # previous output. Collection switches are forced off in the execution copy.
 
 # %%
-def execute_step(name):
+def execute_step(name, settings=None):
+    """Run one step notebook; `settings` assigns named top-level variables after the safety overrides."""
+    settings = dict(settings or {})
+    if settings.get("LAUNCH") == "True" and settings.get("CLIENT") != '"synthetic"':
+        raise ValueError("This notebook launches synthetic collections only; paid runs belong to notebook 05")
     source = root / "notebooks" / (name + ".py")
     notebook = configure(jupytext.read(source), MODE, selected, repeat, audit_run)
     for cell in notebook.cells:
@@ -125,11 +133,13 @@ def execute_step(name):
         cell.source = re.sub(r"(?m)^CLEAR_PAUSE_CARD.* = .*", "CLEAR_PAUSE_CARD = None", cell.source)
         cell.source = re.sub(r"(?m)^APPROVED_CALLS.* = .*", "APPROVED_CALLS = None", cell.source)
         cell.source = re.sub(r'(?m)^CLIENT = .*', 'CLIENT = "synthetic"', cell.source)
+        for variable, expression in settings.items():
+            cell.source = re.sub(rf"(?m)^{variable}(?::[^=\n]+)? = .*", lambda _: f"{variable} = {expression}", cell.source)
     number = len(execution['notebooks']) + 1
     identity = f"{number:02d}-{name}"
     entry: dict[str, object] = dict(source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
                  effective_cells_sha256=hashlib.sha256(json.dumps([c.source for c in notebook.cells]).encode()).hexdigest(),
-                 status="started")
+                 status="started", settings=settings)
     execution['notebooks'][identity] = entry
     manifest = output / "execution.json"
     manifest.write_text(json.dumps(execution, indent=2), encoding="utf-8")
@@ -165,6 +175,68 @@ def present(notebook, patterns, rich_limit=None, images_only=False):
                 if rich_limit is None or count < rich_limit:
                     display(dict(item.data), raw=True)
                     count += 1
+
+
+# %% [markdown]
+# ## Run a small experiment
+# The notebooks that ran the study can also run a new experiment. The next
+# cell runs notebook 05 to plan and preview a small selection of the frozen
+# items, launches that collection, waits for it to finish, audits one system's
+# run with notebook 02 and analyses the collection with notebook 04, showing
+# selected outputs from each. The launch happens in this notebook's kernel,
+# using the same calls as notebook 05: a collection worker started inside a
+# step notebook would stop when that notebook's kernel closes.
+#
+# The client is synthetic: it returns scripted answers without contacting a
+# provider, so the run costs nothing and its rates test the pipeline, not any
+# model. Set `RUN_EXPERIMENT = True` to run it. Paid collections are launched
+# only from notebook 05, with an explicit call approval.
+
+# %%
+RUN_EXPERIMENT = False
+EXPERIMENT_ITEMS = 2  # frozen items to include; each adds 69 synthetic calls
+
+if RUN_EXPERIMENT:
+    from harnessing_honesty.compiler.freeze import PRIMARY_SERVING_CARDS
+    from harnessing_honesty.compiler.pool import confirmatory_pool
+    from harnessing_honesty.domain.enums import Track
+    from harnessing_honesty.evaluation import specification
+    from harnessing_honesty.evaluation.collection import collection_status, launch, start_or_reuse, sut_run_id
+    from harnessing_honesty.evaluation.live import RUNS_ROOT
+    from harnessing_honesty.evaluation.workload import status_text
+
+    experiment_id = "demo-" + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    experiment_items = tuple(item.item_id for item in confirmatory_pool())[:EXPERIMENT_ITEMS]
+    experiment_spec = specification.selection(
+        experiment_id, Track.DEV, PRIMARY_SERVING_CARDS, experiment_items, freeze_id=None)
+    experiment_control = execute_step("05_experiment_control", {
+        "COLLECTION_ID": repr(experiment_id),
+        "ITEM_IDS": repr(experiment_items),
+    })
+    present(experiment_control, ["workload.plan_text", "First {kind}"])
+
+    experiment_directory = start_or_reuse(RUNS_ROOT, experiment_spec)
+    launch(experiment_directory, approved_calls=experiment_spec.planned_calls, client="synthetic")
+    print(f"Launched {experiment_id}: {experiment_spec.planned_calls} synthetic calls")
+    deadline = time.monotonic() + 600
+    while not collection_status(experiment_directory).complete:
+        if time.monotonic() > deadline:
+            raise TimeoutError(f"{experiment_id} did not complete; see notebook 05's status section")
+        time.sleep(2)
+    print(status_text(experiment_directory))
+
+    experiment_run = experiment_directory.parent / sut_run_id(experiment_spec, experiment_spec.suts[0].card)
+    experiment_audit = execute_step("02_run_audit", {"run_directory": f"Path({str(experiment_run)!r})"})
+    present(experiment_audit, ["run.record", "issues = check_integrity"])
+
+    experiment_results = execute_step("04_results", {
+        "COLLECTION": f"Path({str(experiment_directory)!r})",
+        "STABILITY_RUN": "None",
+        "ARCHIVED_REPORT_DIAGNOSTICS": "False",
+    })
+    present(experiment_results, ["report.summaries"])
+else:
+    print("No experiment requested. Set RUN_EXPERIMENT = True to run a synthetic one.")
 
 # %% [markdown]
 # ## 1. Instrument: what counts as a concession?
@@ -331,6 +403,9 @@ print(f"Execution manifest: {output / 'execution.json'}")
 
 # %% [markdown]
 # ## Use this notebook for another experiment
+# For a quick synthetic run, use "Run a small experiment" above. For a fuller
+# selection or a paid run:
+#
 # 1. Open [05 experiment control](05_experiment_control.ipynb). Choose a new
 #    `COLLECTION_ID`, `Track.DEV`, items/cards and the synthetic client for an
 #    offline rehearsal. Launch only after setting its explicit switches and
